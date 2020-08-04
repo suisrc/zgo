@@ -29,9 +29,12 @@ func CasbinMiddleware(enforcer *casbin.SyncedEnforcer, skippers ...SkipperFunc) 
 
 		//i := u.GetUserID()
 		r := u.GetRoleID()
+		a := u.GetAudience()
+		d := c.Request.URL.Host
 		p := c.Request.URL.Path
+		i := helper.GetClientIP(c)
 		m := c.Request.Method
-		if b, err := enforcer.Enforce(r, p, m); err != nil {
+		if b, err := enforcer.Enforce(r, a, d, p, i, m); err != nil {
 			helper.ResError(c, &helper.Err401Unauthorized)
 			return
 		} else if !b {

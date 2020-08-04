@@ -2,6 +2,7 @@ package casbin
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/suisrc/zgo/modules/logger"
@@ -27,6 +28,11 @@ func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(),
 	logger.Infof(nil, "loading casbin model[%s]", c.Model)
 	enforcer.EnableLog(c.Debug)
 
+	// 注册方法
+	enforcer.AddFunction("domainMatch", DomainMatchFunc)
+	enforcer.AddFunction("actionMatch", ActionMatchFunc)
+	enforcer.AddFunction("domainAudMatch", DomainMatchAudienceFunc)
+
 	err = enforcer.InitWithModelAndAdapter(enforcer.GetModel(), adapter)
 	if err != nil {
 		return nil, nil, err
@@ -42,4 +48,62 @@ func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(),
 	}
 
 	return enforcer, cleanFunc, nil
+}
+
+//====================================
+// func
+//====================================
+
+// DomainMatch domain
+func DomainMatch(key1 string, key2 string) bool {
+	if key2[:1] == "." {
+		return strings.HasSuffix(key1, key2)
+	}
+	i := strings.Index(key2, "*") + 1
+	if i == 0 {
+		return key1 == key2
+	}
+	l := len(key2)
+	if i == l {
+		return true
+	}
+	if li := len(key1) - (l - i); li > 0 {
+		// 截取key1可用部分
+		return key1[li:] == key2[i:]
+	}
+	return key1 == key2[i:]
+}
+
+// DomainMatchFunc domain
+func DomainMatchFunc(args ...interface{}) (interface{}, error) {
+	domain1 := args[0].(string)
+	domain2 := args[1].(string)
+	if domain2 == "" || domain2 == "*" {
+		return true, nil
+	}
+	return DomainMatch(domain1, domain2), nil
+}
+
+// DomainMatchAudienceFunc domain
+func DomainMatchAudienceFunc(args ...interface{}) (interface{}, error) {
+	domain1 := args[0].(string)
+	domain2 := args[1].(string)
+	audience := args[2].(string)
+	if domain2 == "" || domain2 == "*" {
+		return true, nil
+	}
+	if domain2 == "jwt" {
+		return DomainMatch(domain1, audience), nil
+	}
+	return DomainMatch(domain1, domain2), nil
+}
+
+// ActionMatchFunc action
+func ActionMatchFunc(args ...interface{}) (interface{}, error) {
+	action := args[0].(string)
+	actions := args[1].(string)
+	if actions == "" || actions == "*" {
+		return true, nil
+	}
+	return strings.Contains(actions, "("+action+")"), nil
 }

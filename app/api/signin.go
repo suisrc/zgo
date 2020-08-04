@@ -21,6 +21,9 @@ type Signin struct {
 func (a *Signin) Register(r gin.IRouter) {
 	// sign 开头的路由会被全局casbin放行
 	r.POST("signin", a.signin) // 登陆必须是POST请求
+
+	// ua := middleware.UserAuthMiddleware(a.Auther)
+	// r.GET("signout", ua, a.signout)
 	r.GET("signout", a.signout)
 }
 
@@ -41,15 +44,7 @@ func (a *Signin) signin(c *gin.Context) {
 		return
 	}
 
-	user := &schema.SigninUser{}
-
-	user.UserName = body.Username
-	user.UserID = strconv.Itoa(1)
-	user.RoleID = "basic"
-	user.Issuer = "t.icgear.cn"
-	user.Audience = "go.t.icgear.cn"
-
-	token, err := a.Auther.GenerateToken(c, user)
+	token, err := a.generateAccessToken(c, body)
 	if err != nil {
 		helper.ResError(c, &helper.Err401Unauthorized)
 		return
@@ -64,15 +59,49 @@ func (a *Signin) signin(c *gin.Context) {
 	helper.ResSuccess(c, &result)
 }
 
+// generateToken 生成访问令牌
+func (a *Signin) generateAccessToken(c *gin.Context, body *schema.SigninBody) (auth.TokenInfo, error) {
+
+	user := &schema.SigninUser{}
+
+	user.UserName = body.Username
+	user.UserID = strconv.Itoa(1)
+	user.RoleID = "basic"
+	user.Issuer = "t.icgear.cn"
+	user.Audience = "go.t.icgear.cn"
+
+	return a.Auther.GenerateToken(c, user)
+}
+
 // Signout godoc
 // @Tags sign
 // @Summary Signin
 // @Description 登出
 // @Accept  json
 // @Produce  json
+// @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
 // @Router /signout [get]
 func (a *Signin) signout(c *gin.Context) {
 	// 返回正常结果即可
+	// user, b := helper.GetUserInfo(c)
+
+	// 确定登陆用户的身份
+	user, err := a.Auther.GetUserInfo(c)
+	if err != nil {
+		if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
+			helper.ResError(c, &helper.Err401Unauthorized)
+			return
+		}
+		helper.ResError(c, &helper.Err400BadRequest)
+		return
+	}
+
+	// 执行登出
+	if err := a.Auther.DestroyToken(c, user); err != nil {
+		helper.ResError(c, &helper.Err400BadRequest)
+		return
+	}
+
 	helper.ResSuccess(c, "ok")
 }

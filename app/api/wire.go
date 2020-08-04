@@ -63,7 +63,7 @@ func InitEndpoints(o *Options) *Endpoints {
 		o.Enforcer,
 		middleware.AllowPathPrefixSkipper(
 			// sign 登陆接口需要排除
-			// 注意[/api/sign开头的,都会被排除]
+			// 注意[/api/sign,都会被排除]
 			middleware.JoinPath(config.C.HTTP.ContextPath, "sign"),
 			// pub => public 为系统公共信息
 			// 注意[/api/pub开头的,都会被排除]

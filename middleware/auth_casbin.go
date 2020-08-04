@@ -34,9 +34,12 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 
 		if conf.Enable {
 			r := user.GetRoleID()
+			a := user.GetAudience()
+			d := c.Request.URL.Host
 			p := c.Request.URL.Path
+			i := helper.GetClientIP(c)
 			m := c.Request.Method
-			if b, err := enforcer.Enforce(r, p, m); err != nil {
+			if b, err := enforcer.Enforce(r, a, d, p, i, m); err != nil {
 				helper.ResError(c, &helper.Err403Forbidden)
 				return
 			} else if !b {

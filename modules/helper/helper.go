@@ -21,6 +21,12 @@ const (
 type UserInfo interface {
 	GetUserID() string
 	GetRoleID() string
+	GetProps() (interface{}, bool)
+
+	GetUserName() string
+	GetTokenID() string
+	GetIssuer() string
+	GetAudience() string
 }
 
 // UserInfoFunc user
