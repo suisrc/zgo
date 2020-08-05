@@ -12,6 +12,13 @@ idu_xxx: 唯一索引
 idx_xxx: 索引  
 fk_xxxx: 外键  
 
+```sql model
+ARG table_prefix=
+
+includes=account,oauth2_third
+excludes=
+```
+
 ## 账户实体(`account`)
 
 管理用户登陆控制,oauth2_token令牌为用户令牌, 与服务器令牌需要区别
@@ -24,10 +31,10 @@ fk_xxxx: 外键
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | account       | 账户           | 字符串   | 账户和账户类型和账户归属平台构成唯一标识            | varchar(255), idu_account                            |
 | account_type  | 账户类型       | 字符串   | 1:user 2:mobile 3:email 4:openid 5:unionid 6:token  | varchar(16) DEFAULT 'user', idu_account              |
-| platform      | 账户归属平台   | 字符串   | 1:ZGO(当前平台) 2:OA2-[OAuth2_id](第三方平台)       | varchar(16) DEFAULT 'ZGO', idu_account               |
+| platform      | 账户归属平台   | 字符串   | 1:ZGO(当前平台) 2:OA2-[OAuth2.id](第三方平台)       | varchar(16) DEFAULT 'ZGO', idu_account               |
 | verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2                             | varchar(16)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| password      | 登录密码       | 字符串   |                                                     | varchar(255)                                         |
+| password      | 登录密码       | 字符串   |                                                     | varchar(255), idu_passwd                             |
 | password_salt | 密码盐值       | 字符串   |                                                     | varchar(255)                                         |
 | password_type | 校验方式       | 字符串   | 1:DEF1(明文) 2:MD5 3:SHA1 4:...                     | varchar(16)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -41,7 +48,7 @@ fk_xxxx: 外键
 | oauth2_time   | oauth2创建时间 | 时间格式 | 令牌生成时间                                        | timestamp                                            |
 | token_fake    | oauth2令牌     | 字符串   | 特殊的令牌,用于集群中应用间通信,可理解为永生令牌    | varchar(1024)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64), idx_creator                             |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
@@ -53,6 +60,7 @@ fk_xxxx: 外键
 | number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
 | number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
+---
 ## 第三方登陆实体(`oauth2_third`)
 
 用于第三方授权登陆我们的系统
@@ -68,7 +76,7 @@ fk_xxxx: 外键
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | authorize_url | 认证地址       | 字符串   |                                                     | varchar(2048)                                        |
 | token_url     | 令牌地址       | 字符串   |                                                     | varchar(2048)                                        |
-| profile_url   | 个人资料地址   | 字符串   |                                                     | varcahr(2048)                                        |
+| profile_url   | 个人资料地址   | 字符串   |                                                     | varchar(2048)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | domain_def    | 默认域名       | 字符串   | 必须以http或者https开头                             | varchar(128)                                         |
 | domain_check  | 域名认证       | 字符串   | 格式:[file]:[context]                               | varchar(255)                                         |
@@ -91,6 +99,7 @@ fk_xxxx: 外键
 | number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
 | number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
+---
 ## 第三方登陆实体(`oauth2_token`)
 
 与第三方系统通信时候,使用的令牌
@@ -117,6 +126,7 @@ fk_xxxx: 外键
 | number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
 | number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
+---
 ## 第三方授权实体(`oauth2_client`)
 
 我们的系统提供第三方登陆, 系统中不涉及第三方签发的令牌, 用户可以直接通过jwt访问我们系统
@@ -149,6 +159,7 @@ fk_xxxx: 外键
 | number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
 | number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
+---
 ## 第三方授权实体(`oauth2_account`)
 
 第三方授权实体, 用于记录用户授权过的第三方登陆
@@ -173,6 +184,7 @@ fk_xxxx: 外键
 | number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
 | number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
+---
 ## 用户实体(`user`)
 
 用户实体操作非常频繁,所以,其中的内容应该尽可能保存的少,更多详细信息可以通过detail进行保存
@@ -185,6 +197,7 @@ fk_xxxx: 外键
 | uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), idu_user_uid                            |
 | name          | 用户名         | 字符串   |                                                     | varchar(64), idu_user_name                           |
 
+---
 ## 用户详情实体(`user_detail`)
 
 用户详情
@@ -209,6 +222,7 @@ fk_xxxx: 外键
 | number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
 | number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
+---
 ## 用户消息实体(`user_message`)
 
 主要用户系统通知
@@ -231,7 +245,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
-
+---
 ## 角色实体(`role`)
 
 一个用户登陆系统后,只能有一个角色存在,如果有多角色的情况,需要进行选择
@@ -248,6 +262,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 角色角色实体(`role_role`)
 
 角色赋值时候,可能出现环,所以在保存角色时候,需要对角色进行校验,防止环形角色情况发生
@@ -263,6 +278,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 用户角色实体(`user_role`)
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
@@ -277,6 +293,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 资源实体(`resource`)
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
@@ -294,6 +311,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 资源角色实体(`resource_role`)
 
 这里使用资源角色而非角色资源,是为了兼容casbin方式,我们对资源如下定义:
@@ -310,6 +328,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 资源用户实体(`resource_user`)
 
 由于用户登陆系统前台是单角色,因此用户资源就变得无意义.
@@ -325,6 +344,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 菜单实体(`menu`)
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
@@ -343,6 +363,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 菜单事件实体(`menu_action`)
 
 主要用户系统中对操作的隐藏,如果需要禁用,需要配合resource使用,默认权限为启用
@@ -363,8 +384,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
-
-
+---
 ## 角色自定义菜单实体(`menu_role`)
 
 角色具有包含角色的性质,所有在处理角色上,需要遍历角色
@@ -381,6 +401,7 @@ fk_xxxx: 外键
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 通用标签实体(`tag_common`)
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
@@ -394,3 +415,5 @@ fk_xxxx: 外键
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+
+---

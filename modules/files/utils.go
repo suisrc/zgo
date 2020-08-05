@@ -16,14 +16,14 @@ func GetFile(path string) (*os.File, error) {
 		return nil, err
 	}
 
-	configPath := path
+	pathX := path
 	if !filepath.IsAbs(path) {
-		configPath = filepath.Join(pwd, path)
+		pathX = filepath.Join(pwd, path)
 	}
 
 	// 检查组合路径文件是否存在(relative path)
-	if _, err := os.Stat(configPath); !os.IsNotExist(err) {
-		return os.Open(configPath)
+	if _, err := os.Stat(pathX); !os.IsNotExist(err) {
+		return os.Open(pathX)
 	}
 
 	f, err := os.Open(path)

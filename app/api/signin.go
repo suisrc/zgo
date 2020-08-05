@@ -44,7 +44,7 @@ func (a *Signin) signin(c *gin.Context) {
 		return
 	}
 
-	token, err := a.generateAccessToken(c, body)
+	token, err := a.generateAccessToken(c, &body)
 	if err != nil {
 		helper.ResError(c, &helper.Err401Unauthorized)
 		return

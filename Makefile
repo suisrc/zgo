@@ -78,3 +78,7 @@ demo-wire:
 	wire gen ./demo/injector
 demo-entc:
 	go generate ./demo/model/ent
+
+# mysql
+mysql:
+	go run cmd/db/main.go mysql -m doc/model.md -o doc/model.mysql.sql

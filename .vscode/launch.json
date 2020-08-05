@@ -22,5 +22,14 @@
             "port": 2345,
             "host": "127.0.0.1",
         },
+        {
+            "name": "Mysql",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "cwd": "${workspaceFolder}",
+            "program": "${workspaceFolder}/cmd/db",
+            "args": ["mysql", "-m", "doc/model.md", "-o", "doc/model.sql"],
+        },
     ]
 }
