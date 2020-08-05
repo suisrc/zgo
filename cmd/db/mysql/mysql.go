@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 )
 
 //ModelFile file
@@ -209,7 +210,9 @@ func (a *model) init() error {
 }
 
 func (a *model) build() (string, error) {
-	content := "-- -------------------------------------------------------\n-- 表结构"
+	content := "-- -------------------------------------------------------\n"
+	content += "-- build by cmd/db/mysql/mysql.go\n-- time: " + time.Now().Format("2006-01-02 15:04:05 CST") + "\n"
+	content += "-- -------------------------------------------------------\n-- 表结构"
 	for _, ct1 := range a.entitys {
 		sql, err := ct1.build()
 		if err != nil {

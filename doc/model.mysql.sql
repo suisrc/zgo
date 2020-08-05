@@ -1,4 +1,7 @@
 -- -------------------------------------------------------
+-- build by cmd/db/mysql/mysql.go
+-- time: 2020-08-05 20:50:40 CST
+-- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
 -- 账户实体
@@ -29,8 +32,8 @@ CREATE TABLE `account` (
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
   `number_2` int(11) DEFAULT NULL COMMENT '备用字段',
   `number_3` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE idu_passwd(`password`),
   UNIQUE idu_account(`account`,`account_type`,`platform`),
+  UNIQUE idu_passwd(`password`),
   INDEX idx_creator(`creator`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
