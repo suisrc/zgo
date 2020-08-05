@@ -8,7 +8,7 @@ INDEX index_name (title(length))
 UNIQUE index_name (title(length))
 ```
 primary: 主键  
-idu_xxx: 唯一索引  
+udx_xxx: 唯一索引  
 idx_xxx: 索引  
 fk_xxxx: 外键  
 
@@ -29,12 +29,12 @@ excludes=
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | --------------------------------------------------- | ---------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| account       | 账户           | 字符串   | 账户和账户类型和账户归属平台构成唯一标识            | varchar(255), idu_account                            |
-| account_type  | 账户类型       | 字符串   | 1:user 2:mobile 3:email 4:openid 5:unionid 6:token  | varchar(16) DEFAULT 'user', idu_account              |
-| platform      | 账户归属平台   | 字符串   | 1:ZGO(当前平台) 2:OA2-[OAuth2.id](第三方平台)       | varchar(16) DEFAULT 'ZGO', idu_account               |
+| account       | 账户           | 字符串   | 账户和账户类型和账户归属平台构成唯一标识            | varchar(255), udx_account                            |
+| account_type  | 账户类型       | 字符串   | 1:user 2:mobile 3:email 4:openid 5:unionid 6:token  | varchar(16) DEFAULT 'user', udx_account              |
+| platform      | 账户归属平台   | 字符串   | 1:ZGO(当前平台) 2:OA2-[OAuth2.id](第三方平台)       | varchar(16) DEFAULT 'ZGO', udx_account               |
 | verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2                             | varchar(16)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| password      | 登录密码       | 字符串   |                                                     | varchar(255), idu_passwd                             |
+| password      | 登录密码       | 字符串   |                                                     | varchar(255), udx_passwd                             |
 | password_salt | 密码盐值       | 字符串   |                                                     | varchar(255)                                         |
 | password_type | 校验方式       | 字符串   | 1:DEF1(明文) 2:MD5 3:SHA1 4:...                     | varchar(16)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -194,8 +194,8 @@ excludes=
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), idu_user_uid                            |
-| name          | 用户名         | 字符串   |                                                     | varchar(64), idu_user_name                           |
+| uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), udx_user_uid                            |
+| name          | 用户名         | 字符串   |                                                     | varchar(64), udx_user_name                           |
 
 ---
 ## 用户详情实体(`user_detail`)
@@ -230,7 +230,7 @@ excludes=
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| uid           | 索引           | 字符串   |                                                     | varchar(64), idu_user_message_uid                    |
+| uid           | 索引           | 字符串   |                                                     | varchar(64), udx_user_message_uid                    |
 | avatar        | 头像           | 字符串   |                                                     | varchar(512)                                         |
 | title         | 标题           | 字符串   |                                                     | varchar(255)                                         |
 | datetime      | 日期           | 字符串   |                                                     | timestamp                                            |
@@ -253,8 +253,8 @@ excludes=
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), idu_role_uid                            |
-| name          | 角色名         | 字符串   |                                                     | varchar(64), idu_role_name                           |
+| uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), udx_role_uid                            |
+| name          | 角色名         | 字符串   |                                                     | varchar(64), udx_role_name                           |
 | desc          | 角色描述       | 字符串   |                                                     | varchar(128)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -407,8 +407,8 @@ excludes=
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| owner_id      | 归属id         | 数值     |                                                     | int(11), idu_tag_common_uid                          |
-| type          | 标签类型       | 数值     | 1:用户 2:角色 3:资源                                | tinyint(4), idu_tag_common_uid                       |
+| owner_id      | 归属id         | 数值     |                                                     | int(11), udx_tag_common_uid                          |
+| type          | 标签类型       | 数值     | 1:用户 2:角色 3:资源                                | tinyint(4), udx_tag_common_uid                       |
 | name          | 标签           | 字符串   |                                                     | varchar(64), idx_tag_common_name                     | 
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |

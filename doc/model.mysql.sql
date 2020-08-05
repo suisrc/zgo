@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-08-05 20:50:40 CST
+-- time: 2020-08-05 20:57:40 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -32,8 +32,8 @@ CREATE TABLE `account` (
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
   `number_2` int(11) DEFAULT NULL COMMENT '备用字段',
   `number_3` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE idu_account(`account`,`account_type`,`platform`),
-  UNIQUE idu_passwd(`password`),
+  UNIQUE udx_account(`account`,`account_type`,`platform`),
+  UNIQUE udx_passwd(`password`),
   INDEX idx_creator(`creator`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
@@ -142,8 +142,8 @@ CREATE TABLE `user` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `uid` varchar(64) DEFAULT NULL COMMENT '唯一标识',
   `name` varchar(64) DEFAULT NULL COMMENT '用户名',
-  UNIQUE idu_user_uid(`uid`),
-  UNIQUE idu_user_name(`name`),
+  UNIQUE udx_user_uid(`uid`),
+  UNIQUE udx_user_name(`name`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -182,7 +182,7 @@ CREATE TABLE `user_message` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  UNIQUE idu_user_message_uid(`uid`),
+  UNIQUE udx_user_message_uid(`uid`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -196,8 +196,8 @@ CREATE TABLE `role` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  UNIQUE idu_role_uid(`uid`),
-  UNIQUE idu_role_name(`name`),
+  UNIQUE udx_role_uid(`uid`),
+  UNIQUE udx_role_name(`name`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -295,8 +295,8 @@ CREATE TABLE `menu_action` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  INDEX idx_menu_action_name(`name`),
   INDEX idx_menu_action_code(`code`),
+  INDEX idx_menu_action_name(`name`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -322,7 +322,7 @@ CREATE TABLE `tag_common` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  UNIQUE idu_tag_common_uid(`owner_id`,`type`),
+  UNIQUE udx_tag_common_uid(`owner_id`,`type`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -331,9 +331,9 @@ CREATE TABLE `tag_common` (
 -- 表外键
 -- -------------------------------------------------------
 ALTER TABLE `account`
+ADD CONSTRAINT `fk_account_oauth2` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`),
 ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
-ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
-ADD CONSTRAINT `fk_account_oauth2` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`);
+ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`);
 
 ALTER TABLE `oauth2_token`
 ADD CONSTRAINT `fk_oa2_token_id` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`);

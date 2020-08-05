@@ -77,7 +77,7 @@ type entity struct {
 	fields []field
 
 	primary []string
-	idumap  map[string][]string
+	udxmap  map[string][]string
 	idxmap  map[string][]string
 	fkmap   map[string][]foreign
 }
@@ -132,7 +132,7 @@ func (a *model) init() error {
 		e := entity{
 			fields:  make([]field, 0),
 			primary: make([]string, 0),
-			idumap:  make(map[string][]string),
+			udxmap:  make(map[string][]string),
 			idxmap:  make(map[string][]string),
 			fkmap:   make(map[string][]foreign),
 		}
@@ -174,8 +174,8 @@ func (a *model) init() error {
 							continue
 						}
 						sql2 = strings.TrimSpace(sql2)
-						if strings.HasPrefix(sql2, "idu_") {
-							e.idumap[sql2] = append(e.idumap[sql2], f.name)
+						if strings.HasPrefix(sql2, "udx_") {
+							e.udxmap[sql2] = append(e.udxmap[sql2], f.name)
 						} else if strings.HasPrefix(sql2, "idx_") {
 							e.idxmap[sql2] = append(e.idxmap[sql2], f.name)
 						} else if strings.HasPrefix(sql2, "fk_") {
@@ -253,7 +253,7 @@ func (a *entity) build() (string, error) {
 		content += ",\n"
 	}
 
-	for key, val := range a.idumap {
+	for key, val := range a.udxmap {
 		content += "  UNIQUE " + key + "("
 		for i, p := range val {
 			if i == 0 {
