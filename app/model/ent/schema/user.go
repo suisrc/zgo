@@ -1,4 +1,3 @@
-
 package schema
 
 /*
@@ -8,8 +7,6 @@ package schema
   https://entgo.io/docs/getting-started/
 */
 import (
-	
-
 	"github.com/facebookincubator/ent"
 	//"github.com/facebookincubator/ent/schema/edge"
 	"github.com/facebookincubator/ent/schema/field"
@@ -35,14 +32,14 @@ func (User) Hooks() []ent.Hook {
 // Fields of the User.
 func (User) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("uid"), // 唯一标识
+		field.String("uid"),  // 唯一标识
 		field.String("name"), // 用户名
 	}
 }
 
 // Edges of the User.
 func (User) Edges() []ent.Edge {
-//	return []ent.Edge{
-//	}
+	//	return []ent.Edge{
+	//	}
 	return nil
 }

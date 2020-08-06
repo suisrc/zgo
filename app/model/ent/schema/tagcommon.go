@@ -1,4 +1,3 @@
-
 package schema
 
 /*
@@ -35,18 +34,18 @@ func (TagCommon) Hooks() []ent.Hook {
 // Fields of the TagCommon.
 func (TagCommon) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("owner_id"), // 归属id
-		field.Int("type"), // 标签类型
-		field.String("creator"), // 创建人
+		field.Int("owner_id"),                      // 归属id
+		field.Int("type"),                          // 标签类型
+		field.String("creator"),                    // 创建人
 		field.Time("created_at").Default(time.Now), // 创建时间
 		field.Time("updated_at").Default(time.Now), // 更新时间
-		field.Int("version").Default(1), // 数据版本
+		field.Int("version").Default(1),            // 数据版本
 	}
 }
 
 // Edges of the TagCommon.
 func (TagCommon) Edges() []ent.Edge {
-//	return []ent.Edge{
-//	}
+	//	return []ent.Edge{
+	//	}
 	return nil
 }

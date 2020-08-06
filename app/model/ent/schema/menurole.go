@@ -1,4 +1,3 @@
-
 package schema
 
 /*
@@ -35,19 +34,19 @@ func (MenuRole) Hooks() []ent.Hook {
 // Fields of the MenuRole.
 func (MenuRole) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("role_id"), // 角色 ID
-		field.Int("user_id"), // 用户 ID
-		field.Int("menu_id"), // 菜单 ID
-		field.String("creator"), // 创建人
+		field.Int("role_id"),                       // 角色 ID
+		field.Int("user_id"),                       // 用户 ID
+		field.Int("menu_id"),                       // 菜单 ID
+		field.String("creator"),                    // 创建人
 		field.Time("created_at").Default(time.Now), // 创建时间
 		field.Time("updated_at").Default(time.Now), // 更新时间
-		field.Int("version").Default(1), // 数据版本
+		field.Int("version").Default(1),            // 数据版本
 	}
 }
 
 // Edges of the MenuRole.
 func (MenuRole) Edges() []ent.Edge {
-//	return []ent.Edge{
-//	}
+	//	return []ent.Edge{
+	//	}
 	return nil
 }

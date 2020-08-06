@@ -1,4 +1,3 @@
-
 package schema
 
 /*
@@ -35,23 +34,23 @@ func (Menu) Hooks() []ent.Hook {
 // Fields of the Menu.
 func (Menu) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("parent_id"), // 父级 ID
-		field.String("name"), // 菜单名称
-		field.Int("sequence"), // 排序值
-		field.String("icon"), // 图标
-		field.String("router"), // 访问路由
-		field.String("memo"), // 备注
-		field.Int("status"), // 状态
-		field.String("creator"), // 创建人
+		field.String("parent_id"),                  // 父级 ID
+		field.String("name"),                       // 菜单名称
+		field.Int("sequence"),                      // 排序值
+		field.String("icon"),                       // 图标
+		field.String("router"),                     // 访问路由
+		field.String("memo"),                       // 备注
+		field.Int("status"),                        // 状态
+		field.String("creator"),                    // 创建人
 		field.Time("created_at").Default(time.Now), // 创建时间
 		field.Time("updated_at").Default(time.Now), // 更新时间
-		field.Int("version").Default(1), // 数据版本
+		field.Int("version").Default(1),            // 数据版本
 	}
 }
 
 // Edges of the Menu.
 func (Menu) Edges() []ent.Edge {
-//	return []ent.Edge{
-//	}
+	//	return []ent.Edge{
+	//	}
 	return nil
 }

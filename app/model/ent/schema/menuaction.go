@@ -1,4 +1,3 @@
-
 package schema
 
 /*
@@ -35,21 +34,21 @@ func (MenuAction) Hooks() []ent.Hook {
 // Fields of the MenuAction.
 func (MenuAction) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("menu_id"), // 菜单 ID
-		field.Int("role_id"), // 角色 ID
-		field.String("code"), // 动作编号
-		field.String("name"), // 动作名称
-		field.Int("disable"), // 状态
-		field.String("creator"), // 创建人
+		field.Int("menu_id"),                       // 菜单 ID
+		field.Int("role_id"),                       // 角色 ID
+		field.String("code"),                       // 动作编号
+		field.String("name"),                       // 动作名称
+		field.Int("disable"),                       // 状态
+		field.String("creator"),                    // 创建人
 		field.Time("created_at").Default(time.Now), // 创建时间
 		field.Time("updated_at").Default(time.Now), // 更新时间
-		field.Int("version").Default(1), // 数据版本
+		field.Int("version").Default(1),            // 数据版本
 	}
 }
 
 // Edges of the MenuAction.
 func (MenuAction) Edges() []ent.Edge {
-//	return []ent.Edge{
-//	}
+	//	return []ent.Edge{
+	//	}
 	return nil
 }

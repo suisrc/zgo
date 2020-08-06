@@ -1,4 +1,3 @@
-
 package schema
 
 /*
@@ -35,19 +34,19 @@ func (UserRole) Hooks() []ent.Hook {
 // Fields of the UserRole.
 func (UserRole) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("user_id"), // 账户标识
-		field.Int("role_id"), // 客户端标识
-		field.Time("expired"), // 授权有效期
-		field.String("creator"), // 创建人
+		field.Int("user_id"),                       // 账户标识
+		field.Int("role_id"),                       // 客户端标识
+		field.Time("expired"),                      // 授权有效期
+		field.String("creator"),                    // 创建人
 		field.Time("created_at").Default(time.Now), // 创建时间
 		field.Time("updated_at").Default(time.Now), // 更新时间
-		field.Int("version").Default(1), // 数据版本
+		field.Int("version").Default(1),            // 数据版本
 	}
 }
 
 // Edges of the UserRole.
 func (UserRole) Edges() []ent.Edge {
-//	return []ent.Edge{
-//	}
+	//	return []ent.Edge{
+	//	}
 	return nil
 }

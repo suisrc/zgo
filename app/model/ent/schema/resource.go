@@ -1,4 +1,3 @@
-
 package schema
 
 /*
@@ -35,21 +34,21 @@ func (Resource) Hooks() []ent.Hook {
 // Fields of the Resource.
 func (Resource) Fields() []ent.Field {
 	return []ent.Field{
-		field.String("resource"), // 资源名
-		field.String("path"), // 路径
-		field.String("netmask"), // 网络掩码
-		field.Int("allow"), // 允许vs拒绝
-		field.String("desc"), // 描述
-		field.String("creator"), // 创建人
+		field.String("resource"),                   // 资源名
+		field.String("path"),                       // 路径
+		field.String("netmask"),                    // 网络掩码
+		field.Int("allow"),                         // 允许vs拒绝
+		field.String("desc"),                       // 描述
+		field.String("creator"),                    // 创建人
 		field.Time("created_at").Default(time.Now), // 创建时间
 		field.Time("updated_at").Default(time.Now), // 更新时间
-		field.Int("version").Default(1), // 数据版本
+		field.Int("version").Default(1),            // 数据版本
 	}
 }
 
 // Edges of the Resource.
 func (Resource) Edges() []ent.Edge {
-//	return []ent.Edge{
-//	}
+	//	return []ent.Edge{
+	//	}
 	return nil
 }

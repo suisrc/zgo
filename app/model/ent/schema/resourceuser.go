@@ -1,4 +1,3 @@
-
 package schema
 
 /*
@@ -35,18 +34,18 @@ func (ResourceUser) Hooks() []ent.Hook {
 // Fields of the ResourceUser.
 func (ResourceUser) Fields() []ent.Field {
 	return []ent.Field{
-		field.Int("user_id"), // 角色
-		field.String("resource"), // 资源名
-		field.String("creator"), // 创建人
+		field.Int("user_id"),                       // 角色
+		field.String("resource"),                   // 资源名
+		field.String("creator"),                    // 创建人
 		field.Time("created_at").Default(time.Now), // 创建时间
 		field.Time("updated_at").Default(time.Now), // 更新时间
-		field.Int("version").Default(1), // 数据版本
+		field.Int("version").Default(1),            // 数据版本
 	}
 }
 
 // Edges of the ResourceUser.
 func (ResourceUser) Edges() []ent.Edge {
-//	return []ent.Edge{
-//	}
+	//	return []ent.Edge{
+	//	}
 	return nil
 }
