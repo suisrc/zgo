@@ -14,7 +14,7 @@ import (
 func NewClient() (*ent.Client, func(), error) {
 
 	// drv, err := sql.Open("sqlite3", "file:db1?mode=memory&cache=shared&_fk=1")
-	drv, err := sql.Open(zdbc.DatabaseType, zdbc.DatabaseDSN)
+	drv, err := sql.Open(zdbc.DatabaseType, zdbc.DatabaseDSN())
 	if err != nil {
 		return nil, nil, err
 	}

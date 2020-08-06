@@ -11,7 +11,7 @@
             "mode": "debug",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/cmd/app",
-            "args": ["web", "-c", "./configs/config.toml"],
+            "args": ["web", "-c", "./configs/__config.toml"],
         },
         {
             "name": "Connect",

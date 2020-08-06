@@ -2,7 +2,6 @@ package zdbc
 
 import (
 	"github.com/suisrc/zgo/modules/config"
-
 	// 引入数据库
 	// _ "github.com/mattn/go-sqlite3"
 	_ "github.com/go-sql-driver/mysql"
@@ -21,7 +20,9 @@ var (
 	// DatabaseType type
 	DatabaseType = "mysql"
 	// DatabaseDSN dsn
-	DatabaseDSN = config.C.MySQL.DSN()
+	DatabaseDSN = func() string {
+		return config.C.MySQL.DSN()
+	}
 )
 
 var (

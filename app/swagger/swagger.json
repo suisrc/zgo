@@ -200,6 +200,11 @@
         },
         "/signout": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "登出",
                 "consumes": [
                     "application/json"
@@ -321,38 +326,35 @@
         "schema.SigninBody": {
             "type": "object",
             "required": [
-                "usrname"
+                "password",
+                "username"
             ],
             "properties": {
+                "attach": {
+                    "description": "reset:重置登入 refresh:刷新令牌",
+                    "type": "string"
+                },
                 "captcha": {
                     "description": "验证码",
                     "type": "string"
                 },
-                "code": {
-                    "description": "登陆方式",
+                "client": {
+                    "description": "应用, 默认为主应用, 为空",
                     "type": "string"
                 },
-                "mobile": {
-                    "description": "手机号",
+                "code": {
+                    "description": "标识码",
                     "type": "string"
                 },
                 "password": {
                     "description": "密码",
                     "type": "string"
                 },
-                "reset": {
-                    "description": "重置登陆",
-                    "type": "boolean"
-                },
                 "role": {
                     "description": "角色",
                     "type": "string"
                 },
-                "type": {
-                    "description": "登陆类型 \u003c系统\u003e:\u003c类型\u003e:\u003c备注\u003e",
-                    "type": "string"
-                },
-                "usrname": {
+                "username": {
                     "description": "账户",
                     "type": "string"
                 }

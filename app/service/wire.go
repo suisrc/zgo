@@ -15,6 +15,7 @@ var ServiceSet = wire.NewSet(
 	sqlxc.NewClient,
 	wire.Struct(new(GPA), "*"),
 	// 服务
+	wire.Struct(new(Signin), "*"),
 )
 
 //======================================
@@ -28,6 +29,6 @@ type ResultRef struct {
 
 // GPA golang persistence api 数据持久化
 type GPA struct {
-	DBE *ent.Client // ent client
-	DBS *sqlx.DB    // sqlx client
+	Entc *ent.Client // ent client
+	Sqlx *sqlx.DB    // sqlx client
 }

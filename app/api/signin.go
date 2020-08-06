@@ -1,20 +1,19 @@
 package api
 
 import (
-	"strconv"
-	"time"
-
 	"github.com/suisrc/zgo/modules/logger"
 
 	"github.com/gin-gonic/gin"
 	"github.com/suisrc/zgo/app/schema"
+	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/helper"
 )
 
 // Signin signin
 type Signin struct {
-	Auther auth.Auther
+	Auther        auth.Auther
+	SigninService service.Signin
 }
 
 // Register 注册路由,认证接口特殊,需要独立注册
@@ -44,8 +43,15 @@ func (a *Signin) signin(c *gin.Context) {
 		return
 	}
 
-	token, err := a.generateAccessToken(c, &body)
+	user, err := a.SigninService.Signin(c, &body)
 	if err != nil {
+		logger.Errorf(c, err.Error())
+		helper.ResError(c, &helper.Err401Unauthorized)
+		return
+	}
+	token, err := a.Auther.GenerateToken(c, user)
+	if err != nil {
+		logger.Errorf(c, err.Error())
 		helper.ResError(c, &helper.Err401Unauthorized)
 		return
 	}
@@ -53,24 +59,11 @@ func (a *Signin) signin(c *gin.Context) {
 	result := schema.SigninResult{
 		Status:  "ok",
 		Token:   token.GetAccessToken(),
-		Expired: token.GetExpiresAt() - time.Now().Unix(),
+		Expired: token.GetExpiresAt(),
+		//Expired: token.GetExpiresAt() - time.Now().Unix(),
 	}
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
-}
-
-// generateToken 生成访问令牌
-func (a *Signin) generateAccessToken(c *gin.Context, body *schema.SigninBody) (auth.TokenInfo, error) {
-
-	user := &schema.SigninUser{}
-
-	user.UserName = body.Username
-	user.UserID = strconv.Itoa(1)
-	user.RoleID = "basic"
-	user.Issuer = "t.icgear.cn"
-	user.Audience = "go.t.icgear.cn"
-
-	return a.Auther.GenerateToken(c, user)
 }
 
 // Signout godoc

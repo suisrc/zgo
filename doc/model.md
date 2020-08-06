@@ -33,7 +33,7 @@ excludes=
 | account       | 账户           | 字符串   | 账户和账户类型和账户归属平台构成唯一标识            | varchar(255), udx_account                            |
 | account_type  | 账户类型       | 字符串   | 1:user 2:mobile 3:email 4:openid 5:unionid 6:token  | varchar(16) DEFAULT 'user', udx_account              |
 | platform      | 账户归属平台   | 字符串   | 1:ZGO(当前平台) 2:OA2-[OAuth2.id](第三方平台)       | varchar(16) DEFAULT 'ZGO', udx_account               |
-| verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2                             | varchar(16)                                          |
+| verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2                             | varchar(16) DEFAULT 'PASSWD'                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | password      | 登录密码       | 字符串   |                                                     | varchar(255)                                         |
 | password_salt | 密码盐值       | 字符串   |                                                     | varchar(255)                                         |

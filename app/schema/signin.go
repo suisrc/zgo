@@ -1,18 +1,20 @@
 package schema
 
-import "github.com/suisrc/zgo/modules/auth"
+import (
+	"database/sql"
+
+	"github.com/suisrc/zgo/modules/auth"
+)
 
 // SigninBody 登陆参数
 type SigninBody struct {
-	Username string `json:"usrname" binding:"required"` // 账户
-	Password string `json:"password"`                   // 密码
-	Mobile   string `json:"mobile"`                     // 手机号
-	Captcha  string `json:"captcha"`                    // 验证码
-	Code     string `json:"code"`                       // 登陆方式
-	Type     string `json:"type"`                       // 登陆类型 <系统>:<类型>:<备注>
-	Role     string `json:"role"`                       // 角色
-	Reset    bool   `json:"reset"`                      // 重置登陆
-
+	Username string `json:"username" binding:"required"` // 账户
+	Password string `json:"password" binding:"required"` // 密码
+	Captcha  string `json:"captcha"`                     // 验证码
+	Code     string `json:"code"`                        // 标识码
+	Role     string `json:"role"`                        // 角色
+	Attach   string `json:"attach"`                      // reset:重置登入 refresh:刷新令牌
+	Client   string `json:"client"`                      // 应用, 默认为主应用, 为空
 }
 
 // SigninResult 登陆返回值
@@ -70,4 +72,43 @@ func (s *SigninUser) GetIssuer() string {
 // GetAudience 令牌接收者
 func (s *SigninUser) GetAudience() string {
 	return s.Audience
+}
+
+// UserSignin user
+type UserSignin struct {
+	ID   int    `db:"id"`
+	UID  string `db:"uid"`
+	Name string `db:"name"`
+}
+
+// RoleSignin role
+type RoleSignin struct {
+	ID   int    `db:"id"`
+	UID  string `db:"uid"`
+	Name string `db:"name"`
+}
+
+// ClientSignin client
+type ClientSignin struct {
+	ID       int            `db:"id"`
+	Issuer   sql.NullString `db:"issuer"`
+	Audience sql.NullString `db:"audience"`
+}
+
+// AccountSignin account
+type AccountSignin struct {
+	ID           int            `db:"id"`
+	Account      string         `db:"account"`
+	AccountType  string         `db:"account_type"`
+	Platform     string         `db:"platform"`
+	VerifyType   sql.NullString `db:"verify_type"`
+	Password     sql.NullString `db:"password"`
+	PasswordSalt sql.NullString `db:"password_salt"`
+	PasswordType sql.NullString `db:"password_type"`
+	UserID       int            `db:"user_id"`
+	RoleID       sql.NullInt64  `db:"role_id"`
+	OAuth2ID     sql.NullInt64  `db:"oauth2_id"`
+
+	// SQLX1 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
+	// SQLX2 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
 }
