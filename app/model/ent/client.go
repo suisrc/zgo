@@ -11,9 +11,22 @@ import (
 
 	"github.com/suisrc/zgo/app/model/ent/account"
 	"github.com/suisrc/zgo/app/model/ent/menu"
+	"github.com/suisrc/zgo/app/model/ent/menuaction"
+	"github.com/suisrc/zgo/app/model/ent/menurole"
+	"github.com/suisrc/zgo/app/model/ent/oauth2account"
+	"github.com/suisrc/zgo/app/model/ent/oauth2client"
+	"github.com/suisrc/zgo/app/model/ent/oauth2third"
+	"github.com/suisrc/zgo/app/model/ent/oauth2token"
 	"github.com/suisrc/zgo/app/model/ent/resource"
+	"github.com/suisrc/zgo/app/model/ent/resourcerole"
+	"github.com/suisrc/zgo/app/model/ent/resourceuser"
 	"github.com/suisrc/zgo/app/model/ent/role"
+	"github.com/suisrc/zgo/app/model/ent/rolerole"
+	"github.com/suisrc/zgo/app/model/ent/tagcommon"
 	"github.com/suisrc/zgo/app/model/ent/user"
+	"github.com/suisrc/zgo/app/model/ent/userdetail"
+	"github.com/suisrc/zgo/app/model/ent/usermessage"
+	"github.com/suisrc/zgo/app/model/ent/userrole"
 
 	"github.com/facebookincubator/ent/dialect"
 	"github.com/facebookincubator/ent/dialect/sql"
@@ -28,12 +41,38 @@ type Client struct {
 	Account *AccountClient
 	// Menu is the client for interacting with the Menu builders.
 	Menu *MenuClient
+	// MenuAction is the client for interacting with the MenuAction builders.
+	MenuAction *MenuActionClient
+	// MenuRole is the client for interacting with the MenuRole builders.
+	MenuRole *MenuRoleClient
+	// Oauth2Account is the client for interacting with the Oauth2Account builders.
+	Oauth2Account *Oauth2AccountClient
+	// Oauth2Client is the client for interacting with the Oauth2Client builders.
+	Oauth2Client *Oauth2ClientClient
+	// Oauth2Third is the client for interacting with the Oauth2Third builders.
+	Oauth2Third *Oauth2ThirdClient
+	// Oauth2Token is the client for interacting with the Oauth2Token builders.
+	Oauth2Token *Oauth2TokenClient
 	// Resource is the client for interacting with the Resource builders.
 	Resource *ResourceClient
+	// ResourceRole is the client for interacting with the ResourceRole builders.
+	ResourceRole *ResourceRoleClient
+	// ResourceUser is the client for interacting with the ResourceUser builders.
+	ResourceUser *ResourceUserClient
 	// Role is the client for interacting with the Role builders.
 	Role *RoleClient
+	// RoleRole is the client for interacting with the RoleRole builders.
+	RoleRole *RoleRoleClient
+	// TagCommon is the client for interacting with the TagCommon builders.
+	TagCommon *TagCommonClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserDetail is the client for interacting with the UserDetail builders.
+	UserDetail *UserDetailClient
+	// UserMessage is the client for interacting with the UserMessage builders.
+	UserMessage *UserMessageClient
+	// UserRole is the client for interacting with the UserRole builders.
+	UserRole *UserRoleClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -49,9 +88,22 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Account = NewAccountClient(c.config)
 	c.Menu = NewMenuClient(c.config)
+	c.MenuAction = NewMenuActionClient(c.config)
+	c.MenuRole = NewMenuRoleClient(c.config)
+	c.Oauth2Account = NewOauth2AccountClient(c.config)
+	c.Oauth2Client = NewOauth2ClientClient(c.config)
+	c.Oauth2Third = NewOauth2ThirdClient(c.config)
+	c.Oauth2Token = NewOauth2TokenClient(c.config)
 	c.Resource = NewResourceClient(c.config)
+	c.ResourceRole = NewResourceRoleClient(c.config)
+	c.ResourceUser = NewResourceUserClient(c.config)
 	c.Role = NewRoleClient(c.config)
+	c.RoleRole = NewRoleRoleClient(c.config)
+	c.TagCommon = NewTagCommonClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.UserDetail = NewUserDetailClient(c.config)
+	c.UserMessage = NewUserMessageClient(c.config)
+	c.UserRole = NewUserRoleClient(c.config)
 }
 
 // Open opens a database/sql.DB specified by the driver name and
@@ -82,13 +134,26 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	}
 	cfg := config{driver: tx, log: c.log, debug: c.debug, hooks: c.hooks}
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Account:  NewAccountClient(cfg),
-		Menu:     NewMenuClient(cfg),
-		Resource: NewResourceClient(cfg),
-		Role:     NewRoleClient(cfg),
-		User:     NewUserClient(cfg),
+		ctx:           ctx,
+		config:        cfg,
+		Account:       NewAccountClient(cfg),
+		Menu:          NewMenuClient(cfg),
+		MenuAction:    NewMenuActionClient(cfg),
+		MenuRole:      NewMenuRoleClient(cfg),
+		Oauth2Account: NewOauth2AccountClient(cfg),
+		Oauth2Client:  NewOauth2ClientClient(cfg),
+		Oauth2Third:   NewOauth2ThirdClient(cfg),
+		Oauth2Token:   NewOauth2TokenClient(cfg),
+		Resource:      NewResourceClient(cfg),
+		ResourceRole:  NewResourceRoleClient(cfg),
+		ResourceUser:  NewResourceUserClient(cfg),
+		Role:          NewRoleClient(cfg),
+		RoleRole:      NewRoleRoleClient(cfg),
+		TagCommon:     NewTagCommonClient(cfg),
+		User:          NewUserClient(cfg),
+		UserDetail:    NewUserDetailClient(cfg),
+		UserMessage:   NewUserMessageClient(cfg),
+		UserRole:      NewUserRoleClient(cfg),
 	}, nil
 }
 
@@ -103,12 +168,25 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	}
 	cfg := config{driver: &txDriver{tx: tx, drv: c.driver}, log: c.log, debug: c.debug, hooks: c.hooks}
 	return &Tx{
-		config:   cfg,
-		Account:  NewAccountClient(cfg),
-		Menu:     NewMenuClient(cfg),
-		Resource: NewResourceClient(cfg),
-		Role:     NewRoleClient(cfg),
-		User:     NewUserClient(cfg),
+		config:        cfg,
+		Account:       NewAccountClient(cfg),
+		Menu:          NewMenuClient(cfg),
+		MenuAction:    NewMenuActionClient(cfg),
+		MenuRole:      NewMenuRoleClient(cfg),
+		Oauth2Account: NewOauth2AccountClient(cfg),
+		Oauth2Client:  NewOauth2ClientClient(cfg),
+		Oauth2Third:   NewOauth2ThirdClient(cfg),
+		Oauth2Token:   NewOauth2TokenClient(cfg),
+		Resource:      NewResourceClient(cfg),
+		ResourceRole:  NewResourceRoleClient(cfg),
+		ResourceUser:  NewResourceUserClient(cfg),
+		Role:          NewRoleClient(cfg),
+		RoleRole:      NewRoleRoleClient(cfg),
+		TagCommon:     NewTagCommonClient(cfg),
+		User:          NewUserClient(cfg),
+		UserDetail:    NewUserDetailClient(cfg),
+		UserMessage:   NewUserMessageClient(cfg),
+		UserRole:      NewUserRoleClient(cfg),
 	}, nil
 }
 
@@ -139,9 +217,22 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	c.Account.Use(hooks...)
 	c.Menu.Use(hooks...)
+	c.MenuAction.Use(hooks...)
+	c.MenuRole.Use(hooks...)
+	c.Oauth2Account.Use(hooks...)
+	c.Oauth2Client.Use(hooks...)
+	c.Oauth2Third.Use(hooks...)
+	c.Oauth2Token.Use(hooks...)
 	c.Resource.Use(hooks...)
+	c.ResourceRole.Use(hooks...)
+	c.ResourceUser.Use(hooks...)
 	c.Role.Use(hooks...)
+	c.RoleRole.Use(hooks...)
+	c.TagCommon.Use(hooks...)
 	c.User.Use(hooks...)
+	c.UserDetail.Use(hooks...)
+	c.UserMessage.Use(hooks...)
+	c.UserRole.Use(hooks...)
 }
 
 // AccountClient is a client for the Account schema.
@@ -310,6 +401,504 @@ func (c *MenuClient) Hooks() []Hook {
 	return c.hooks.Menu
 }
 
+// MenuActionClient is a client for the MenuAction schema.
+type MenuActionClient struct {
+	config
+}
+
+// NewMenuActionClient returns a client for the MenuAction from the given config.
+func NewMenuActionClient(c config) *MenuActionClient {
+	return &MenuActionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `menuaction.Hooks(f(g(h())))`.
+func (c *MenuActionClient) Use(hooks ...Hook) {
+	c.hooks.MenuAction = append(c.hooks.MenuAction, hooks...)
+}
+
+// Create returns a create builder for MenuAction.
+func (c *MenuActionClient) Create() *MenuActionCreate {
+	mutation := newMenuActionMutation(c.config, OpCreate)
+	return &MenuActionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for MenuAction.
+func (c *MenuActionClient) Update() *MenuActionUpdate {
+	mutation := newMenuActionMutation(c.config, OpUpdate)
+	return &MenuActionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MenuActionClient) UpdateOne(ma *MenuAction) *MenuActionUpdateOne {
+	mutation := newMenuActionMutation(c.config, OpUpdateOne, withMenuAction(ma))
+	return &MenuActionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MenuActionClient) UpdateOneID(id int) *MenuActionUpdateOne {
+	mutation := newMenuActionMutation(c.config, OpUpdateOne, withMenuActionID(id))
+	return &MenuActionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MenuAction.
+func (c *MenuActionClient) Delete() *MenuActionDelete {
+	mutation := newMenuActionMutation(c.config, OpDelete)
+	return &MenuActionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *MenuActionClient) DeleteOne(ma *MenuAction) *MenuActionDeleteOne {
+	return c.DeleteOneID(ma.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *MenuActionClient) DeleteOneID(id int) *MenuActionDeleteOne {
+	builder := c.Delete().Where(menuaction.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MenuActionDeleteOne{builder}
+}
+
+// Create returns a query builder for MenuAction.
+func (c *MenuActionClient) Query() *MenuActionQuery {
+	return &MenuActionQuery{config: c.config}
+}
+
+// Get returns a MenuAction entity by its id.
+func (c *MenuActionClient) Get(ctx context.Context, id int) (*MenuAction, error) {
+	return c.Query().Where(menuaction.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MenuActionClient) GetX(ctx context.Context, id int) *MenuAction {
+	ma, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return ma
+}
+
+// Hooks returns the client hooks.
+func (c *MenuActionClient) Hooks() []Hook {
+	return c.hooks.MenuAction
+}
+
+// MenuRoleClient is a client for the MenuRole schema.
+type MenuRoleClient struct {
+	config
+}
+
+// NewMenuRoleClient returns a client for the MenuRole from the given config.
+func NewMenuRoleClient(c config) *MenuRoleClient {
+	return &MenuRoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `menurole.Hooks(f(g(h())))`.
+func (c *MenuRoleClient) Use(hooks ...Hook) {
+	c.hooks.MenuRole = append(c.hooks.MenuRole, hooks...)
+}
+
+// Create returns a create builder for MenuRole.
+func (c *MenuRoleClient) Create() *MenuRoleCreate {
+	mutation := newMenuRoleMutation(c.config, OpCreate)
+	return &MenuRoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for MenuRole.
+func (c *MenuRoleClient) Update() *MenuRoleUpdate {
+	mutation := newMenuRoleMutation(c.config, OpUpdate)
+	return &MenuRoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MenuRoleClient) UpdateOne(mr *MenuRole) *MenuRoleUpdateOne {
+	mutation := newMenuRoleMutation(c.config, OpUpdateOne, withMenuRole(mr))
+	return &MenuRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MenuRoleClient) UpdateOneID(id int) *MenuRoleUpdateOne {
+	mutation := newMenuRoleMutation(c.config, OpUpdateOne, withMenuRoleID(id))
+	return &MenuRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MenuRole.
+func (c *MenuRoleClient) Delete() *MenuRoleDelete {
+	mutation := newMenuRoleMutation(c.config, OpDelete)
+	return &MenuRoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *MenuRoleClient) DeleteOne(mr *MenuRole) *MenuRoleDeleteOne {
+	return c.DeleteOneID(mr.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *MenuRoleClient) DeleteOneID(id int) *MenuRoleDeleteOne {
+	builder := c.Delete().Where(menurole.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MenuRoleDeleteOne{builder}
+}
+
+// Create returns a query builder for MenuRole.
+func (c *MenuRoleClient) Query() *MenuRoleQuery {
+	return &MenuRoleQuery{config: c.config}
+}
+
+// Get returns a MenuRole entity by its id.
+func (c *MenuRoleClient) Get(ctx context.Context, id int) (*MenuRole, error) {
+	return c.Query().Where(menurole.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MenuRoleClient) GetX(ctx context.Context, id int) *MenuRole {
+	mr, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return mr
+}
+
+// Hooks returns the client hooks.
+func (c *MenuRoleClient) Hooks() []Hook {
+	return c.hooks.MenuRole
+}
+
+// Oauth2AccountClient is a client for the Oauth2Account schema.
+type Oauth2AccountClient struct {
+	config
+}
+
+// NewOauth2AccountClient returns a client for the Oauth2Account from the given config.
+func NewOauth2AccountClient(c config) *Oauth2AccountClient {
+	return &Oauth2AccountClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `oauth2account.Hooks(f(g(h())))`.
+func (c *Oauth2AccountClient) Use(hooks ...Hook) {
+	c.hooks.Oauth2Account = append(c.hooks.Oauth2Account, hooks...)
+}
+
+// Create returns a create builder for Oauth2Account.
+func (c *Oauth2AccountClient) Create() *Oauth2AccountCreate {
+	mutation := newOauth2AccountMutation(c.config, OpCreate)
+	return &Oauth2AccountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for Oauth2Account.
+func (c *Oauth2AccountClient) Update() *Oauth2AccountUpdate {
+	mutation := newOauth2AccountMutation(c.config, OpUpdate)
+	return &Oauth2AccountUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *Oauth2AccountClient) UpdateOne(o *Oauth2Account) *Oauth2AccountUpdateOne {
+	mutation := newOauth2AccountMutation(c.config, OpUpdateOne, withOauth2Account(o))
+	return &Oauth2AccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *Oauth2AccountClient) UpdateOneID(id int) *Oauth2AccountUpdateOne {
+	mutation := newOauth2AccountMutation(c.config, OpUpdateOne, withOauth2AccountID(id))
+	return &Oauth2AccountUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Oauth2Account.
+func (c *Oauth2AccountClient) Delete() *Oauth2AccountDelete {
+	mutation := newOauth2AccountMutation(c.config, OpDelete)
+	return &Oauth2AccountDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *Oauth2AccountClient) DeleteOne(o *Oauth2Account) *Oauth2AccountDeleteOne {
+	return c.DeleteOneID(o.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *Oauth2AccountClient) DeleteOneID(id int) *Oauth2AccountDeleteOne {
+	builder := c.Delete().Where(oauth2account.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &Oauth2AccountDeleteOne{builder}
+}
+
+// Create returns a query builder for Oauth2Account.
+func (c *Oauth2AccountClient) Query() *Oauth2AccountQuery {
+	return &Oauth2AccountQuery{config: c.config}
+}
+
+// Get returns a Oauth2Account entity by its id.
+func (c *Oauth2AccountClient) Get(ctx context.Context, id int) (*Oauth2Account, error) {
+	return c.Query().Where(oauth2account.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *Oauth2AccountClient) GetX(ctx context.Context, id int) *Oauth2Account {
+	o, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return o
+}
+
+// Hooks returns the client hooks.
+func (c *Oauth2AccountClient) Hooks() []Hook {
+	return c.hooks.Oauth2Account
+}
+
+// Oauth2ClientClient is a client for the Oauth2Client schema.
+type Oauth2ClientClient struct {
+	config
+}
+
+// NewOauth2ClientClient returns a client for the Oauth2Client from the given config.
+func NewOauth2ClientClient(c config) *Oauth2ClientClient {
+	return &Oauth2ClientClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `oauth2client.Hooks(f(g(h())))`.
+func (c *Oauth2ClientClient) Use(hooks ...Hook) {
+	c.hooks.Oauth2Client = append(c.hooks.Oauth2Client, hooks...)
+}
+
+// Create returns a create builder for Oauth2Client.
+func (c *Oauth2ClientClient) Create() *Oauth2ClientCreate {
+	mutation := newOauth2ClientMutation(c.config, OpCreate)
+	return &Oauth2ClientCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for Oauth2Client.
+func (c *Oauth2ClientClient) Update() *Oauth2ClientUpdate {
+	mutation := newOauth2ClientMutation(c.config, OpUpdate)
+	return &Oauth2ClientUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *Oauth2ClientClient) UpdateOne(o *Oauth2Client) *Oauth2ClientUpdateOne {
+	mutation := newOauth2ClientMutation(c.config, OpUpdateOne, withOauth2Client(o))
+	return &Oauth2ClientUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *Oauth2ClientClient) UpdateOneID(id int) *Oauth2ClientUpdateOne {
+	mutation := newOauth2ClientMutation(c.config, OpUpdateOne, withOauth2ClientID(id))
+	return &Oauth2ClientUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Oauth2Client.
+func (c *Oauth2ClientClient) Delete() *Oauth2ClientDelete {
+	mutation := newOauth2ClientMutation(c.config, OpDelete)
+	return &Oauth2ClientDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *Oauth2ClientClient) DeleteOne(o *Oauth2Client) *Oauth2ClientDeleteOne {
+	return c.DeleteOneID(o.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *Oauth2ClientClient) DeleteOneID(id int) *Oauth2ClientDeleteOne {
+	builder := c.Delete().Where(oauth2client.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &Oauth2ClientDeleteOne{builder}
+}
+
+// Create returns a query builder for Oauth2Client.
+func (c *Oauth2ClientClient) Query() *Oauth2ClientQuery {
+	return &Oauth2ClientQuery{config: c.config}
+}
+
+// Get returns a Oauth2Client entity by its id.
+func (c *Oauth2ClientClient) Get(ctx context.Context, id int) (*Oauth2Client, error) {
+	return c.Query().Where(oauth2client.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *Oauth2ClientClient) GetX(ctx context.Context, id int) *Oauth2Client {
+	o, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return o
+}
+
+// Hooks returns the client hooks.
+func (c *Oauth2ClientClient) Hooks() []Hook {
+	return c.hooks.Oauth2Client
+}
+
+// Oauth2ThirdClient is a client for the Oauth2Third schema.
+type Oauth2ThirdClient struct {
+	config
+}
+
+// NewOauth2ThirdClient returns a client for the Oauth2Third from the given config.
+func NewOauth2ThirdClient(c config) *Oauth2ThirdClient {
+	return &Oauth2ThirdClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `oauth2third.Hooks(f(g(h())))`.
+func (c *Oauth2ThirdClient) Use(hooks ...Hook) {
+	c.hooks.Oauth2Third = append(c.hooks.Oauth2Third, hooks...)
+}
+
+// Create returns a create builder for Oauth2Third.
+func (c *Oauth2ThirdClient) Create() *Oauth2ThirdCreate {
+	mutation := newOauth2ThirdMutation(c.config, OpCreate)
+	return &Oauth2ThirdCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for Oauth2Third.
+func (c *Oauth2ThirdClient) Update() *Oauth2ThirdUpdate {
+	mutation := newOauth2ThirdMutation(c.config, OpUpdate)
+	return &Oauth2ThirdUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *Oauth2ThirdClient) UpdateOne(o *Oauth2Third) *Oauth2ThirdUpdateOne {
+	mutation := newOauth2ThirdMutation(c.config, OpUpdateOne, withOauth2Third(o))
+	return &Oauth2ThirdUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *Oauth2ThirdClient) UpdateOneID(id int) *Oauth2ThirdUpdateOne {
+	mutation := newOauth2ThirdMutation(c.config, OpUpdateOne, withOauth2ThirdID(id))
+	return &Oauth2ThirdUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Oauth2Third.
+func (c *Oauth2ThirdClient) Delete() *Oauth2ThirdDelete {
+	mutation := newOauth2ThirdMutation(c.config, OpDelete)
+	return &Oauth2ThirdDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *Oauth2ThirdClient) DeleteOne(o *Oauth2Third) *Oauth2ThirdDeleteOne {
+	return c.DeleteOneID(o.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *Oauth2ThirdClient) DeleteOneID(id int) *Oauth2ThirdDeleteOne {
+	builder := c.Delete().Where(oauth2third.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &Oauth2ThirdDeleteOne{builder}
+}
+
+// Create returns a query builder for Oauth2Third.
+func (c *Oauth2ThirdClient) Query() *Oauth2ThirdQuery {
+	return &Oauth2ThirdQuery{config: c.config}
+}
+
+// Get returns a Oauth2Third entity by its id.
+func (c *Oauth2ThirdClient) Get(ctx context.Context, id int) (*Oauth2Third, error) {
+	return c.Query().Where(oauth2third.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *Oauth2ThirdClient) GetX(ctx context.Context, id int) *Oauth2Third {
+	o, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return o
+}
+
+// Hooks returns the client hooks.
+func (c *Oauth2ThirdClient) Hooks() []Hook {
+	return c.hooks.Oauth2Third
+}
+
+// Oauth2TokenClient is a client for the Oauth2Token schema.
+type Oauth2TokenClient struct {
+	config
+}
+
+// NewOauth2TokenClient returns a client for the Oauth2Token from the given config.
+func NewOauth2TokenClient(c config) *Oauth2TokenClient {
+	return &Oauth2TokenClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `oauth2token.Hooks(f(g(h())))`.
+func (c *Oauth2TokenClient) Use(hooks ...Hook) {
+	c.hooks.Oauth2Token = append(c.hooks.Oauth2Token, hooks...)
+}
+
+// Create returns a create builder for Oauth2Token.
+func (c *Oauth2TokenClient) Create() *Oauth2TokenCreate {
+	mutation := newOauth2TokenMutation(c.config, OpCreate)
+	return &Oauth2TokenCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for Oauth2Token.
+func (c *Oauth2TokenClient) Update() *Oauth2TokenUpdate {
+	mutation := newOauth2TokenMutation(c.config, OpUpdate)
+	return &Oauth2TokenUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *Oauth2TokenClient) UpdateOne(o *Oauth2Token) *Oauth2TokenUpdateOne {
+	mutation := newOauth2TokenMutation(c.config, OpUpdateOne, withOauth2Token(o))
+	return &Oauth2TokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *Oauth2TokenClient) UpdateOneID(id int) *Oauth2TokenUpdateOne {
+	mutation := newOauth2TokenMutation(c.config, OpUpdateOne, withOauth2TokenID(id))
+	return &Oauth2TokenUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Oauth2Token.
+func (c *Oauth2TokenClient) Delete() *Oauth2TokenDelete {
+	mutation := newOauth2TokenMutation(c.config, OpDelete)
+	return &Oauth2TokenDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *Oauth2TokenClient) DeleteOne(o *Oauth2Token) *Oauth2TokenDeleteOne {
+	return c.DeleteOneID(o.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *Oauth2TokenClient) DeleteOneID(id int) *Oauth2TokenDeleteOne {
+	builder := c.Delete().Where(oauth2token.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &Oauth2TokenDeleteOne{builder}
+}
+
+// Create returns a query builder for Oauth2Token.
+func (c *Oauth2TokenClient) Query() *Oauth2TokenQuery {
+	return &Oauth2TokenQuery{config: c.config}
+}
+
+// Get returns a Oauth2Token entity by its id.
+func (c *Oauth2TokenClient) Get(ctx context.Context, id int) (*Oauth2Token, error) {
+	return c.Query().Where(oauth2token.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *Oauth2TokenClient) GetX(ctx context.Context, id int) *Oauth2Token {
+	o, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return o
+}
+
+// Hooks returns the client hooks.
+func (c *Oauth2TokenClient) Hooks() []Hook {
+	return c.hooks.Oauth2Token
+}
+
 // ResourceClient is a client for the Resource schema.
 type ResourceClient struct {
 	config
@@ -391,6 +980,172 @@ func (c *ResourceClient) GetX(ctx context.Context, id int) *Resource {
 // Hooks returns the client hooks.
 func (c *ResourceClient) Hooks() []Hook {
 	return c.hooks.Resource
+}
+
+// ResourceRoleClient is a client for the ResourceRole schema.
+type ResourceRoleClient struct {
+	config
+}
+
+// NewResourceRoleClient returns a client for the ResourceRole from the given config.
+func NewResourceRoleClient(c config) *ResourceRoleClient {
+	return &ResourceRoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resourcerole.Hooks(f(g(h())))`.
+func (c *ResourceRoleClient) Use(hooks ...Hook) {
+	c.hooks.ResourceRole = append(c.hooks.ResourceRole, hooks...)
+}
+
+// Create returns a create builder for ResourceRole.
+func (c *ResourceRoleClient) Create() *ResourceRoleCreate {
+	mutation := newResourceRoleMutation(c.config, OpCreate)
+	return &ResourceRoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for ResourceRole.
+func (c *ResourceRoleClient) Update() *ResourceRoleUpdate {
+	mutation := newResourceRoleMutation(c.config, OpUpdate)
+	return &ResourceRoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResourceRoleClient) UpdateOne(rr *ResourceRole) *ResourceRoleUpdateOne {
+	mutation := newResourceRoleMutation(c.config, OpUpdateOne, withResourceRole(rr))
+	return &ResourceRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResourceRoleClient) UpdateOneID(id int) *ResourceRoleUpdateOne {
+	mutation := newResourceRoleMutation(c.config, OpUpdateOne, withResourceRoleID(id))
+	return &ResourceRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ResourceRole.
+func (c *ResourceRoleClient) Delete() *ResourceRoleDelete {
+	mutation := newResourceRoleMutation(c.config, OpDelete)
+	return &ResourceRoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *ResourceRoleClient) DeleteOne(rr *ResourceRole) *ResourceRoleDeleteOne {
+	return c.DeleteOneID(rr.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *ResourceRoleClient) DeleteOneID(id int) *ResourceRoleDeleteOne {
+	builder := c.Delete().Where(resourcerole.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResourceRoleDeleteOne{builder}
+}
+
+// Create returns a query builder for ResourceRole.
+func (c *ResourceRoleClient) Query() *ResourceRoleQuery {
+	return &ResourceRoleQuery{config: c.config}
+}
+
+// Get returns a ResourceRole entity by its id.
+func (c *ResourceRoleClient) Get(ctx context.Context, id int) (*ResourceRole, error) {
+	return c.Query().Where(resourcerole.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResourceRoleClient) GetX(ctx context.Context, id int) *ResourceRole {
+	rr, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return rr
+}
+
+// Hooks returns the client hooks.
+func (c *ResourceRoleClient) Hooks() []Hook {
+	return c.hooks.ResourceRole
+}
+
+// ResourceUserClient is a client for the ResourceUser schema.
+type ResourceUserClient struct {
+	config
+}
+
+// NewResourceUserClient returns a client for the ResourceUser from the given config.
+func NewResourceUserClient(c config) *ResourceUserClient {
+	return &ResourceUserClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `resourceuser.Hooks(f(g(h())))`.
+func (c *ResourceUserClient) Use(hooks ...Hook) {
+	c.hooks.ResourceUser = append(c.hooks.ResourceUser, hooks...)
+}
+
+// Create returns a create builder for ResourceUser.
+func (c *ResourceUserClient) Create() *ResourceUserCreate {
+	mutation := newResourceUserMutation(c.config, OpCreate)
+	return &ResourceUserCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for ResourceUser.
+func (c *ResourceUserClient) Update() *ResourceUserUpdate {
+	mutation := newResourceUserMutation(c.config, OpUpdate)
+	return &ResourceUserUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ResourceUserClient) UpdateOne(ru *ResourceUser) *ResourceUserUpdateOne {
+	mutation := newResourceUserMutation(c.config, OpUpdateOne, withResourceUser(ru))
+	return &ResourceUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ResourceUserClient) UpdateOneID(id int) *ResourceUserUpdateOne {
+	mutation := newResourceUserMutation(c.config, OpUpdateOne, withResourceUserID(id))
+	return &ResourceUserUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ResourceUser.
+func (c *ResourceUserClient) Delete() *ResourceUserDelete {
+	mutation := newResourceUserMutation(c.config, OpDelete)
+	return &ResourceUserDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *ResourceUserClient) DeleteOne(ru *ResourceUser) *ResourceUserDeleteOne {
+	return c.DeleteOneID(ru.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *ResourceUserClient) DeleteOneID(id int) *ResourceUserDeleteOne {
+	builder := c.Delete().Where(resourceuser.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ResourceUserDeleteOne{builder}
+}
+
+// Create returns a query builder for ResourceUser.
+func (c *ResourceUserClient) Query() *ResourceUserQuery {
+	return &ResourceUserQuery{config: c.config}
+}
+
+// Get returns a ResourceUser entity by its id.
+func (c *ResourceUserClient) Get(ctx context.Context, id int) (*ResourceUser, error) {
+	return c.Query().Where(resourceuser.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ResourceUserClient) GetX(ctx context.Context, id int) *ResourceUser {
+	ru, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return ru
+}
+
+// Hooks returns the client hooks.
+func (c *ResourceUserClient) Hooks() []Hook {
+	return c.hooks.ResourceUser
 }
 
 // RoleClient is a client for the Role schema.
@@ -476,6 +1231,172 @@ func (c *RoleClient) Hooks() []Hook {
 	return c.hooks.Role
 }
 
+// RoleRoleClient is a client for the RoleRole schema.
+type RoleRoleClient struct {
+	config
+}
+
+// NewRoleRoleClient returns a client for the RoleRole from the given config.
+func NewRoleRoleClient(c config) *RoleRoleClient {
+	return &RoleRoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `rolerole.Hooks(f(g(h())))`.
+func (c *RoleRoleClient) Use(hooks ...Hook) {
+	c.hooks.RoleRole = append(c.hooks.RoleRole, hooks...)
+}
+
+// Create returns a create builder for RoleRole.
+func (c *RoleRoleClient) Create() *RoleRoleCreate {
+	mutation := newRoleRoleMutation(c.config, OpCreate)
+	return &RoleRoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for RoleRole.
+func (c *RoleRoleClient) Update() *RoleRoleUpdate {
+	mutation := newRoleRoleMutation(c.config, OpUpdate)
+	return &RoleRoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *RoleRoleClient) UpdateOne(rr *RoleRole) *RoleRoleUpdateOne {
+	mutation := newRoleRoleMutation(c.config, OpUpdateOne, withRoleRole(rr))
+	return &RoleRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *RoleRoleClient) UpdateOneID(id int) *RoleRoleUpdateOne {
+	mutation := newRoleRoleMutation(c.config, OpUpdateOne, withRoleRoleID(id))
+	return &RoleRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for RoleRole.
+func (c *RoleRoleClient) Delete() *RoleRoleDelete {
+	mutation := newRoleRoleMutation(c.config, OpDelete)
+	return &RoleRoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *RoleRoleClient) DeleteOne(rr *RoleRole) *RoleRoleDeleteOne {
+	return c.DeleteOneID(rr.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *RoleRoleClient) DeleteOneID(id int) *RoleRoleDeleteOne {
+	builder := c.Delete().Where(rolerole.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &RoleRoleDeleteOne{builder}
+}
+
+// Create returns a query builder for RoleRole.
+func (c *RoleRoleClient) Query() *RoleRoleQuery {
+	return &RoleRoleQuery{config: c.config}
+}
+
+// Get returns a RoleRole entity by its id.
+func (c *RoleRoleClient) Get(ctx context.Context, id int) (*RoleRole, error) {
+	return c.Query().Where(rolerole.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *RoleRoleClient) GetX(ctx context.Context, id int) *RoleRole {
+	rr, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return rr
+}
+
+// Hooks returns the client hooks.
+func (c *RoleRoleClient) Hooks() []Hook {
+	return c.hooks.RoleRole
+}
+
+// TagCommonClient is a client for the TagCommon schema.
+type TagCommonClient struct {
+	config
+}
+
+// NewTagCommonClient returns a client for the TagCommon from the given config.
+func NewTagCommonClient(c config) *TagCommonClient {
+	return &TagCommonClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `tagcommon.Hooks(f(g(h())))`.
+func (c *TagCommonClient) Use(hooks ...Hook) {
+	c.hooks.TagCommon = append(c.hooks.TagCommon, hooks...)
+}
+
+// Create returns a create builder for TagCommon.
+func (c *TagCommonClient) Create() *TagCommonCreate {
+	mutation := newTagCommonMutation(c.config, OpCreate)
+	return &TagCommonCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for TagCommon.
+func (c *TagCommonClient) Update() *TagCommonUpdate {
+	mutation := newTagCommonMutation(c.config, OpUpdate)
+	return &TagCommonUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TagCommonClient) UpdateOne(tc *TagCommon) *TagCommonUpdateOne {
+	mutation := newTagCommonMutation(c.config, OpUpdateOne, withTagCommon(tc))
+	return &TagCommonUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TagCommonClient) UpdateOneID(id int) *TagCommonUpdateOne {
+	mutation := newTagCommonMutation(c.config, OpUpdateOne, withTagCommonID(id))
+	return &TagCommonUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TagCommon.
+func (c *TagCommonClient) Delete() *TagCommonDelete {
+	mutation := newTagCommonMutation(c.config, OpDelete)
+	return &TagCommonDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *TagCommonClient) DeleteOne(tc *TagCommon) *TagCommonDeleteOne {
+	return c.DeleteOneID(tc.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *TagCommonClient) DeleteOneID(id int) *TagCommonDeleteOne {
+	builder := c.Delete().Where(tagcommon.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TagCommonDeleteOne{builder}
+}
+
+// Create returns a query builder for TagCommon.
+func (c *TagCommonClient) Query() *TagCommonQuery {
+	return &TagCommonQuery{config: c.config}
+}
+
+// Get returns a TagCommon entity by its id.
+func (c *TagCommonClient) Get(ctx context.Context, id int) (*TagCommon, error) {
+	return c.Query().Where(tagcommon.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TagCommonClient) GetX(ctx context.Context, id int) *TagCommon {
+	tc, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return tc
+}
+
+// Hooks returns the client hooks.
+func (c *TagCommonClient) Hooks() []Hook {
+	return c.hooks.TagCommon
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -557,4 +1478,253 @@ func (c *UserClient) GetX(ctx context.Context, id int) *User {
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
+}
+
+// UserDetailClient is a client for the UserDetail schema.
+type UserDetailClient struct {
+	config
+}
+
+// NewUserDetailClient returns a client for the UserDetail from the given config.
+func NewUserDetailClient(c config) *UserDetailClient {
+	return &UserDetailClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userdetail.Hooks(f(g(h())))`.
+func (c *UserDetailClient) Use(hooks ...Hook) {
+	c.hooks.UserDetail = append(c.hooks.UserDetail, hooks...)
+}
+
+// Create returns a create builder for UserDetail.
+func (c *UserDetailClient) Create() *UserDetailCreate {
+	mutation := newUserDetailMutation(c.config, OpCreate)
+	return &UserDetailCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for UserDetail.
+func (c *UserDetailClient) Update() *UserDetailUpdate {
+	mutation := newUserDetailMutation(c.config, OpUpdate)
+	return &UserDetailUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserDetailClient) UpdateOne(ud *UserDetail) *UserDetailUpdateOne {
+	mutation := newUserDetailMutation(c.config, OpUpdateOne, withUserDetail(ud))
+	return &UserDetailUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserDetailClient) UpdateOneID(id int) *UserDetailUpdateOne {
+	mutation := newUserDetailMutation(c.config, OpUpdateOne, withUserDetailID(id))
+	return &UserDetailUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserDetail.
+func (c *UserDetailClient) Delete() *UserDetailDelete {
+	mutation := newUserDetailMutation(c.config, OpDelete)
+	return &UserDetailDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *UserDetailClient) DeleteOne(ud *UserDetail) *UserDetailDeleteOne {
+	return c.DeleteOneID(ud.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *UserDetailClient) DeleteOneID(id int) *UserDetailDeleteOne {
+	builder := c.Delete().Where(userdetail.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserDetailDeleteOne{builder}
+}
+
+// Create returns a query builder for UserDetail.
+func (c *UserDetailClient) Query() *UserDetailQuery {
+	return &UserDetailQuery{config: c.config}
+}
+
+// Get returns a UserDetail entity by its id.
+func (c *UserDetailClient) Get(ctx context.Context, id int) (*UserDetail, error) {
+	return c.Query().Where(userdetail.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserDetailClient) GetX(ctx context.Context, id int) *UserDetail {
+	ud, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return ud
+}
+
+// Hooks returns the client hooks.
+func (c *UserDetailClient) Hooks() []Hook {
+	return c.hooks.UserDetail
+}
+
+// UserMessageClient is a client for the UserMessage schema.
+type UserMessageClient struct {
+	config
+}
+
+// NewUserMessageClient returns a client for the UserMessage from the given config.
+func NewUserMessageClient(c config) *UserMessageClient {
+	return &UserMessageClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `usermessage.Hooks(f(g(h())))`.
+func (c *UserMessageClient) Use(hooks ...Hook) {
+	c.hooks.UserMessage = append(c.hooks.UserMessage, hooks...)
+}
+
+// Create returns a create builder for UserMessage.
+func (c *UserMessageClient) Create() *UserMessageCreate {
+	mutation := newUserMessageMutation(c.config, OpCreate)
+	return &UserMessageCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for UserMessage.
+func (c *UserMessageClient) Update() *UserMessageUpdate {
+	mutation := newUserMessageMutation(c.config, OpUpdate)
+	return &UserMessageUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserMessageClient) UpdateOne(um *UserMessage) *UserMessageUpdateOne {
+	mutation := newUserMessageMutation(c.config, OpUpdateOne, withUserMessage(um))
+	return &UserMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserMessageClient) UpdateOneID(id int) *UserMessageUpdateOne {
+	mutation := newUserMessageMutation(c.config, OpUpdateOne, withUserMessageID(id))
+	return &UserMessageUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserMessage.
+func (c *UserMessageClient) Delete() *UserMessageDelete {
+	mutation := newUserMessageMutation(c.config, OpDelete)
+	return &UserMessageDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *UserMessageClient) DeleteOne(um *UserMessage) *UserMessageDeleteOne {
+	return c.DeleteOneID(um.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *UserMessageClient) DeleteOneID(id int) *UserMessageDeleteOne {
+	builder := c.Delete().Where(usermessage.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserMessageDeleteOne{builder}
+}
+
+// Create returns a query builder for UserMessage.
+func (c *UserMessageClient) Query() *UserMessageQuery {
+	return &UserMessageQuery{config: c.config}
+}
+
+// Get returns a UserMessage entity by its id.
+func (c *UserMessageClient) Get(ctx context.Context, id int) (*UserMessage, error) {
+	return c.Query().Where(usermessage.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserMessageClient) GetX(ctx context.Context, id int) *UserMessage {
+	um, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return um
+}
+
+// Hooks returns the client hooks.
+func (c *UserMessageClient) Hooks() []Hook {
+	return c.hooks.UserMessage
+}
+
+// UserRoleClient is a client for the UserRole schema.
+type UserRoleClient struct {
+	config
+}
+
+// NewUserRoleClient returns a client for the UserRole from the given config.
+func NewUserRoleClient(c config) *UserRoleClient {
+	return &UserRoleClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userrole.Hooks(f(g(h())))`.
+func (c *UserRoleClient) Use(hooks ...Hook) {
+	c.hooks.UserRole = append(c.hooks.UserRole, hooks...)
+}
+
+// Create returns a create builder for UserRole.
+func (c *UserRoleClient) Create() *UserRoleCreate {
+	mutation := newUserRoleMutation(c.config, OpCreate)
+	return &UserRoleCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Update returns an update builder for UserRole.
+func (c *UserRoleClient) Update() *UserRoleUpdate {
+	mutation := newUserRoleMutation(c.config, OpUpdate)
+	return &UserRoleUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserRoleClient) UpdateOne(ur *UserRole) *UserRoleUpdateOne {
+	mutation := newUserRoleMutation(c.config, OpUpdateOne, withUserRole(ur))
+	return &UserRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserRoleClient) UpdateOneID(id int) *UserRoleUpdateOne {
+	mutation := newUserRoleMutation(c.config, OpUpdateOne, withUserRoleID(id))
+	return &UserRoleUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserRole.
+func (c *UserRoleClient) Delete() *UserRoleDelete {
+	mutation := newUserRoleMutation(c.config, OpDelete)
+	return &UserRoleDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a delete builder for the given entity.
+func (c *UserRoleClient) DeleteOne(ur *UserRole) *UserRoleDeleteOne {
+	return c.DeleteOneID(ur.ID)
+}
+
+// DeleteOneID returns a delete builder for the given id.
+func (c *UserRoleClient) DeleteOneID(id int) *UserRoleDeleteOne {
+	builder := c.Delete().Where(userrole.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserRoleDeleteOne{builder}
+}
+
+// Create returns a query builder for UserRole.
+func (c *UserRoleClient) Query() *UserRoleQuery {
+	return &UserRoleQuery{config: c.config}
+}
+
+// Get returns a UserRole entity by its id.
+func (c *UserRoleClient) Get(ctx context.Context, id int) (*UserRole, error) {
+	return c.Query().Where(userrole.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserRoleClient) GetX(ctx context.Context, id int) *UserRole {
+	ur, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return ur
+}
+
+// Hooks returns the client hooks.
+func (c *UserRoleClient) Hooks() []Hook {
+	return c.hooks.UserRole
 }

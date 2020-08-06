@@ -2,17 +2,105 @@
 
 package account
 
+import (
+	"time"
+)
+
 const (
 	// Label holds the string label denoting the account type in the database.
 	Label = "account"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldAccount holds the string denoting the account field in the database.
+	FieldAccount = "account"
+	// FieldAccountType holds the string denoting the account_type field in the database.
+	FieldAccountType = "account_type"
+	// FieldPlatform holds the string denoting the platform field in the database.
+	FieldPlatform = "platform"
+	// FieldVerifyType holds the string denoting the verify_type field in the database.
+	FieldVerifyType = "verify_type"
+	// FieldPassword holds the string denoting the password field in the database.
+	FieldPassword = "password"
+	// FieldPasswordSalt holds the string denoting the password_salt field in the database.
+	FieldPasswordSalt = "password_salt"
+	// FieldPasswordType holds the string denoting the password_type field in the database.
+	FieldPasswordType = "password_type"
+	// FieldUserID holds the string denoting the user_id field in the database.
+	FieldUserID = "user_id"
+	// FieldRoleID holds the string denoting the role_id field in the database.
+	FieldRoleID = "role_id"
+	// FieldStatus holds the string denoting the status field in the database.
+	FieldStatus = "status"
+	// FieldDesc holds the string denoting the desc field in the database.
+	FieldDesc = "desc"
+	// FieldOauth2ID holds the string denoting the oauth2_id field in the database.
+	FieldOauth2ID = "oauth2_id"
+	// FieldOauth2Token holds the string denoting the oauth2_token field in the database.
+	FieldOauth2Token = "oauth2_token"
+	// FieldOauth2Time holds the string denoting the oauth2_time field in the database.
+	FieldOauth2Time = "oauth2_time"
+	// FieldTokenFake holds the string denoting the token_fake field in the database.
+	FieldTokenFake = "token_fake"
+	// FieldCreator holds the string denoting the creator field in the database.
+	FieldCreator = "creator"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
+	// FieldString1 holds the string denoting the string_1 field in the database.
+	FieldString1 = "string_1"
+	// FieldString2 holds the string denoting the string_2 field in the database.
+	FieldString2 = "string_2"
+	// FieldString3 holds the string denoting the string_3 field in the database.
+	FieldString3 = "string_3"
+	// FieldNumber1 holds the string denoting the number_1 field in the database.
+	FieldNumber1 = "number_1"
+	// FieldNumber2 holds the string denoting the number_2 field in the database.
+	FieldNumber2 = "number_2"
+	// FieldNumber3 holds the string denoting the number_3 field in the database.
+	FieldNumber3 = "number_3"
 
 	// Table holds the table name of the account in the database.
-	Table = "accounts"
+	Table = "account"
 )
 
 // Columns holds all SQL columns for account fields.
 var Columns = []string{
 	FieldID,
+	FieldAccount,
+	FieldAccountType,
+	FieldPlatform,
+	FieldVerifyType,
+	FieldPassword,
+	FieldPasswordSalt,
+	FieldPasswordType,
+	FieldUserID,
+	FieldRoleID,
+	FieldStatus,
+	FieldDesc,
+	FieldOauth2ID,
+	FieldOauth2Token,
+	FieldOauth2Time,
+	FieldTokenFake,
+	FieldCreator,
+	FieldCreatedAt,
+	FieldUpdatedAt,
+	FieldVersion,
+	FieldString1,
+	FieldString2,
+	FieldString3,
+	FieldNumber1,
+	FieldNumber2,
+	FieldNumber3,
 }
+
+var (
+	// DefaultCreatedAt holds the default value on creation for the created_at field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	DefaultUpdatedAt func() time.Time
+	// DefaultVersion holds the default value on creation for the version field.
+	DefaultVersion int
+)

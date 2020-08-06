@@ -1,4 +1,4 @@
-package mysql
+package mysqlcmd
 
 import (
 	"fmt"

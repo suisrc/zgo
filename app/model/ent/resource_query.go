@@ -233,6 +233,19 @@ func (rq *ResourceQuery) Clone() *ResourceQuery {
 
 // GroupBy used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		Resource string `json:"resource,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Resource.Query().
+//		GroupBy(resource.FieldResource).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (rq *ResourceQuery) GroupBy(field string, fields ...string) *ResourceGroupBy {
 	group := &ResourceGroupBy{config: rq.config}
 	group.fields = append([]string{field}, fields...)
@@ -246,6 +259,17 @@ func (rq *ResourceQuery) GroupBy(field string, fields ...string) *ResourceGroupB
 }
 
 // Select one or more fields from the given query.
+//
+// Example:
+//
+//	var v []struct {
+//		Resource string `json:"resource,omitempty"`
+//	}
+//
+//	client.Resource.Query().
+//		Select(resource.FieldResource).
+//		Scan(ctx, &v)
+//
 func (rq *ResourceQuery) Select(field string, fields ...string) *ResourceSelect {
 	selector := &ResourceSelect{config: rq.config}
 	selector.fields = append([]string{field}, fields...)

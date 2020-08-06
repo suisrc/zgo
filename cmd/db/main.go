@@ -5,7 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/suisrc/zgo/cmd/db/mysql"
+	entcmd "github.com/suisrc/zgo/cmd/db/ent"
+	mysqlcmd "github.com/suisrc/zgo/cmd/db/mysql"
 
 	"github.com/urfave/cli/v2"
 )
@@ -22,6 +23,8 @@ func main() {
 	app.Usage = "zgo cmd"
 	app.Commands = []*cli.Command{
 		runMysqlCmd(ctx),
+		runEntcCmd(ctx),
+		runEntcDel(ctx),
 	}
 	err := app.Run(os.Args)
 	if err != nil {
@@ -50,11 +53,59 @@ func runMysqlCmd(ctx context.Context) *cli.Command {
 			},
 		},
 		Action: func(c *cli.Context) error {
-			mf := &mysql.ModelFile{
+			mf := &mysqlcmd.ModelFile{
 				Model:  c.String("model"),
 				Output: c.String("output"),
 			}
 			return mf.RunBuild()
+		},
+	}
+}
+
+func runEntcCmd(ctx context.Context) *cli.Command {
+	return &cli.Command{
+		Name:  "entc",
+		Usage: "构建ent文",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "model",
+				Aliases: []string{"m"},
+				Usage:   "输入文件(.md)",
+			},
+			&cli.StringFlag{
+				Name:    "output",
+				Aliases: []string{"o"},
+				Usage:   "输出文件文件夹",
+			},
+		},
+		Action: func(c *cli.Context) error {
+			mf := &entcmd.ModelFile{
+				Model:  c.String("model"),
+				Output: c.String("output"),
+			}
+			return mf.RunBuild()
+		},
+	}
+}
+
+func runEntcDel(ctx context.Context) *cli.Command {
+	return &cli.Command{
+		Name:  "entc-del",
+		Usage: "删除ent中的实体",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:    "entitys",
+				Aliases: []string{"es"},
+				Usage:   "删除实体列表",
+			},
+			&cli.StringFlag{
+				Name:    "input",
+				Aliases: []string{"o"},
+				Usage:   "输入文件夹",
+			},
+		},
+		Action: func(c *cli.Context) error {
+			return entcmd.RunDel(c.String("input"), c.String("entitys"))
 		},
 	}
 }

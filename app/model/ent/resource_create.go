@@ -4,7 +4,9 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
@@ -18,6 +20,84 @@ type ResourceCreate struct {
 	hooks    []Hook
 }
 
+// SetResource sets the resource field.
+func (rc *ResourceCreate) SetResource(s string) *ResourceCreate {
+	rc.mutation.SetResource(s)
+	return rc
+}
+
+// SetPath sets the path field.
+func (rc *ResourceCreate) SetPath(s string) *ResourceCreate {
+	rc.mutation.SetPath(s)
+	return rc
+}
+
+// SetNetmask sets the netmask field.
+func (rc *ResourceCreate) SetNetmask(s string) *ResourceCreate {
+	rc.mutation.SetNetmask(s)
+	return rc
+}
+
+// SetAllow sets the allow field.
+func (rc *ResourceCreate) SetAllow(i int) *ResourceCreate {
+	rc.mutation.SetAllow(i)
+	return rc
+}
+
+// SetDesc sets the desc field.
+func (rc *ResourceCreate) SetDesc(s string) *ResourceCreate {
+	rc.mutation.SetDesc(s)
+	return rc
+}
+
+// SetCreator sets the creator field.
+func (rc *ResourceCreate) SetCreator(s string) *ResourceCreate {
+	rc.mutation.SetCreator(s)
+	return rc
+}
+
+// SetCreatedAt sets the created_at field.
+func (rc *ResourceCreate) SetCreatedAt(t time.Time) *ResourceCreate {
+	rc.mutation.SetCreatedAt(t)
+	return rc
+}
+
+// SetNillableCreatedAt sets the created_at field if the given value is not nil.
+func (rc *ResourceCreate) SetNillableCreatedAt(t *time.Time) *ResourceCreate {
+	if t != nil {
+		rc.SetCreatedAt(*t)
+	}
+	return rc
+}
+
+// SetUpdatedAt sets the updated_at field.
+func (rc *ResourceCreate) SetUpdatedAt(t time.Time) *ResourceCreate {
+	rc.mutation.SetUpdatedAt(t)
+	return rc
+}
+
+// SetNillableUpdatedAt sets the updated_at field if the given value is not nil.
+func (rc *ResourceCreate) SetNillableUpdatedAt(t *time.Time) *ResourceCreate {
+	if t != nil {
+		rc.SetUpdatedAt(*t)
+	}
+	return rc
+}
+
+// SetVersion sets the version field.
+func (rc *ResourceCreate) SetVersion(i int) *ResourceCreate {
+	rc.mutation.SetVersion(i)
+	return rc
+}
+
+// SetNillableVersion sets the version field if the given value is not nil.
+func (rc *ResourceCreate) SetNillableVersion(i *int) *ResourceCreate {
+	if i != nil {
+		rc.SetVersion(*i)
+	}
+	return rc
+}
+
 // Mutation returns the ResourceMutation object of the builder.
 func (rc *ResourceCreate) Mutation() *ResourceMutation {
 	return rc.mutation
@@ -25,6 +105,36 @@ func (rc *ResourceCreate) Mutation() *ResourceMutation {
 
 // Save creates the Resource in the database.
 func (rc *ResourceCreate) Save(ctx context.Context) (*Resource, error) {
+	if _, ok := rc.mutation.Resource(); !ok {
+		return nil, &ValidationError{Name: "resource", err: errors.New("ent: missing required field \"resource\"")}
+	}
+	if _, ok := rc.mutation.Path(); !ok {
+		return nil, &ValidationError{Name: "path", err: errors.New("ent: missing required field \"path\"")}
+	}
+	if _, ok := rc.mutation.Netmask(); !ok {
+		return nil, &ValidationError{Name: "netmask", err: errors.New("ent: missing required field \"netmask\"")}
+	}
+	if _, ok := rc.mutation.Allow(); !ok {
+		return nil, &ValidationError{Name: "allow", err: errors.New("ent: missing required field \"allow\"")}
+	}
+	if _, ok := rc.mutation.Desc(); !ok {
+		return nil, &ValidationError{Name: "desc", err: errors.New("ent: missing required field \"desc\"")}
+	}
+	if _, ok := rc.mutation.Creator(); !ok {
+		return nil, &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
+	}
+	if _, ok := rc.mutation.CreatedAt(); !ok {
+		v := resource.DefaultCreatedAt()
+		rc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := rc.mutation.UpdatedAt(); !ok {
+		v := resource.DefaultUpdatedAt()
+		rc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := rc.mutation.Version(); !ok {
+		v := resource.DefaultVersion
+		rc.mutation.SetVersion(v)
+	}
 	var (
 		err  error
 		node *Resource
@@ -85,5 +195,77 @@ func (rc *ResourceCreate) createSpec() (*Resource, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := rc.mutation.Resource(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resource.FieldResource,
+		})
+		r.Resource = value
+	}
+	if value, ok := rc.mutation.Path(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resource.FieldPath,
+		})
+		r.Path = value
+	}
+	if value, ok := rc.mutation.Netmask(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resource.FieldNetmask,
+		})
+		r.Netmask = value
+	}
+	if value, ok := rc.mutation.Allow(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: resource.FieldAllow,
+		})
+		r.Allow = value
+	}
+	if value, ok := rc.mutation.Desc(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resource.FieldDesc,
+		})
+		r.Desc = value
+	}
+	if value, ok := rc.mutation.Creator(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: resource.FieldCreator,
+		})
+		r.Creator = value
+	}
+	if value, ok := rc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: resource.FieldCreatedAt,
+		})
+		r.CreatedAt = value
+	}
+	if value, ok := rc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: resource.FieldUpdatedAt,
+		})
+		r.UpdatedAt = value
+	}
+	if value, ok := rc.mutation.Version(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: resource.FieldVersion,
+		})
+		r.Version = value
+	}
 	return r, _spec
 }

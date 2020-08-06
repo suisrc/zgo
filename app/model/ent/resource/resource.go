@@ -2,17 +2,57 @@
 
 package resource
 
+import (
+	"time"
+)
+
 const (
 	// Label holds the string label denoting the resource type in the database.
 	Label = "resource"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldResource holds the string denoting the resource field in the database.
+	FieldResource = "resource"
+	// FieldPath holds the string denoting the path field in the database.
+	FieldPath = "path"
+	// FieldNetmask holds the string denoting the netmask field in the database.
+	FieldNetmask = "netmask"
+	// FieldAllow holds the string denoting the allow field in the database.
+	FieldAllow = "allow"
+	// FieldDesc holds the string denoting the desc field in the database.
+	FieldDesc = "desc"
+	// FieldCreator holds the string denoting the creator field in the database.
+	FieldCreator = "creator"
+	// FieldCreatedAt holds the string denoting the created_at field in the database.
+	FieldCreatedAt = "created_at"
+	// FieldUpdatedAt holds the string denoting the updated_at field in the database.
+	FieldUpdatedAt = "updated_at"
+	// FieldVersion holds the string denoting the version field in the database.
+	FieldVersion = "version"
 
 	// Table holds the table name of the resource in the database.
-	Table = "resources"
+	Table = "resource"
 )
 
 // Columns holds all SQL columns for resource fields.
 var Columns = []string{
 	FieldID,
+	FieldResource,
+	FieldPath,
+	FieldNetmask,
+	FieldAllow,
+	FieldDesc,
+	FieldCreator,
+	FieldCreatedAt,
+	FieldUpdatedAt,
+	FieldVersion,
 }
+
+var (
+	// DefaultCreatedAt holds the default value on creation for the created_at field.
+	DefaultCreatedAt func() time.Time
+	// DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	DefaultUpdatedAt func() time.Time
+	// DefaultVersion holds the default value on creation for the version field.
+	DefaultVersion int
+)

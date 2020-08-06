@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/suisrc/zgo/app/model/ent/resource"
@@ -12,15 +13,42 @@ import (
 
 // Resource is the model entity for the Resource schema.
 type Resource struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// Resource holds the value of the "resource" field.
+	Resource string `json:"resource,omitempty"`
+	// Path holds the value of the "path" field.
+	Path string `json:"path,omitempty"`
+	// Netmask holds the value of the "netmask" field.
+	Netmask string `json:"netmask,omitempty"`
+	// Allow holds the value of the "allow" field.
+	Allow int `json:"allow,omitempty"`
+	// Desc holds the value of the "desc" field.
+	Desc string `json:"desc,omitempty"`
+	// Creator holds the value of the "creator" field.
+	Creator string `json:"creator,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Version holds the value of the "version" field.
+	Version int `json:"version,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Resource) scanValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // id
+		&sql.NullInt64{},  // id
+		&sql.NullString{}, // resource
+		&sql.NullString{}, // path
+		&sql.NullString{}, // netmask
+		&sql.NullInt64{},  // allow
+		&sql.NullString{}, // desc
+		&sql.NullString{}, // creator
+		&sql.NullTime{},   // created_at
+		&sql.NullTime{},   // updated_at
+		&sql.NullInt64{},  // version
 	}
 }
 
@@ -36,6 +64,51 @@ func (r *Resource) assignValues(values ...interface{}) error {
 	}
 	r.ID = int(value.Int64)
 	values = values[1:]
+	if value, ok := values[0].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field resource", values[0])
+	} else if value.Valid {
+		r.Resource = value.String
+	}
+	if value, ok := values[1].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field path", values[1])
+	} else if value.Valid {
+		r.Path = value.String
+	}
+	if value, ok := values[2].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field netmask", values[2])
+	} else if value.Valid {
+		r.Netmask = value.String
+	}
+	if value, ok := values[3].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field allow", values[3])
+	} else if value.Valid {
+		r.Allow = int(value.Int64)
+	}
+	if value, ok := values[4].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field desc", values[4])
+	} else if value.Valid {
+		r.Desc = value.String
+	}
+	if value, ok := values[5].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field creator", values[5])
+	} else if value.Valid {
+		r.Creator = value.String
+	}
+	if value, ok := values[6].(*sql.NullTime); !ok {
+		return fmt.Errorf("unexpected type %T for field created_at", values[6])
+	} else if value.Valid {
+		r.CreatedAt = value.Time
+	}
+	if value, ok := values[7].(*sql.NullTime); !ok {
+		return fmt.Errorf("unexpected type %T for field updated_at", values[7])
+	} else if value.Valid {
+		r.UpdatedAt = value.Time
+	}
+	if value, ok := values[8].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field version", values[8])
+	} else if value.Valid {
+		r.Version = int(value.Int64)
+	}
 	return nil
 }
 
@@ -62,6 +135,24 @@ func (r *Resource) String() string {
 	var builder strings.Builder
 	builder.WriteString("Resource(")
 	builder.WriteString(fmt.Sprintf("id=%v", r.ID))
+	builder.WriteString(", resource=")
+	builder.WriteString(r.Resource)
+	builder.WriteString(", path=")
+	builder.WriteString(r.Path)
+	builder.WriteString(", netmask=")
+	builder.WriteString(r.Netmask)
+	builder.WriteString(", allow=")
+	builder.WriteString(fmt.Sprintf("%v", r.Allow))
+	builder.WriteString(", desc=")
+	builder.WriteString(r.Desc)
+	builder.WriteString(", creator=")
+	builder.WriteString(r.Creator)
+	builder.WriteString(", created_at=")
+	builder.WriteString(r.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(r.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", version=")
+	builder.WriteString(fmt.Sprintf("%v", r.Version))
 	builder.WriteByte(')')
 	return builder.String()
 }

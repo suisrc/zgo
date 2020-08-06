@@ -8,68 +8,426 @@ import (
 )
 
 var (
-	// AccountsColumns holds the columns for the "accounts" table.
-	AccountsColumns = []*schema.Column{
+	// AccountColumns holds the columns for the "account" table.
+	AccountColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "account", Type: field.TypeString},
+		{Name: "account_type", Type: field.TypeString},
+		{Name: "platform", Type: field.TypeString},
+		{Name: "verify_type", Type: field.TypeString},
+		{Name: "password", Type: field.TypeString},
+		{Name: "password_salt", Type: field.TypeString},
+		{Name: "password_type", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeInt},
+		{Name: "desc", Type: field.TypeString},
+		{Name: "oauth2_id", Type: field.TypeInt},
+		{Name: "oauth2_token", Type: field.TypeString},
+		{Name: "oauth2_time", Type: field.TypeTime},
+		{Name: "token_fake", Type: field.TypeString},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "string_1", Type: field.TypeString},
+		{Name: "string_2", Type: field.TypeString},
+		{Name: "string_3", Type: field.TypeString},
+		{Name: "number_1", Type: field.TypeInt},
+		{Name: "number_2", Type: field.TypeInt},
+		{Name: "number_3", Type: field.TypeInt},
 	}
-	// AccountsTable holds the schema information for the "accounts" table.
-	AccountsTable = &schema.Table{
-		Name:        "accounts",
-		Columns:     AccountsColumns,
-		PrimaryKey:  []*schema.Column{AccountsColumns[0]},
+	// AccountTable holds the schema information for the "account" table.
+	AccountTable = &schema.Table{
+		Name:        "account",
+		Columns:     AccountColumns,
+		PrimaryKey:  []*schema.Column{AccountColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
-	// MenusColumns holds the columns for the "menus" table.
-	MenusColumns = []*schema.Column{
+	// MenuColumns holds the columns for the "menu" table.
+	MenuColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "parent_id", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "sequence", Type: field.TypeInt},
+		{Name: "icon", Type: field.TypeString},
+		{Name: "router", Type: field.TypeString},
+		{Name: "memo", Type: field.TypeString},
+		{Name: "status", Type: field.TypeInt},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
 	}
-	// MenusTable holds the schema information for the "menus" table.
-	MenusTable = &schema.Table{
-		Name:        "menus",
-		Columns:     MenusColumns,
-		PrimaryKey:  []*schema.Column{MenusColumns[0]},
+	// MenuTable holds the schema information for the "menu" table.
+	MenuTable = &schema.Table{
+		Name:        "menu",
+		Columns:     MenuColumns,
+		PrimaryKey:  []*schema.Column{MenuColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
-	// ResourcesColumns holds the columns for the "resources" table.
-	ResourcesColumns = []*schema.Column{
+	// MenuActionColumns holds the columns for the "menu_action" table.
+	MenuActionColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "menu_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "code", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "disable", Type: field.TypeInt},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
 	}
-	// ResourcesTable holds the schema information for the "resources" table.
-	ResourcesTable = &schema.Table{
-		Name:        "resources",
-		Columns:     ResourcesColumns,
-		PrimaryKey:  []*schema.Column{ResourcesColumns[0]},
+	// MenuActionTable holds the schema information for the "menu_action" table.
+	MenuActionTable = &schema.Table{
+		Name:        "menu_action",
+		Columns:     MenuActionColumns,
+		PrimaryKey:  []*schema.Column{MenuActionColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
-	// RolesColumns holds the columns for the "roles" table.
-	RolesColumns = []*schema.Column{
+	// MenuRoleColumns holds the columns for the "menu_role" table.
+	MenuRoleColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "menu_id", Type: field.TypeInt},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
 	}
-	// RolesTable holds the schema information for the "roles" table.
-	RolesTable = &schema.Table{
-		Name:        "roles",
-		Columns:     RolesColumns,
-		PrimaryKey:  []*schema.Column{RolesColumns[0]},
+	// MenuRoleTable holds the schema information for the "menu_role" table.
+	MenuRoleTable = &schema.Table{
+		Name:        "menu_role",
+		Columns:     MenuRoleColumns,
+		PrimaryKey:  []*schema.Column{MenuRoleColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
-	// UsersColumns holds the columns for the "users" table.
-	UsersColumns = []*schema.Column{
+	// Oauth2AccountColumns holds the columns for the "oauth2_account" table.
+	Oauth2AccountColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "client_id", Type: field.TypeInt},
+		{Name: "secret", Type: field.TypeString},
+		{Name: "expired", Type: field.TypeTime},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "string_1", Type: field.TypeString},
+		{Name: "string_2", Type: field.TypeString},
+		{Name: "string_3", Type: field.TypeString},
+		{Name: "number_1", Type: field.TypeInt},
+		{Name: "number_2", Type: field.TypeInt},
+		{Name: "number_3", Type: field.TypeInt},
 	}
-	// UsersTable holds the schema information for the "users" table.
-	UsersTable = &schema.Table{
-		Name:        "users",
-		Columns:     UsersColumns,
-		PrimaryKey:  []*schema.Column{UsersColumns[0]},
+	// Oauth2AccountTable holds the schema information for the "oauth2_account" table.
+	Oauth2AccountTable = &schema.Table{
+		Name:        "oauth2_account",
+		Columns:     Oauth2AccountColumns,
+		PrimaryKey:  []*schema.Column{Oauth2AccountColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// Oauth2ClientColumns holds the columns for the "oauth2_client" table.
+	Oauth2ClientColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "client_key", Type: field.TypeString},
+		{Name: "audience", Type: field.TypeString},
+		{Name: "issuer", Type: field.TypeString},
+		{Name: "expired", Type: field.TypeInt},
+		{Name: "token_type", Type: field.TypeInt},
+		{Name: "s_method", Type: field.TypeString},
+		{Name: "s_secret", Type: field.TypeString},
+		{Name: "token_getter", Type: field.TypeString},
+		{Name: "signin_url", Type: field.TypeString},
+		{Name: "signin_force", Type: field.TypeInt},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "string_1", Type: field.TypeString},
+		{Name: "string_2", Type: field.TypeString},
+		{Name: "string_3", Type: field.TypeString},
+		{Name: "number_1", Type: field.TypeInt},
+		{Name: "number_2", Type: field.TypeInt},
+		{Name: "number_3", Type: field.TypeInt},
+	}
+	// Oauth2ClientTable holds the schema information for the "oauth2_client" table.
+	Oauth2ClientTable = &schema.Table{
+		Name:        "oauth2_client",
+		Columns:     Oauth2ClientColumns,
+		PrimaryKey:  []*schema.Column{Oauth2ClientColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// Oauth2ThirdColumns holds the columns for the "oauth2_third" table.
+	Oauth2ThirdColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "platform", Type: field.TypeString},
+		{Name: "agent_id", Type: field.TypeString},
+		{Name: "suite_id", Type: field.TypeString},
+		{Name: "app_id", Type: field.TypeString},
+		{Name: "app_secret", Type: field.TypeString},
+		{Name: "authorize_url", Type: field.TypeString},
+		{Name: "token_url", Type: field.TypeString},
+		{Name: "profile_url", Type: field.TypeString},
+		{Name: "domain_def", Type: field.TypeString},
+		{Name: "domain_check", Type: field.TypeString},
+		{Name: "js_secret", Type: field.TypeString},
+		{Name: "state_secret", Type: field.TypeString},
+		{Name: "callback", Type: field.TypeInt},
+		{Name: "cb_encrypt", Type: field.TypeInt},
+		{Name: "cb_token", Type: field.TypeString},
+		{Name: "cb_encoding", Type: field.TypeString},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "string_1", Type: field.TypeString},
+		{Name: "string_2", Type: field.TypeString},
+		{Name: "string_3", Type: field.TypeString},
+		{Name: "number_1", Type: field.TypeInt},
+		{Name: "number_2", Type: field.TypeInt},
+		{Name: "number_3", Type: field.TypeInt},
+	}
+	// Oauth2ThirdTable holds the schema information for the "oauth2_third" table.
+	Oauth2ThirdTable = &schema.Table{
+		Name:        "oauth2_third",
+		Columns:     Oauth2ThirdColumns,
+		PrimaryKey:  []*schema.Column{Oauth2ThirdColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// Oauth2TokenColumns holds the columns for the "oauth2_token" table.
+	Oauth2TokenColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "oauth2_id", Type: field.TypeString},
+		{Name: "access_token", Type: field.TypeString},
+		{Name: "expires_in", Type: field.TypeString},
+		{Name: "create_time", Type: field.TypeString},
+		{Name: "sync_lock", Type: field.TypeInt},
+		{Name: "call_count", Type: field.TypeInt},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "string_1", Type: field.TypeString},
+		{Name: "string_2", Type: field.TypeString},
+		{Name: "string_3", Type: field.TypeString},
+		{Name: "number_1", Type: field.TypeInt},
+		{Name: "number_2", Type: field.TypeInt},
+		{Name: "number_3", Type: field.TypeInt},
+	}
+	// Oauth2TokenTable holds the schema information for the "oauth2_token" table.
+	Oauth2TokenTable = &schema.Table{
+		Name:        "oauth2_token",
+		Columns:     Oauth2TokenColumns,
+		PrimaryKey:  []*schema.Column{Oauth2TokenColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// ResourceColumns holds the columns for the "resource" table.
+	ResourceColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "resource", Type: field.TypeString},
+		{Name: "path", Type: field.TypeString},
+		{Name: "netmask", Type: field.TypeString},
+		{Name: "allow", Type: field.TypeInt},
+		{Name: "desc", Type: field.TypeString},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// ResourceTable holds the schema information for the "resource" table.
+	ResourceTable = &schema.Table{
+		Name:        "resource",
+		Columns:     ResourceColumns,
+		PrimaryKey:  []*schema.Column{ResourceColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// ResourceRoleColumns holds the columns for the "resource_role" table.
+	ResourceRoleColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "resource", Type: field.TypeString},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// ResourceRoleTable holds the schema information for the "resource_role" table.
+	ResourceRoleTable = &schema.Table{
+		Name:        "resource_role",
+		Columns:     ResourceRoleColumns,
+		PrimaryKey:  []*schema.Column{ResourceRoleColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// ResourceUserColumns holds the columns for the "resource_user" table.
+	ResourceUserColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "resource", Type: field.TypeString},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// ResourceUserTable holds the schema information for the "resource_user" table.
+	ResourceUserTable = &schema.Table{
+		Name:        "resource_user",
+		Columns:     ResourceUserColumns,
+		PrimaryKey:  []*schema.Column{ResourceUserColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// RoleColumns holds the columns for the "role" table.
+	RoleColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "uid", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+		{Name: "desc", Type: field.TypeString},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// RoleTable holds the schema information for the "role" table.
+	RoleTable = &schema.Table{
+		Name:        "role",
+		Columns:     RoleColumns,
+		PrimaryKey:  []*schema.Column{RoleColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// RoleRoleColumns holds the columns for the "role_role" table.
+	RoleRoleColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "owner_id", Type: field.TypeInt},
+		{Name: "child_id", Type: field.TypeInt},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// RoleRoleTable holds the schema information for the "role_role" table.
+	RoleRoleTable = &schema.Table{
+		Name:        "role_role",
+		Columns:     RoleRoleColumns,
+		PrimaryKey:  []*schema.Column{RoleRoleColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// TagCommonColumns holds the columns for the "tag_common" table.
+	TagCommonColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "owner_id", Type: field.TypeInt},
+		{Name: "type", Type: field.TypeInt},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// TagCommonTable holds the schema information for the "tag_common" table.
+	TagCommonTable = &schema.Table{
+		Name:        "tag_common",
+		Columns:     TagCommonColumns,
+		PrimaryKey:  []*schema.Column{TagCommonColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// UserColumns holds the columns for the "user" table.
+	UserColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "uid", Type: field.TypeString},
+		{Name: "name", Type: field.TypeString},
+	}
+	// UserTable holds the schema information for the "user" table.
+	UserTable = &schema.Table{
+		Name:        "user",
+		Columns:     UserColumns,
+		PrimaryKey:  []*schema.Column{UserColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// UserDetailColumns holds the columns for the "user_detail" table.
+	UserDetailColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "nickname", Type: field.TypeString},
+		{Name: "avatar", Type: field.TypeString},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+		{Name: "string_1", Type: field.TypeString},
+		{Name: "string_2", Type: field.TypeString},
+		{Name: "string_3", Type: field.TypeString},
+		{Name: "number_1", Type: field.TypeInt},
+		{Name: "number_2", Type: field.TypeInt},
+		{Name: "number_3", Type: field.TypeInt},
+	}
+	// UserDetailTable holds the schema information for the "user_detail" table.
+	UserDetailTable = &schema.Table{
+		Name:        "user_detail",
+		Columns:     UserDetailColumns,
+		PrimaryKey:  []*schema.Column{UserDetailColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// UserMessageColumns holds the columns for the "user_message" table.
+	UserMessageColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "uid", Type: field.TypeString},
+		{Name: "avatar", Type: field.TypeString},
+		{Name: "title", Type: field.TypeString},
+		{Name: "datetime", Type: field.TypeString},
+		{Name: "type", Type: field.TypeString},
+		{Name: "read", Type: field.TypeInt},
+		{Name: "description", Type: field.TypeString},
+		{Name: "click_close", Type: field.TypeInt},
+		{Name: "status", Type: field.TypeInt},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// UserMessageTable holds the schema information for the "user_message" table.
+	UserMessageTable = &schema.Table{
+		Name:        "user_message",
+		Columns:     UserMessageColumns,
+		PrimaryKey:  []*schema.Column{UserMessageColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{},
+	}
+	// UserRoleColumns holds the columns for the "user_role" table.
+	UserRoleColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "user_id", Type: field.TypeInt},
+		{Name: "role_id", Type: field.TypeInt},
+		{Name: "expired", Type: field.TypeTime},
+		{Name: "creator", Type: field.TypeString},
+		{Name: "created_at", Type: field.TypeTime},
+		{Name: "updated_at", Type: field.TypeTime},
+		{Name: "version", Type: field.TypeInt, Default: 1},
+	}
+	// UserRoleTable holds the schema information for the "user_role" table.
+	UserRoleTable = &schema.Table{
+		Name:        "user_role",
+		Columns:     UserRoleColumns,
+		PrimaryKey:  []*schema.Column{UserRoleColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
-		AccountsTable,
-		MenusTable,
-		ResourcesTable,
-		RolesTable,
-		UsersTable,
+		AccountTable,
+		MenuTable,
+		MenuActionTable,
+		MenuRoleTable,
+		Oauth2AccountTable,
+		Oauth2ClientTable,
+		Oauth2ThirdTable,
+		Oauth2TokenTable,
+		ResourceTable,
+		ResourceRoleTable,
+		ResourceUserTable,
+		RoleTable,
+		RoleRoleTable,
+		TagCommonTable,
+		UserTable,
+		UserDetailTable,
+		UserMessageTable,
+		UserRoleTable,
 	}
 )
 

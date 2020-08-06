@@ -24,11 +24,24 @@ type config struct {
 
 // hooks per client, for fast access.
 type hooks struct {
-	Account  []ent.Hook
-	Menu     []ent.Hook
-	Resource []ent.Hook
-	Role     []ent.Hook
-	User     []ent.Hook
+	Account       []ent.Hook
+	Menu          []ent.Hook
+	MenuAction    []ent.Hook
+	MenuRole      []ent.Hook
+	Oauth2Account []ent.Hook
+	Oauth2Client  []ent.Hook
+	Oauth2Third   []ent.Hook
+	Oauth2Token   []ent.Hook
+	Resource      []ent.Hook
+	ResourceRole  []ent.Hook
+	ResourceUser  []ent.Hook
+	Role          []ent.Hook
+	RoleRole      []ent.Hook
+	TagCommon     []ent.Hook
+	User          []ent.Hook
+	UserDetail    []ent.Hook
+	UserMessage   []ent.Hook
+	UserRole      []ent.Hook
 }
 
 // Options applies the options on the config object.

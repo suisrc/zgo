@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
@@ -18,6 +19,18 @@ type UserCreate struct {
 	hooks    []Hook
 }
 
+// SetUID sets the uid field.
+func (uc *UserCreate) SetUID(s string) *UserCreate {
+	uc.mutation.SetUID(s)
+	return uc
+}
+
+// SetName sets the name field.
+func (uc *UserCreate) SetName(s string) *UserCreate {
+	uc.mutation.SetName(s)
+	return uc
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (uc *UserCreate) Mutation() *UserMutation {
 	return uc.mutation
@@ -25,6 +38,12 @@ func (uc *UserCreate) Mutation() *UserMutation {
 
 // Save creates the User in the database.
 func (uc *UserCreate) Save(ctx context.Context) (*User, error) {
+	if _, ok := uc.mutation.UID(); !ok {
+		return nil, &ValidationError{Name: "uid", err: errors.New("ent: missing required field \"uid\"")}
+	}
+	if _, ok := uc.mutation.Name(); !ok {
+		return nil, &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
+	}
 	var (
 		err  error
 		node *User
@@ -85,5 +104,21 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := uc.mutation.UID(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldUID,
+		})
+		u.UID = value
+	}
+	if value, ok := uc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: user.FieldName,
+		})
+		u.Name = value
+	}
 	return u, _spec
 }

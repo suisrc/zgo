@@ -34,7 +34,7 @@ debug:
 	#echo c | dlv debug --accept-multiclient --api-version=2 --listen=127.0.0.1:2345 cmd/app/main.go -- web -c ./configs/config.toml
 
 start:
-	go run cmd/app/main.go web -c ./configs/config.toml
+	go run cmd/app/main.go web -c ./configs/__config.toml
 
 # go get -u github.com/swaggo/swag/cmd/swag
 swagger:
@@ -79,6 +79,10 @@ demo-wire:
 demo-entc:
 	go generate ./demo/model/ent
 
-# mysql
-mysql:
-	go run cmd/db/main.go mysql -m doc/model.md -o doc/model.mysql.sql
+# database
+db-mysql:
+	go run cmd/db/main.go mysql -m doc/model.md -o configs/model.mysql.sql
+db-entc:
+	go run cmd/db/main.go entc -m doc/model.md -o app/model/ent/schema
+db-entc-del:
+	go run cmd/db/main.go entc-del -o app/model/ent -es $(es)

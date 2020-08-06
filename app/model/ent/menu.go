@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/suisrc/zgo/app/model/ent/menu"
@@ -12,15 +13,48 @@ import (
 
 // Menu is the model entity for the Menu schema.
 type Menu struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// ParentID holds the value of the "parent_id" field.
+	ParentID string `json:"parent_id,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
+	// Sequence holds the value of the "sequence" field.
+	Sequence int `json:"sequence,omitempty"`
+	// Icon holds the value of the "icon" field.
+	Icon string `json:"icon,omitempty"`
+	// Router holds the value of the "router" field.
+	Router string `json:"router,omitempty"`
+	// Memo holds the value of the "memo" field.
+	Memo string `json:"memo,omitempty"`
+	// Status holds the value of the "status" field.
+	Status int `json:"status,omitempty"`
+	// Creator holds the value of the "creator" field.
+	Creator string `json:"creator,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Version holds the value of the "version" field.
+	Version int `json:"version,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Menu) scanValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // id
+		&sql.NullInt64{},  // id
+		&sql.NullString{}, // parent_id
+		&sql.NullString{}, // name
+		&sql.NullInt64{},  // sequence
+		&sql.NullString{}, // icon
+		&sql.NullString{}, // router
+		&sql.NullString{}, // memo
+		&sql.NullInt64{},  // status
+		&sql.NullString{}, // creator
+		&sql.NullTime{},   // created_at
+		&sql.NullTime{},   // updated_at
+		&sql.NullInt64{},  // version
 	}
 }
 
@@ -36,6 +70,61 @@ func (m *Menu) assignValues(values ...interface{}) error {
 	}
 	m.ID = int(value.Int64)
 	values = values[1:]
+	if value, ok := values[0].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field parent_id", values[0])
+	} else if value.Valid {
+		m.ParentID = value.String
+	}
+	if value, ok := values[1].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field name", values[1])
+	} else if value.Valid {
+		m.Name = value.String
+	}
+	if value, ok := values[2].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field sequence", values[2])
+	} else if value.Valid {
+		m.Sequence = int(value.Int64)
+	}
+	if value, ok := values[3].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field icon", values[3])
+	} else if value.Valid {
+		m.Icon = value.String
+	}
+	if value, ok := values[4].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field router", values[4])
+	} else if value.Valid {
+		m.Router = value.String
+	}
+	if value, ok := values[5].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field memo", values[5])
+	} else if value.Valid {
+		m.Memo = value.String
+	}
+	if value, ok := values[6].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field status", values[6])
+	} else if value.Valid {
+		m.Status = int(value.Int64)
+	}
+	if value, ok := values[7].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field creator", values[7])
+	} else if value.Valid {
+		m.Creator = value.String
+	}
+	if value, ok := values[8].(*sql.NullTime); !ok {
+		return fmt.Errorf("unexpected type %T for field created_at", values[8])
+	} else if value.Valid {
+		m.CreatedAt = value.Time
+	}
+	if value, ok := values[9].(*sql.NullTime); !ok {
+		return fmt.Errorf("unexpected type %T for field updated_at", values[9])
+	} else if value.Valid {
+		m.UpdatedAt = value.Time
+	}
+	if value, ok := values[10].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field version", values[10])
+	} else if value.Valid {
+		m.Version = int(value.Int64)
+	}
 	return nil
 }
 
@@ -62,6 +151,28 @@ func (m *Menu) String() string {
 	var builder strings.Builder
 	builder.WriteString("Menu(")
 	builder.WriteString(fmt.Sprintf("id=%v", m.ID))
+	builder.WriteString(", parent_id=")
+	builder.WriteString(m.ParentID)
+	builder.WriteString(", name=")
+	builder.WriteString(m.Name)
+	builder.WriteString(", sequence=")
+	builder.WriteString(fmt.Sprintf("%v", m.Sequence))
+	builder.WriteString(", icon=")
+	builder.WriteString(m.Icon)
+	builder.WriteString(", router=")
+	builder.WriteString(m.Router)
+	builder.WriteString(", memo=")
+	builder.WriteString(m.Memo)
+	builder.WriteString(", status=")
+	builder.WriteString(fmt.Sprintf("%v", m.Status))
+	builder.WriteString(", creator=")
+	builder.WriteString(m.Creator)
+	builder.WriteString(", created_at=")
+	builder.WriteString(m.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(m.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", version=")
+	builder.WriteString(fmt.Sprintf("%v", m.Version))
 	builder.WriteByte(')')
 	return builder.String()
 }

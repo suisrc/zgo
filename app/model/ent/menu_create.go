@@ -4,7 +4,9 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
@@ -18,6 +20,96 @@ type MenuCreate struct {
 	hooks    []Hook
 }
 
+// SetParentID sets the parent_id field.
+func (mc *MenuCreate) SetParentID(s string) *MenuCreate {
+	mc.mutation.SetParentID(s)
+	return mc
+}
+
+// SetName sets the name field.
+func (mc *MenuCreate) SetName(s string) *MenuCreate {
+	mc.mutation.SetName(s)
+	return mc
+}
+
+// SetSequence sets the sequence field.
+func (mc *MenuCreate) SetSequence(i int) *MenuCreate {
+	mc.mutation.SetSequence(i)
+	return mc
+}
+
+// SetIcon sets the icon field.
+func (mc *MenuCreate) SetIcon(s string) *MenuCreate {
+	mc.mutation.SetIcon(s)
+	return mc
+}
+
+// SetRouter sets the router field.
+func (mc *MenuCreate) SetRouter(s string) *MenuCreate {
+	mc.mutation.SetRouter(s)
+	return mc
+}
+
+// SetMemo sets the memo field.
+func (mc *MenuCreate) SetMemo(s string) *MenuCreate {
+	mc.mutation.SetMemo(s)
+	return mc
+}
+
+// SetStatus sets the status field.
+func (mc *MenuCreate) SetStatus(i int) *MenuCreate {
+	mc.mutation.SetStatus(i)
+	return mc
+}
+
+// SetCreator sets the creator field.
+func (mc *MenuCreate) SetCreator(s string) *MenuCreate {
+	mc.mutation.SetCreator(s)
+	return mc
+}
+
+// SetCreatedAt sets the created_at field.
+func (mc *MenuCreate) SetCreatedAt(t time.Time) *MenuCreate {
+	mc.mutation.SetCreatedAt(t)
+	return mc
+}
+
+// SetNillableCreatedAt sets the created_at field if the given value is not nil.
+func (mc *MenuCreate) SetNillableCreatedAt(t *time.Time) *MenuCreate {
+	if t != nil {
+		mc.SetCreatedAt(*t)
+	}
+	return mc
+}
+
+// SetUpdatedAt sets the updated_at field.
+func (mc *MenuCreate) SetUpdatedAt(t time.Time) *MenuCreate {
+	mc.mutation.SetUpdatedAt(t)
+	return mc
+}
+
+// SetNillableUpdatedAt sets the updated_at field if the given value is not nil.
+func (mc *MenuCreate) SetNillableUpdatedAt(t *time.Time) *MenuCreate {
+	if t != nil {
+		mc.SetUpdatedAt(*t)
+	}
+	return mc
+}
+
+// SetVersion sets the version field.
+func (mc *MenuCreate) SetVersion(i int) *MenuCreate {
+	mc.mutation.SetVersion(i)
+	return mc
+}
+
+// SetNillableVersion sets the version field if the given value is not nil.
+func (mc *MenuCreate) SetNillableVersion(i *int) *MenuCreate {
+	if i != nil {
+		mc.SetVersion(*i)
+	}
+	return mc
+}
+
 // Mutation returns the MenuMutation object of the builder.
 func (mc *MenuCreate) Mutation() *MenuMutation {
 	return mc.mutation
@@ -25,6 +117,42 @@ func (mc *MenuCreate) Mutation() *MenuMutation {
 
 // Save creates the Menu in the database.
 func (mc *MenuCreate) Save(ctx context.Context) (*Menu, error) {
+	if _, ok := mc.mutation.ParentID(); !ok {
+		return nil, &ValidationError{Name: "parent_id", err: errors.New("ent: missing required field \"parent_id\"")}
+	}
+	if _, ok := mc.mutation.Name(); !ok {
+		return nil, &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
+	}
+	if _, ok := mc.mutation.Sequence(); !ok {
+		return nil, &ValidationError{Name: "sequence", err: errors.New("ent: missing required field \"sequence\"")}
+	}
+	if _, ok := mc.mutation.Icon(); !ok {
+		return nil, &ValidationError{Name: "icon", err: errors.New("ent: missing required field \"icon\"")}
+	}
+	if _, ok := mc.mutation.Router(); !ok {
+		return nil, &ValidationError{Name: "router", err: errors.New("ent: missing required field \"router\"")}
+	}
+	if _, ok := mc.mutation.Memo(); !ok {
+		return nil, &ValidationError{Name: "memo", err: errors.New("ent: missing required field \"memo\"")}
+	}
+	if _, ok := mc.mutation.Status(); !ok {
+		return nil, &ValidationError{Name: "status", err: errors.New("ent: missing required field \"status\"")}
+	}
+	if _, ok := mc.mutation.Creator(); !ok {
+		return nil, &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
+	}
+	if _, ok := mc.mutation.CreatedAt(); !ok {
+		v := menu.DefaultCreatedAt()
+		mc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := mc.mutation.UpdatedAt(); !ok {
+		v := menu.DefaultUpdatedAt()
+		mc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := mc.mutation.Version(); !ok {
+		v := menu.DefaultVersion
+		mc.mutation.SetVersion(v)
+	}
 	var (
 		err  error
 		node *Menu
@@ -85,5 +213,93 @@ func (mc *MenuCreate) createSpec() (*Menu, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := mc.mutation.ParentID(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: menu.FieldParentID,
+		})
+		m.ParentID = value
+	}
+	if value, ok := mc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: menu.FieldName,
+		})
+		m.Name = value
+	}
+	if value, ok := mc.mutation.Sequence(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: menu.FieldSequence,
+		})
+		m.Sequence = value
+	}
+	if value, ok := mc.mutation.Icon(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: menu.FieldIcon,
+		})
+		m.Icon = value
+	}
+	if value, ok := mc.mutation.Router(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: menu.FieldRouter,
+		})
+		m.Router = value
+	}
+	if value, ok := mc.mutation.Memo(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: menu.FieldMemo,
+		})
+		m.Memo = value
+	}
+	if value, ok := mc.mutation.Status(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: menu.FieldStatus,
+		})
+		m.Status = value
+	}
+	if value, ok := mc.mutation.Creator(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: menu.FieldCreator,
+		})
+		m.Creator = value
+	}
+	if value, ok := mc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: menu.FieldCreatedAt,
+		})
+		m.CreatedAt = value
+	}
+	if value, ok := mc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: menu.FieldUpdatedAt,
+		})
+		m.UpdatedAt = value
+	}
+	if value, ok := mc.mutation.Version(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: menu.FieldVersion,
+		})
+		m.Version = value
+	}
 	return m, _spec
 }

@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-08-05 20:57:40 CST
+-- time: 2020-08-06 10:13:34 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -33,8 +33,6 @@ CREATE TABLE `account` (
   `number_2` int(11) DEFAULT NULL COMMENT '备用字段',
   `number_3` int(11) DEFAULT NULL COMMENT '备用字段',
   UNIQUE udx_account(`account`,`account_type`,`platform`),
-  UNIQUE udx_passwd(`password`),
-  INDEX idx_creator(`creator`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -331,9 +329,9 @@ CREATE TABLE `tag_common` (
 -- 表外键
 -- -------------------------------------------------------
 ALTER TABLE `account`
-ADD CONSTRAINT `fk_account_oauth2` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`),
 ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
-ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`);
+ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
+ADD CONSTRAINT `fk_account_oauth2` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`);
 
 ALTER TABLE `oauth2_token`
 ADD CONSTRAINT `fk_oa2_token_id` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`);

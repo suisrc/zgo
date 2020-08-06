@@ -5,6 +5,7 @@ package ent
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/suisrc/zgo/app/model/ent/account"
@@ -12,15 +13,90 @@ import (
 
 // Account is the model entity for the Account schema.
 type Account struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// Account holds the value of the "account" field.
+	Account string `json:"account,omitempty"`
+	// AccountType holds the value of the "account_type" field.
+	AccountType string `json:"account_type,omitempty"`
+	// Platform holds the value of the "platform" field.
+	Platform string `json:"platform,omitempty"`
+	// VerifyType holds the value of the "verify_type" field.
+	VerifyType string `json:"verify_type,omitempty"`
+	// Password holds the value of the "password" field.
+	Password string `json:"password,omitempty"`
+	// PasswordSalt holds the value of the "password_salt" field.
+	PasswordSalt string `json:"password_salt,omitempty"`
+	// PasswordType holds the value of the "password_type" field.
+	PasswordType string `json:"password_type,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID int `json:"user_id,omitempty"`
+	// RoleID holds the value of the "role_id" field.
+	RoleID int `json:"role_id,omitempty"`
+	// Status holds the value of the "status" field.
+	Status int `json:"status,omitempty"`
+	// Desc holds the value of the "desc" field.
+	Desc string `json:"desc,omitempty"`
+	// Oauth2ID holds the value of the "oauth2_id" field.
+	Oauth2ID int `json:"oauth2_id,omitempty"`
+	// Oauth2Token holds the value of the "oauth2_token" field.
+	Oauth2Token string `json:"oauth2_token,omitempty"`
+	// Oauth2Time holds the value of the "oauth2_time" field.
+	Oauth2Time time.Time `json:"oauth2_time,omitempty"`
+	// TokenFake holds the value of the "token_fake" field.
+	TokenFake string `json:"token_fake,omitempty"`
+	// Creator holds the value of the "creator" field.
+	Creator string `json:"creator,omitempty"`
+	// CreatedAt holds the value of the "created_at" field.
+	CreatedAt time.Time `json:"created_at,omitempty"`
+	// UpdatedAt holds the value of the "updated_at" field.
+	UpdatedAt time.Time `json:"updated_at,omitempty"`
+	// Version holds the value of the "version" field.
+	Version int `json:"version,omitempty"`
+	// String1 holds the value of the "string_1" field.
+	String1 string `json:"string_1,omitempty"`
+	// String2 holds the value of the "string_2" field.
+	String2 string `json:"string_2,omitempty"`
+	// String3 holds the value of the "string_3" field.
+	String3 string `json:"string_3,omitempty"`
+	// Number1 holds the value of the "number_1" field.
+	Number1 int `json:"number_1,omitempty"`
+	// Number2 holds the value of the "number_2" field.
+	Number2 int `json:"number_2,omitempty"`
+	// Number3 holds the value of the "number_3" field.
+	Number3 int `json:"number_3,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Account) scanValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // id
+		&sql.NullInt64{},  // id
+		&sql.NullString{}, // account
+		&sql.NullString{}, // account_type
+		&sql.NullString{}, // platform
+		&sql.NullString{}, // verify_type
+		&sql.NullString{}, // password
+		&sql.NullString{}, // password_salt
+		&sql.NullString{}, // password_type
+		&sql.NullInt64{},  // user_id
+		&sql.NullInt64{},  // role_id
+		&sql.NullInt64{},  // status
+		&sql.NullString{}, // desc
+		&sql.NullInt64{},  // oauth2_id
+		&sql.NullString{}, // oauth2_token
+		&sql.NullTime{},   // oauth2_time
+		&sql.NullString{}, // token_fake
+		&sql.NullString{}, // creator
+		&sql.NullTime{},   // created_at
+		&sql.NullTime{},   // updated_at
+		&sql.NullInt64{},  // version
+		&sql.NullString{}, // string_1
+		&sql.NullString{}, // string_2
+		&sql.NullString{}, // string_3
+		&sql.NullInt64{},  // number_1
+		&sql.NullInt64{},  // number_2
+		&sql.NullInt64{},  // number_3
 	}
 }
 
@@ -36,6 +112,131 @@ func (a *Account) assignValues(values ...interface{}) error {
 	}
 	a.ID = int(value.Int64)
 	values = values[1:]
+	if value, ok := values[0].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field account", values[0])
+	} else if value.Valid {
+		a.Account = value.String
+	}
+	if value, ok := values[1].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field account_type", values[1])
+	} else if value.Valid {
+		a.AccountType = value.String
+	}
+	if value, ok := values[2].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field platform", values[2])
+	} else if value.Valid {
+		a.Platform = value.String
+	}
+	if value, ok := values[3].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field verify_type", values[3])
+	} else if value.Valid {
+		a.VerifyType = value.String
+	}
+	if value, ok := values[4].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field password", values[4])
+	} else if value.Valid {
+		a.Password = value.String
+	}
+	if value, ok := values[5].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field password_salt", values[5])
+	} else if value.Valid {
+		a.PasswordSalt = value.String
+	}
+	if value, ok := values[6].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field password_type", values[6])
+	} else if value.Valid {
+		a.PasswordType = value.String
+	}
+	if value, ok := values[7].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field user_id", values[7])
+	} else if value.Valid {
+		a.UserID = int(value.Int64)
+	}
+	if value, ok := values[8].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field role_id", values[8])
+	} else if value.Valid {
+		a.RoleID = int(value.Int64)
+	}
+	if value, ok := values[9].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field status", values[9])
+	} else if value.Valid {
+		a.Status = int(value.Int64)
+	}
+	if value, ok := values[10].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field desc", values[10])
+	} else if value.Valid {
+		a.Desc = value.String
+	}
+	if value, ok := values[11].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field oauth2_id", values[11])
+	} else if value.Valid {
+		a.Oauth2ID = int(value.Int64)
+	}
+	if value, ok := values[12].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field oauth2_token", values[12])
+	} else if value.Valid {
+		a.Oauth2Token = value.String
+	}
+	if value, ok := values[13].(*sql.NullTime); !ok {
+		return fmt.Errorf("unexpected type %T for field oauth2_time", values[13])
+	} else if value.Valid {
+		a.Oauth2Time = value.Time
+	}
+	if value, ok := values[14].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field token_fake", values[14])
+	} else if value.Valid {
+		a.TokenFake = value.String
+	}
+	if value, ok := values[15].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field creator", values[15])
+	} else if value.Valid {
+		a.Creator = value.String
+	}
+	if value, ok := values[16].(*sql.NullTime); !ok {
+		return fmt.Errorf("unexpected type %T for field created_at", values[16])
+	} else if value.Valid {
+		a.CreatedAt = value.Time
+	}
+	if value, ok := values[17].(*sql.NullTime); !ok {
+		return fmt.Errorf("unexpected type %T for field updated_at", values[17])
+	} else if value.Valid {
+		a.UpdatedAt = value.Time
+	}
+	if value, ok := values[18].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field version", values[18])
+	} else if value.Valid {
+		a.Version = int(value.Int64)
+	}
+	if value, ok := values[19].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field string_1", values[19])
+	} else if value.Valid {
+		a.String1 = value.String
+	}
+	if value, ok := values[20].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field string_2", values[20])
+	} else if value.Valid {
+		a.String2 = value.String
+	}
+	if value, ok := values[21].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field string_3", values[21])
+	} else if value.Valid {
+		a.String3 = value.String
+	}
+	if value, ok := values[22].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field number_1", values[22])
+	} else if value.Valid {
+		a.Number1 = int(value.Int64)
+	}
+	if value, ok := values[23].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field number_2", values[23])
+	} else if value.Valid {
+		a.Number2 = int(value.Int64)
+	}
+	if value, ok := values[24].(*sql.NullInt64); !ok {
+		return fmt.Errorf("unexpected type %T for field number_3", values[24])
+	} else if value.Valid {
+		a.Number3 = int(value.Int64)
+	}
 	return nil
 }
 
@@ -62,6 +263,56 @@ func (a *Account) String() string {
 	var builder strings.Builder
 	builder.WriteString("Account(")
 	builder.WriteString(fmt.Sprintf("id=%v", a.ID))
+	builder.WriteString(", account=")
+	builder.WriteString(a.Account)
+	builder.WriteString(", account_type=")
+	builder.WriteString(a.AccountType)
+	builder.WriteString(", platform=")
+	builder.WriteString(a.Platform)
+	builder.WriteString(", verify_type=")
+	builder.WriteString(a.VerifyType)
+	builder.WriteString(", password=")
+	builder.WriteString(a.Password)
+	builder.WriteString(", password_salt=")
+	builder.WriteString(a.PasswordSalt)
+	builder.WriteString(", password_type=")
+	builder.WriteString(a.PasswordType)
+	builder.WriteString(", user_id=")
+	builder.WriteString(fmt.Sprintf("%v", a.UserID))
+	builder.WriteString(", role_id=")
+	builder.WriteString(fmt.Sprintf("%v", a.RoleID))
+	builder.WriteString(", status=")
+	builder.WriteString(fmt.Sprintf("%v", a.Status))
+	builder.WriteString(", desc=")
+	builder.WriteString(a.Desc)
+	builder.WriteString(", oauth2_id=")
+	builder.WriteString(fmt.Sprintf("%v", a.Oauth2ID))
+	builder.WriteString(", oauth2_token=")
+	builder.WriteString(a.Oauth2Token)
+	builder.WriteString(", oauth2_time=")
+	builder.WriteString(a.Oauth2Time.Format(time.ANSIC))
+	builder.WriteString(", token_fake=")
+	builder.WriteString(a.TokenFake)
+	builder.WriteString(", creator=")
+	builder.WriteString(a.Creator)
+	builder.WriteString(", created_at=")
+	builder.WriteString(a.CreatedAt.Format(time.ANSIC))
+	builder.WriteString(", updated_at=")
+	builder.WriteString(a.UpdatedAt.Format(time.ANSIC))
+	builder.WriteString(", version=")
+	builder.WriteString(fmt.Sprintf("%v", a.Version))
+	builder.WriteString(", string_1=")
+	builder.WriteString(a.String1)
+	builder.WriteString(", string_2=")
+	builder.WriteString(a.String2)
+	builder.WriteString(", string_3=")
+	builder.WriteString(a.String3)
+	builder.WriteString(", number_1=")
+	builder.WriteString(fmt.Sprintf("%v", a.Number1))
+	builder.WriteString(", number_2=")
+	builder.WriteString(fmt.Sprintf("%v", a.Number2))
+	builder.WriteString(", number_3=")
+	builder.WriteString(fmt.Sprintf("%v", a.Number3))
 	builder.WriteByte(')')
 	return builder.String()
 }

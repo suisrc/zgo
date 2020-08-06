@@ -12,15 +12,21 @@ import (
 
 // User is the model entity for the User schema.
 type User struct {
-	config
+	config `json:"-"`
 	// ID of the ent.
 	ID int `json:"id,omitempty"`
+	// UID holds the value of the "uid" field.
+	UID string `json:"uid,omitempty"`
+	// Name holds the value of the "name" field.
+	Name string `json:"name,omitempty"`
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
 func (*User) scanValues() []interface{} {
 	return []interface{}{
-		&sql.NullInt64{}, // id
+		&sql.NullInt64{},  // id
+		&sql.NullString{}, // uid
+		&sql.NullString{}, // name
 	}
 }
 
@@ -36,6 +42,16 @@ func (u *User) assignValues(values ...interface{}) error {
 	}
 	u.ID = int(value.Int64)
 	values = values[1:]
+	if value, ok := values[0].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field uid", values[0])
+	} else if value.Valid {
+		u.UID = value.String
+	}
+	if value, ok := values[1].(*sql.NullString); !ok {
+		return fmt.Errorf("unexpected type %T for field name", values[1])
+	} else if value.Valid {
+		u.Name = value.String
+	}
 	return nil
 }
 
@@ -62,6 +78,10 @@ func (u *User) String() string {
 	var builder strings.Builder
 	builder.WriteString("User(")
 	builder.WriteString(fmt.Sprintf("id=%v", u.ID))
+	builder.WriteString(", uid=")
+	builder.WriteString(u.UID)
+	builder.WriteString(", name=")
+	builder.WriteString(u.Name)
 	builder.WriteByte(')')
 	return builder.String()
 }

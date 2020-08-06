@@ -2,8 +2,269 @@
 
 package ent
 
+import (
+	"time"
+
+	"github.com/suisrc/zgo/app/model/ent/account"
+	"github.com/suisrc/zgo/app/model/ent/menu"
+	"github.com/suisrc/zgo/app/model/ent/menuaction"
+	"github.com/suisrc/zgo/app/model/ent/menurole"
+	"github.com/suisrc/zgo/app/model/ent/oauth2account"
+	"github.com/suisrc/zgo/app/model/ent/oauth2client"
+	"github.com/suisrc/zgo/app/model/ent/oauth2third"
+	"github.com/suisrc/zgo/app/model/ent/oauth2token"
+	"github.com/suisrc/zgo/app/model/ent/resource"
+	"github.com/suisrc/zgo/app/model/ent/resourcerole"
+	"github.com/suisrc/zgo/app/model/ent/resourceuser"
+	"github.com/suisrc/zgo/app/model/ent/role"
+	"github.com/suisrc/zgo/app/model/ent/rolerole"
+	"github.com/suisrc/zgo/app/model/ent/schema"
+	"github.com/suisrc/zgo/app/model/ent/tagcommon"
+	"github.com/suisrc/zgo/app/model/ent/userdetail"
+	"github.com/suisrc/zgo/app/model/ent/usermessage"
+	"github.com/suisrc/zgo/app/model/ent/userrole"
+)
+
 // The init function reads all schema descriptors with runtime
 // code (default values, validators or hooks) and stitches it
 // to their package variables.
 func init() {
+	accountFields := schema.Account{}.Fields()
+	_ = accountFields
+	// accountDescCreatedAt is the schema descriptor for created_at field.
+	accountDescCreatedAt := accountFields[16].Descriptor()
+	// account.DefaultCreatedAt holds the default value on creation for the created_at field.
+	account.DefaultCreatedAt = accountDescCreatedAt.Default.(func() time.Time)
+	// accountDescUpdatedAt is the schema descriptor for updated_at field.
+	accountDescUpdatedAt := accountFields[17].Descriptor()
+	// account.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	account.DefaultUpdatedAt = accountDescUpdatedAt.Default.(func() time.Time)
+	// accountDescVersion is the schema descriptor for version field.
+	accountDescVersion := accountFields[18].Descriptor()
+	// account.DefaultVersion holds the default value on creation for the version field.
+	account.DefaultVersion = accountDescVersion.Default.(int)
+	menuFields := schema.Menu{}.Fields()
+	_ = menuFields
+	// menuDescCreatedAt is the schema descriptor for created_at field.
+	menuDescCreatedAt := menuFields[8].Descriptor()
+	// menu.DefaultCreatedAt holds the default value on creation for the created_at field.
+	menu.DefaultCreatedAt = menuDescCreatedAt.Default.(func() time.Time)
+	// menuDescUpdatedAt is the schema descriptor for updated_at field.
+	menuDescUpdatedAt := menuFields[9].Descriptor()
+	// menu.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	menu.DefaultUpdatedAt = menuDescUpdatedAt.Default.(func() time.Time)
+	// menuDescVersion is the schema descriptor for version field.
+	menuDescVersion := menuFields[10].Descriptor()
+	// menu.DefaultVersion holds the default value on creation for the version field.
+	menu.DefaultVersion = menuDescVersion.Default.(int)
+	menuactionFields := schema.MenuAction{}.Fields()
+	_ = menuactionFields
+	// menuactionDescCreatedAt is the schema descriptor for created_at field.
+	menuactionDescCreatedAt := menuactionFields[6].Descriptor()
+	// menuaction.DefaultCreatedAt holds the default value on creation for the created_at field.
+	menuaction.DefaultCreatedAt = menuactionDescCreatedAt.Default.(func() time.Time)
+	// menuactionDescUpdatedAt is the schema descriptor for updated_at field.
+	menuactionDescUpdatedAt := menuactionFields[7].Descriptor()
+	// menuaction.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	menuaction.DefaultUpdatedAt = menuactionDescUpdatedAt.Default.(func() time.Time)
+	// menuactionDescVersion is the schema descriptor for version field.
+	menuactionDescVersion := menuactionFields[8].Descriptor()
+	// menuaction.DefaultVersion holds the default value on creation for the version field.
+	menuaction.DefaultVersion = menuactionDescVersion.Default.(int)
+	menuroleFields := schema.MenuRole{}.Fields()
+	_ = menuroleFields
+	// menuroleDescCreatedAt is the schema descriptor for created_at field.
+	menuroleDescCreatedAt := menuroleFields[4].Descriptor()
+	// menurole.DefaultCreatedAt holds the default value on creation for the created_at field.
+	menurole.DefaultCreatedAt = menuroleDescCreatedAt.Default.(func() time.Time)
+	// menuroleDescUpdatedAt is the schema descriptor for updated_at field.
+	menuroleDescUpdatedAt := menuroleFields[5].Descriptor()
+	// menurole.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	menurole.DefaultUpdatedAt = menuroleDescUpdatedAt.Default.(func() time.Time)
+	// menuroleDescVersion is the schema descriptor for version field.
+	menuroleDescVersion := menuroleFields[6].Descriptor()
+	// menurole.DefaultVersion holds the default value on creation for the version field.
+	menurole.DefaultVersion = menuroleDescVersion.Default.(int)
+	oauth2accountFields := schema.Oauth2Account{}.Fields()
+	_ = oauth2accountFields
+	// oauth2accountDescCreatedAt is the schema descriptor for created_at field.
+	oauth2accountDescCreatedAt := oauth2accountFields[4].Descriptor()
+	// oauth2account.DefaultCreatedAt holds the default value on creation for the created_at field.
+	oauth2account.DefaultCreatedAt = oauth2accountDescCreatedAt.Default.(func() time.Time)
+	// oauth2accountDescUpdatedAt is the schema descriptor for updated_at field.
+	oauth2accountDescUpdatedAt := oauth2accountFields[5].Descriptor()
+	// oauth2account.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	oauth2account.DefaultUpdatedAt = oauth2accountDescUpdatedAt.Default.(func() time.Time)
+	// oauth2accountDescVersion is the schema descriptor for version field.
+	oauth2accountDescVersion := oauth2accountFields[6].Descriptor()
+	// oauth2account.DefaultVersion holds the default value on creation for the version field.
+	oauth2account.DefaultVersion = oauth2accountDescVersion.Default.(int)
+	oauth2clientFields := schema.Oauth2Client{}.Fields()
+	_ = oauth2clientFields
+	// oauth2clientDescCreatedAt is the schema descriptor for created_at field.
+	oauth2clientDescCreatedAt := oauth2clientFields[11].Descriptor()
+	// oauth2client.DefaultCreatedAt holds the default value on creation for the created_at field.
+	oauth2client.DefaultCreatedAt = oauth2clientDescCreatedAt.Default.(func() time.Time)
+	// oauth2clientDescUpdatedAt is the schema descriptor for updated_at field.
+	oauth2clientDescUpdatedAt := oauth2clientFields[12].Descriptor()
+	// oauth2client.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	oauth2client.DefaultUpdatedAt = oauth2clientDescUpdatedAt.Default.(func() time.Time)
+	// oauth2clientDescVersion is the schema descriptor for version field.
+	oauth2clientDescVersion := oauth2clientFields[13].Descriptor()
+	// oauth2client.DefaultVersion holds the default value on creation for the version field.
+	oauth2client.DefaultVersion = oauth2clientDescVersion.Default.(int)
+	oauth2thirdFields := schema.Oauth2Third{}.Fields()
+	_ = oauth2thirdFields
+	// oauth2thirdDescCreatedAt is the schema descriptor for created_at field.
+	oauth2thirdDescCreatedAt := oauth2thirdFields[17].Descriptor()
+	// oauth2third.DefaultCreatedAt holds the default value on creation for the created_at field.
+	oauth2third.DefaultCreatedAt = oauth2thirdDescCreatedAt.Default.(func() time.Time)
+	// oauth2thirdDescUpdatedAt is the schema descriptor for updated_at field.
+	oauth2thirdDescUpdatedAt := oauth2thirdFields[18].Descriptor()
+	// oauth2third.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	oauth2third.DefaultUpdatedAt = oauth2thirdDescUpdatedAt.Default.(func() time.Time)
+	// oauth2thirdDescVersion is the schema descriptor for version field.
+	oauth2thirdDescVersion := oauth2thirdFields[19].Descriptor()
+	// oauth2third.DefaultVersion holds the default value on creation for the version field.
+	oauth2third.DefaultVersion = oauth2thirdDescVersion.Default.(int)
+	oauth2tokenFields := schema.Oauth2Token{}.Fields()
+	_ = oauth2tokenFields
+	// oauth2tokenDescCreatedAt is the schema descriptor for created_at field.
+	oauth2tokenDescCreatedAt := oauth2tokenFields[7].Descriptor()
+	// oauth2token.DefaultCreatedAt holds the default value on creation for the created_at field.
+	oauth2token.DefaultCreatedAt = oauth2tokenDescCreatedAt.Default.(func() time.Time)
+	// oauth2tokenDescUpdatedAt is the schema descriptor for updated_at field.
+	oauth2tokenDescUpdatedAt := oauth2tokenFields[8].Descriptor()
+	// oauth2token.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	oauth2token.DefaultUpdatedAt = oauth2tokenDescUpdatedAt.Default.(func() time.Time)
+	// oauth2tokenDescVersion is the schema descriptor for version field.
+	oauth2tokenDescVersion := oauth2tokenFields[9].Descriptor()
+	// oauth2token.DefaultVersion holds the default value on creation for the version field.
+	oauth2token.DefaultVersion = oauth2tokenDescVersion.Default.(int)
+	resourceFields := schema.Resource{}.Fields()
+	_ = resourceFields
+	// resourceDescCreatedAt is the schema descriptor for created_at field.
+	resourceDescCreatedAt := resourceFields[6].Descriptor()
+	// resource.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resource.DefaultCreatedAt = resourceDescCreatedAt.Default.(func() time.Time)
+	// resourceDescUpdatedAt is the schema descriptor for updated_at field.
+	resourceDescUpdatedAt := resourceFields[7].Descriptor()
+	// resource.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resource.DefaultUpdatedAt = resourceDescUpdatedAt.Default.(func() time.Time)
+	// resourceDescVersion is the schema descriptor for version field.
+	resourceDescVersion := resourceFields[8].Descriptor()
+	// resource.DefaultVersion holds the default value on creation for the version field.
+	resource.DefaultVersion = resourceDescVersion.Default.(int)
+	resourceroleFields := schema.ResourceRole{}.Fields()
+	_ = resourceroleFields
+	// resourceroleDescCreatedAt is the schema descriptor for created_at field.
+	resourceroleDescCreatedAt := resourceroleFields[3].Descriptor()
+	// resourcerole.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resourcerole.DefaultCreatedAt = resourceroleDescCreatedAt.Default.(func() time.Time)
+	// resourceroleDescUpdatedAt is the schema descriptor for updated_at field.
+	resourceroleDescUpdatedAt := resourceroleFields[4].Descriptor()
+	// resourcerole.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resourcerole.DefaultUpdatedAt = resourceroleDescUpdatedAt.Default.(func() time.Time)
+	// resourceroleDescVersion is the schema descriptor for version field.
+	resourceroleDescVersion := resourceroleFields[5].Descriptor()
+	// resourcerole.DefaultVersion holds the default value on creation for the version field.
+	resourcerole.DefaultVersion = resourceroleDescVersion.Default.(int)
+	resourceuserFields := schema.ResourceUser{}.Fields()
+	_ = resourceuserFields
+	// resourceuserDescCreatedAt is the schema descriptor for created_at field.
+	resourceuserDescCreatedAt := resourceuserFields[3].Descriptor()
+	// resourceuser.DefaultCreatedAt holds the default value on creation for the created_at field.
+	resourceuser.DefaultCreatedAt = resourceuserDescCreatedAt.Default.(func() time.Time)
+	// resourceuserDescUpdatedAt is the schema descriptor for updated_at field.
+	resourceuserDescUpdatedAt := resourceuserFields[4].Descriptor()
+	// resourceuser.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	resourceuser.DefaultUpdatedAt = resourceuserDescUpdatedAt.Default.(func() time.Time)
+	// resourceuserDescVersion is the schema descriptor for version field.
+	resourceuserDescVersion := resourceuserFields[5].Descriptor()
+	// resourceuser.DefaultVersion holds the default value on creation for the version field.
+	resourceuser.DefaultVersion = resourceuserDescVersion.Default.(int)
+	roleFields := schema.Role{}.Fields()
+	_ = roleFields
+	// roleDescCreatedAt is the schema descriptor for created_at field.
+	roleDescCreatedAt := roleFields[4].Descriptor()
+	// role.DefaultCreatedAt holds the default value on creation for the created_at field.
+	role.DefaultCreatedAt = roleDescCreatedAt.Default.(func() time.Time)
+	// roleDescUpdatedAt is the schema descriptor for updated_at field.
+	roleDescUpdatedAt := roleFields[5].Descriptor()
+	// role.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	role.DefaultUpdatedAt = roleDescUpdatedAt.Default.(func() time.Time)
+	// roleDescVersion is the schema descriptor for version field.
+	roleDescVersion := roleFields[6].Descriptor()
+	// role.DefaultVersion holds the default value on creation for the version field.
+	role.DefaultVersion = roleDescVersion.Default.(int)
+	roleroleFields := schema.RoleRole{}.Fields()
+	_ = roleroleFields
+	// roleroleDescCreatedAt is the schema descriptor for created_at field.
+	roleroleDescCreatedAt := roleroleFields[3].Descriptor()
+	// rolerole.DefaultCreatedAt holds the default value on creation for the created_at field.
+	rolerole.DefaultCreatedAt = roleroleDescCreatedAt.Default.(func() time.Time)
+	// roleroleDescUpdatedAt is the schema descriptor for updated_at field.
+	roleroleDescUpdatedAt := roleroleFields[4].Descriptor()
+	// rolerole.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	rolerole.DefaultUpdatedAt = roleroleDescUpdatedAt.Default.(func() time.Time)
+	// roleroleDescVersion is the schema descriptor for version field.
+	roleroleDescVersion := roleroleFields[5].Descriptor()
+	// rolerole.DefaultVersion holds the default value on creation for the version field.
+	rolerole.DefaultVersion = roleroleDescVersion.Default.(int)
+	tagcommonFields := schema.TagCommon{}.Fields()
+	_ = tagcommonFields
+	// tagcommonDescCreatedAt is the schema descriptor for created_at field.
+	tagcommonDescCreatedAt := tagcommonFields[3].Descriptor()
+	// tagcommon.DefaultCreatedAt holds the default value on creation for the created_at field.
+	tagcommon.DefaultCreatedAt = tagcommonDescCreatedAt.Default.(func() time.Time)
+	// tagcommonDescUpdatedAt is the schema descriptor for updated_at field.
+	tagcommonDescUpdatedAt := tagcommonFields[4].Descriptor()
+	// tagcommon.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	tagcommon.DefaultUpdatedAt = tagcommonDescUpdatedAt.Default.(func() time.Time)
+	// tagcommonDescVersion is the schema descriptor for version field.
+	tagcommonDescVersion := tagcommonFields[5].Descriptor()
+	// tagcommon.DefaultVersion holds the default value on creation for the version field.
+	tagcommon.DefaultVersion = tagcommonDescVersion.Default.(int)
+	userdetailFields := schema.UserDetail{}.Fields()
+	_ = userdetailFields
+	// userdetailDescCreatedAt is the schema descriptor for created_at field.
+	userdetailDescCreatedAt := userdetailFields[4].Descriptor()
+	// userdetail.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userdetail.DefaultCreatedAt = userdetailDescCreatedAt.Default.(func() time.Time)
+	// userdetailDescUpdatedAt is the schema descriptor for updated_at field.
+	userdetailDescUpdatedAt := userdetailFields[5].Descriptor()
+	// userdetail.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	userdetail.DefaultUpdatedAt = userdetailDescUpdatedAt.Default.(func() time.Time)
+	// userdetailDescVersion is the schema descriptor for version field.
+	userdetailDescVersion := userdetailFields[6].Descriptor()
+	// userdetail.DefaultVersion holds the default value on creation for the version field.
+	userdetail.DefaultVersion = userdetailDescVersion.Default.(int)
+	usermessageFields := schema.UserMessage{}.Fields()
+	_ = usermessageFields
+	// usermessageDescCreatedAt is the schema descriptor for created_at field.
+	usermessageDescCreatedAt := usermessageFields[10].Descriptor()
+	// usermessage.DefaultCreatedAt holds the default value on creation for the created_at field.
+	usermessage.DefaultCreatedAt = usermessageDescCreatedAt.Default.(func() time.Time)
+	// usermessageDescUpdatedAt is the schema descriptor for updated_at field.
+	usermessageDescUpdatedAt := usermessageFields[11].Descriptor()
+	// usermessage.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	usermessage.DefaultUpdatedAt = usermessageDescUpdatedAt.Default.(func() time.Time)
+	// usermessageDescVersion is the schema descriptor for version field.
+	usermessageDescVersion := usermessageFields[12].Descriptor()
+	// usermessage.DefaultVersion holds the default value on creation for the version field.
+	usermessage.DefaultVersion = usermessageDescVersion.Default.(int)
+	userroleFields := schema.UserRole{}.Fields()
+	_ = userroleFields
+	// userroleDescCreatedAt is the schema descriptor for created_at field.
+	userroleDescCreatedAt := userroleFields[4].Descriptor()
+	// userrole.DefaultCreatedAt holds the default value on creation for the created_at field.
+	userrole.DefaultCreatedAt = userroleDescCreatedAt.Default.(func() time.Time)
+	// userroleDescUpdatedAt is the schema descriptor for updated_at field.
+	userroleDescUpdatedAt := userroleFields[5].Descriptor()
+	// userrole.DefaultUpdatedAt holds the default value on creation for the updated_at field.
+	userrole.DefaultUpdatedAt = userroleDescUpdatedAt.Default.(func() time.Time)
+	// userroleDescVersion is the schema descriptor for version field.
+	userroleDescVersion := userroleFields[6].Descriptor()
+	// userrole.DefaultVersion holds the default value on creation for the version field.
+	userrole.DefaultVersion = userroleDescVersion.Default.(int)
 }

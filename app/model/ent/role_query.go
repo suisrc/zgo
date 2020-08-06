@@ -233,6 +233,19 @@ func (rq *RoleQuery) Clone() *RoleQuery {
 
 // GroupBy used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		UID string `json:"uid,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Role.Query().
+//		GroupBy(role.FieldUID).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (rq *RoleQuery) GroupBy(field string, fields ...string) *RoleGroupBy {
 	group := &RoleGroupBy{config: rq.config}
 	group.fields = append([]string{field}, fields...)
@@ -246,6 +259,17 @@ func (rq *RoleQuery) GroupBy(field string, fields ...string) *RoleGroupBy {
 }
 
 // Select one or more fields from the given query.
+//
+// Example:
+//
+//	var v []struct {
+//		UID string `json:"uid,omitempty"`
+//	}
+//
+//	client.Role.Query().
+//		Select(role.FieldUID).
+//		Scan(ctx, &v)
+//
 func (rq *RoleQuery) Select(field string, fields ...string) *RoleSelect {
 	selector := &RoleSelect{config: rq.config}
 	selector.fields = append([]string{field}, fields...)

@@ -3,6 +3,8 @@
 package resource
 
 import (
+	"time"
+
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/suisrc/zgo/app/model/ent/predicate"
 )
@@ -87,6 +89,928 @@ func IDLT(id int) predicate.Resource {
 func IDLTE(id int) predicate.Resource {
 	return predicate.Resource(func(s *sql.Selector) {
 		s.Where(sql.LTE(s.C(FieldID), id))
+	})
+}
+
+// Resource applies equality check predicate on the "resource" field. It's identical to ResourceEQ.
+func Resource(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResource), v))
+	})
+}
+
+// Path applies equality check predicate on the "path" field. It's identical to PathEQ.
+func Path(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldPath), v))
+	})
+}
+
+// Netmask applies equality check predicate on the "netmask" field. It's identical to NetmaskEQ.
+func Netmask(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldNetmask), v))
+	})
+}
+
+// Allow applies equality check predicate on the "allow" field. It's identical to AllowEQ.
+func Allow(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldAllow), v))
+	})
+}
+
+// Desc applies equality check predicate on the "desc" field. It's identical to DescEQ.
+func Desc(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDesc), v))
+	})
+}
+
+// Creator applies equality check predicate on the "creator" field. It's identical to CreatorEQ.
+func Creator(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCreator), v))
+	})
+}
+
+// CreatedAt applies equality check predicate on the "created_at" field. It's identical to CreatedAtEQ.
+func CreatedAt(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// UpdatedAt applies equality check predicate on the "updated_at" field. It's identical to UpdatedAtEQ.
+func UpdatedAt(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// Version applies equality check predicate on the "version" field. It's identical to VersionEQ.
+func Version(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldVersion), v))
+	})
+}
+
+// ResourceEQ applies the EQ predicate on the "resource" field.
+func ResourceEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldResource), v))
+	})
+}
+
+// ResourceNEQ applies the NEQ predicate on the "resource" field.
+func ResourceNEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldResource), v))
+	})
+}
+
+// ResourceIn applies the In predicate on the "resource" field.
+func ResourceIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldResource), v...))
+	})
+}
+
+// ResourceNotIn applies the NotIn predicate on the "resource" field.
+func ResourceNotIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldResource), v...))
+	})
+}
+
+// ResourceGT applies the GT predicate on the "resource" field.
+func ResourceGT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldResource), v))
+	})
+}
+
+// ResourceGTE applies the GTE predicate on the "resource" field.
+func ResourceGTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldResource), v))
+	})
+}
+
+// ResourceLT applies the LT predicate on the "resource" field.
+func ResourceLT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldResource), v))
+	})
+}
+
+// ResourceLTE applies the LTE predicate on the "resource" field.
+func ResourceLTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldResource), v))
+	})
+}
+
+// ResourceContains applies the Contains predicate on the "resource" field.
+func ResourceContains(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldResource), v))
+	})
+}
+
+// ResourceHasPrefix applies the HasPrefix predicate on the "resource" field.
+func ResourceHasPrefix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldResource), v))
+	})
+}
+
+// ResourceHasSuffix applies the HasSuffix predicate on the "resource" field.
+func ResourceHasSuffix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldResource), v))
+	})
+}
+
+// ResourceEqualFold applies the EqualFold predicate on the "resource" field.
+func ResourceEqualFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldResource), v))
+	})
+}
+
+// ResourceContainsFold applies the ContainsFold predicate on the "resource" field.
+func ResourceContainsFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldResource), v))
+	})
+}
+
+// PathEQ applies the EQ predicate on the "path" field.
+func PathEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldPath), v))
+	})
+}
+
+// PathNEQ applies the NEQ predicate on the "path" field.
+func PathNEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldPath), v))
+	})
+}
+
+// PathIn applies the In predicate on the "path" field.
+func PathIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldPath), v...))
+	})
+}
+
+// PathNotIn applies the NotIn predicate on the "path" field.
+func PathNotIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldPath), v...))
+	})
+}
+
+// PathGT applies the GT predicate on the "path" field.
+func PathGT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldPath), v))
+	})
+}
+
+// PathGTE applies the GTE predicate on the "path" field.
+func PathGTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldPath), v))
+	})
+}
+
+// PathLT applies the LT predicate on the "path" field.
+func PathLT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldPath), v))
+	})
+}
+
+// PathLTE applies the LTE predicate on the "path" field.
+func PathLTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldPath), v))
+	})
+}
+
+// PathContains applies the Contains predicate on the "path" field.
+func PathContains(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldPath), v))
+	})
+}
+
+// PathHasPrefix applies the HasPrefix predicate on the "path" field.
+func PathHasPrefix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldPath), v))
+	})
+}
+
+// PathHasSuffix applies the HasSuffix predicate on the "path" field.
+func PathHasSuffix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldPath), v))
+	})
+}
+
+// PathEqualFold applies the EqualFold predicate on the "path" field.
+func PathEqualFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldPath), v))
+	})
+}
+
+// PathContainsFold applies the ContainsFold predicate on the "path" field.
+func PathContainsFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldPath), v))
+	})
+}
+
+// NetmaskEQ applies the EQ predicate on the "netmask" field.
+func NetmaskEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskNEQ applies the NEQ predicate on the "netmask" field.
+func NetmaskNEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskIn applies the In predicate on the "netmask" field.
+func NetmaskIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldNetmask), v...))
+	})
+}
+
+// NetmaskNotIn applies the NotIn predicate on the "netmask" field.
+func NetmaskNotIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldNetmask), v...))
+	})
+}
+
+// NetmaskGT applies the GT predicate on the "netmask" field.
+func NetmaskGT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskGTE applies the GTE predicate on the "netmask" field.
+func NetmaskGTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskLT applies the LT predicate on the "netmask" field.
+func NetmaskLT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskLTE applies the LTE predicate on the "netmask" field.
+func NetmaskLTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskContains applies the Contains predicate on the "netmask" field.
+func NetmaskContains(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskHasPrefix applies the HasPrefix predicate on the "netmask" field.
+func NetmaskHasPrefix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskHasSuffix applies the HasSuffix predicate on the "netmask" field.
+func NetmaskHasSuffix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskEqualFold applies the EqualFold predicate on the "netmask" field.
+func NetmaskEqualFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldNetmask), v))
+	})
+}
+
+// NetmaskContainsFold applies the ContainsFold predicate on the "netmask" field.
+func NetmaskContainsFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldNetmask), v))
+	})
+}
+
+// AllowEQ applies the EQ predicate on the "allow" field.
+func AllowEQ(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldAllow), v))
+	})
+}
+
+// AllowNEQ applies the NEQ predicate on the "allow" field.
+func AllowNEQ(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldAllow), v))
+	})
+}
+
+// AllowIn applies the In predicate on the "allow" field.
+func AllowIn(vs ...int) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldAllow), v...))
+	})
+}
+
+// AllowNotIn applies the NotIn predicate on the "allow" field.
+func AllowNotIn(vs ...int) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldAllow), v...))
+	})
+}
+
+// AllowGT applies the GT predicate on the "allow" field.
+func AllowGT(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldAllow), v))
+	})
+}
+
+// AllowGTE applies the GTE predicate on the "allow" field.
+func AllowGTE(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldAllow), v))
+	})
+}
+
+// AllowLT applies the LT predicate on the "allow" field.
+func AllowLT(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldAllow), v))
+	})
+}
+
+// AllowLTE applies the LTE predicate on the "allow" field.
+func AllowLTE(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldAllow), v))
+	})
+}
+
+// DescEQ applies the EQ predicate on the "desc" field.
+func DescEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldDesc), v))
+	})
+}
+
+// DescNEQ applies the NEQ predicate on the "desc" field.
+func DescNEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldDesc), v))
+	})
+}
+
+// DescIn applies the In predicate on the "desc" field.
+func DescIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldDesc), v...))
+	})
+}
+
+// DescNotIn applies the NotIn predicate on the "desc" field.
+func DescNotIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldDesc), v...))
+	})
+}
+
+// DescGT applies the GT predicate on the "desc" field.
+func DescGT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldDesc), v))
+	})
+}
+
+// DescGTE applies the GTE predicate on the "desc" field.
+func DescGTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldDesc), v))
+	})
+}
+
+// DescLT applies the LT predicate on the "desc" field.
+func DescLT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldDesc), v))
+	})
+}
+
+// DescLTE applies the LTE predicate on the "desc" field.
+func DescLTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldDesc), v))
+	})
+}
+
+// DescContains applies the Contains predicate on the "desc" field.
+func DescContains(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldDesc), v))
+	})
+}
+
+// DescHasPrefix applies the HasPrefix predicate on the "desc" field.
+func DescHasPrefix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldDesc), v))
+	})
+}
+
+// DescHasSuffix applies the HasSuffix predicate on the "desc" field.
+func DescHasSuffix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldDesc), v))
+	})
+}
+
+// DescEqualFold applies the EqualFold predicate on the "desc" field.
+func DescEqualFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldDesc), v))
+	})
+}
+
+// DescContainsFold applies the ContainsFold predicate on the "desc" field.
+func DescContainsFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldDesc), v))
+	})
+}
+
+// CreatorEQ applies the EQ predicate on the "creator" field.
+func CreatorEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorNEQ applies the NEQ predicate on the "creator" field.
+func CreatorNEQ(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorIn applies the In predicate on the "creator" field.
+func CreatorIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCreator), v...))
+	})
+}
+
+// CreatorNotIn applies the NotIn predicate on the "creator" field.
+func CreatorNotIn(vs ...string) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCreator), v...))
+	})
+}
+
+// CreatorGT applies the GT predicate on the "creator" field.
+func CreatorGT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorGTE applies the GTE predicate on the "creator" field.
+func CreatorGTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorLT applies the LT predicate on the "creator" field.
+func CreatorLT(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorLTE applies the LTE predicate on the "creator" field.
+func CreatorLTE(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorContains applies the Contains predicate on the "creator" field.
+func CreatorContains(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorHasPrefix applies the HasPrefix predicate on the "creator" field.
+func CreatorHasPrefix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorHasSuffix applies the HasSuffix predicate on the "creator" field.
+func CreatorHasSuffix(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorEqualFold applies the EqualFold predicate on the "creator" field.
+func CreatorEqualFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldCreator), v))
+	})
+}
+
+// CreatorContainsFold applies the ContainsFold predicate on the "creator" field.
+func CreatorContainsFold(v string) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldCreator), v))
+	})
+}
+
+// CreatedAtEQ applies the EQ predicate on the "created_at" field.
+func CreatedAtEQ(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtNEQ applies the NEQ predicate on the "created_at" field.
+func CreatedAtNEQ(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtIn applies the In predicate on the "created_at" field.
+func CreatedAtIn(vs ...time.Time) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldCreatedAt), v...))
+	})
+}
+
+// CreatedAtNotIn applies the NotIn predicate on the "created_at" field.
+func CreatedAtNotIn(vs ...time.Time) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldCreatedAt), v...))
+	})
+}
+
+// CreatedAtGT applies the GT predicate on the "created_at" field.
+func CreatedAtGT(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtGTE applies the GTE predicate on the "created_at" field.
+func CreatedAtGTE(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtLT applies the LT predicate on the "created_at" field.
+func CreatedAtLT(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldCreatedAt), v))
+	})
+}
+
+// CreatedAtLTE applies the LTE predicate on the "created_at" field.
+func CreatedAtLTE(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldCreatedAt), v))
+	})
+}
+
+// UpdatedAtEQ applies the EQ predicate on the "updated_at" field.
+func UpdatedAtEQ(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtNEQ applies the NEQ predicate on the "updated_at" field.
+func UpdatedAtNEQ(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtIn applies the In predicate on the "updated_at" field.
+func UpdatedAtIn(vs ...time.Time) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldUpdatedAt), v...))
+	})
+}
+
+// UpdatedAtNotIn applies the NotIn predicate on the "updated_at" field.
+func UpdatedAtNotIn(vs ...time.Time) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldUpdatedAt), v...))
+	})
+}
+
+// UpdatedAtGT applies the GT predicate on the "updated_at" field.
+func UpdatedAtGT(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtGTE applies the GTE predicate on the "updated_at" field.
+func UpdatedAtGTE(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtLT applies the LT predicate on the "updated_at" field.
+func UpdatedAtLT(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// UpdatedAtLTE applies the LTE predicate on the "updated_at" field.
+func UpdatedAtLTE(v time.Time) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldUpdatedAt), v))
+	})
+}
+
+// VersionEQ applies the EQ predicate on the "version" field.
+func VersionEQ(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldVersion), v))
+	})
+}
+
+// VersionNEQ applies the NEQ predicate on the "version" field.
+func VersionNEQ(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldVersion), v))
+	})
+}
+
+// VersionIn applies the In predicate on the "version" field.
+func VersionIn(vs ...int) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldVersion), v...))
+	})
+}
+
+// VersionNotIn applies the NotIn predicate on the "version" field.
+func VersionNotIn(vs ...int) predicate.Resource {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Resource(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldVersion), v...))
+	})
+}
+
+// VersionGT applies the GT predicate on the "version" field.
+func VersionGT(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldVersion), v))
+	})
+}
+
+// VersionGTE applies the GTE predicate on the "version" field.
+func VersionGTE(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldVersion), v))
+	})
+}
+
+// VersionLT applies the LT predicate on the "version" field.
+func VersionLT(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldVersion), v))
+	})
+}
+
+// VersionLTE applies the LTE predicate on the "version" field.
+func VersionLTE(v int) predicate.Resource {
+	return predicate.Resource(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldVersion), v))
 	})
 }
 

@@ -233,6 +233,19 @@ func (mq *MenuQuery) Clone() *MenuQuery {
 
 // GroupBy used to group vertices by one or more fields/columns.
 // It is often used with aggregate functions, like: count, max, mean, min, sum.
+//
+// Example:
+//
+//	var v []struct {
+//		ParentID string `json:"parent_id,omitempty"`
+//		Count int `json:"count,omitempty"`
+//	}
+//
+//	client.Menu.Query().
+//		GroupBy(menu.FieldParentID).
+//		Aggregate(ent.Count()).
+//		Scan(ctx, &v)
+//
 func (mq *MenuQuery) GroupBy(field string, fields ...string) *MenuGroupBy {
 	group := &MenuGroupBy{config: mq.config}
 	group.fields = append([]string{field}, fields...)
@@ -246,6 +259,17 @@ func (mq *MenuQuery) GroupBy(field string, fields ...string) *MenuGroupBy {
 }
 
 // Select one or more fields from the given query.
+//
+// Example:
+//
+//	var v []struct {
+//		ParentID string `json:"parent_id,omitempty"`
+//	}
+//
+//	client.Menu.Query().
+//		Select(menu.FieldParentID).
+//		Scan(ctx, &v)
+//
 func (mq *MenuQuery) Select(field string, fields ...string) *MenuSelect {
 	selector := &MenuSelect{config: mq.config}
 	selector.fields = append([]string{field}, fields...)

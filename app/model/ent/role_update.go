@@ -5,6 +5,7 @@ package ent
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql"
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
@@ -24,6 +25,79 @@ type RoleUpdate struct {
 // Where adds a new predicate for the builder.
 func (ru *RoleUpdate) Where(ps ...predicate.Role) *RoleUpdate {
 	ru.predicates = append(ru.predicates, ps...)
+	return ru
+}
+
+// SetUID sets the uid field.
+func (ru *RoleUpdate) SetUID(s string) *RoleUpdate {
+	ru.mutation.SetUID(s)
+	return ru
+}
+
+// SetName sets the name field.
+func (ru *RoleUpdate) SetName(s string) *RoleUpdate {
+	ru.mutation.SetName(s)
+	return ru
+}
+
+// SetDesc sets the desc field.
+func (ru *RoleUpdate) SetDesc(s string) *RoleUpdate {
+	ru.mutation.SetDesc(s)
+	return ru
+}
+
+// SetCreator sets the creator field.
+func (ru *RoleUpdate) SetCreator(s string) *RoleUpdate {
+	ru.mutation.SetCreator(s)
+	return ru
+}
+
+// SetCreatedAt sets the created_at field.
+func (ru *RoleUpdate) SetCreatedAt(t time.Time) *RoleUpdate {
+	ru.mutation.SetCreatedAt(t)
+	return ru
+}
+
+// SetNillableCreatedAt sets the created_at field if the given value is not nil.
+func (ru *RoleUpdate) SetNillableCreatedAt(t *time.Time) *RoleUpdate {
+	if t != nil {
+		ru.SetCreatedAt(*t)
+	}
+	return ru
+}
+
+// SetUpdatedAt sets the updated_at field.
+func (ru *RoleUpdate) SetUpdatedAt(t time.Time) *RoleUpdate {
+	ru.mutation.SetUpdatedAt(t)
+	return ru
+}
+
+// SetNillableUpdatedAt sets the updated_at field if the given value is not nil.
+func (ru *RoleUpdate) SetNillableUpdatedAt(t *time.Time) *RoleUpdate {
+	if t != nil {
+		ru.SetUpdatedAt(*t)
+	}
+	return ru
+}
+
+// SetVersion sets the version field.
+func (ru *RoleUpdate) SetVersion(i int) *RoleUpdate {
+	ru.mutation.ResetVersion()
+	ru.mutation.SetVersion(i)
+	return ru
+}
+
+// SetNillableVersion sets the version field if the given value is not nil.
+func (ru *RoleUpdate) SetNillableVersion(i *int) *RoleUpdate {
+	if i != nil {
+		ru.SetVersion(*i)
+	}
+	return ru
+}
+
+// AddVersion adds i to version.
+func (ru *RoleUpdate) AddVersion(i int) *RoleUpdate {
+	ru.mutation.AddVersion(i)
 	return ru
 }
 
@@ -101,6 +175,62 @@ func (ru *RoleUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := ru.mutation.UID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldUID,
+		})
+	}
+	if value, ok := ru.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldName,
+		})
+	}
+	if value, ok := ru.mutation.Desc(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldDesc,
+		})
+	}
+	if value, ok := ru.mutation.Creator(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldCreator,
+		})
+	}
+	if value, ok := ru.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: role.FieldCreatedAt,
+		})
+	}
+	if value, ok := ru.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: role.FieldUpdatedAt,
+		})
+	}
+	if value, ok := ru.mutation.Version(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: role.FieldVersion,
+		})
+	}
+	if value, ok := ru.mutation.AddedVersion(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: role.FieldVersion,
+		})
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, ru.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{role.Label}
@@ -117,6 +247,79 @@ type RoleUpdateOne struct {
 	config
 	hooks    []Hook
 	mutation *RoleMutation
+}
+
+// SetUID sets the uid field.
+func (ruo *RoleUpdateOne) SetUID(s string) *RoleUpdateOne {
+	ruo.mutation.SetUID(s)
+	return ruo
+}
+
+// SetName sets the name field.
+func (ruo *RoleUpdateOne) SetName(s string) *RoleUpdateOne {
+	ruo.mutation.SetName(s)
+	return ruo
+}
+
+// SetDesc sets the desc field.
+func (ruo *RoleUpdateOne) SetDesc(s string) *RoleUpdateOne {
+	ruo.mutation.SetDesc(s)
+	return ruo
+}
+
+// SetCreator sets the creator field.
+func (ruo *RoleUpdateOne) SetCreator(s string) *RoleUpdateOne {
+	ruo.mutation.SetCreator(s)
+	return ruo
+}
+
+// SetCreatedAt sets the created_at field.
+func (ruo *RoleUpdateOne) SetCreatedAt(t time.Time) *RoleUpdateOne {
+	ruo.mutation.SetCreatedAt(t)
+	return ruo
+}
+
+// SetNillableCreatedAt sets the created_at field if the given value is not nil.
+func (ruo *RoleUpdateOne) SetNillableCreatedAt(t *time.Time) *RoleUpdateOne {
+	if t != nil {
+		ruo.SetCreatedAt(*t)
+	}
+	return ruo
+}
+
+// SetUpdatedAt sets the updated_at field.
+func (ruo *RoleUpdateOne) SetUpdatedAt(t time.Time) *RoleUpdateOne {
+	ruo.mutation.SetUpdatedAt(t)
+	return ruo
+}
+
+// SetNillableUpdatedAt sets the updated_at field if the given value is not nil.
+func (ruo *RoleUpdateOne) SetNillableUpdatedAt(t *time.Time) *RoleUpdateOne {
+	if t != nil {
+		ruo.SetUpdatedAt(*t)
+	}
+	return ruo
+}
+
+// SetVersion sets the version field.
+func (ruo *RoleUpdateOne) SetVersion(i int) *RoleUpdateOne {
+	ruo.mutation.ResetVersion()
+	ruo.mutation.SetVersion(i)
+	return ruo
+}
+
+// SetNillableVersion sets the version field if the given value is not nil.
+func (ruo *RoleUpdateOne) SetNillableVersion(i *int) *RoleUpdateOne {
+	if i != nil {
+		ruo.SetVersion(*i)
+	}
+	return ruo
+}
+
+// AddVersion adds i to version.
+func (ruo *RoleUpdateOne) AddVersion(i int) *RoleUpdateOne {
+	ruo.mutation.AddVersion(i)
+	return ruo
 }
 
 // Mutation returns the RoleMutation object of the builder.
@@ -191,6 +394,62 @@ func (ruo *RoleUpdateOne) sqlSave(ctx context.Context) (r *Role, err error) {
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Role.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if value, ok := ruo.mutation.UID(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldUID,
+		})
+	}
+	if value, ok := ruo.mutation.Name(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldName,
+		})
+	}
+	if value, ok := ruo.mutation.Desc(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldDesc,
+		})
+	}
+	if value, ok := ruo.mutation.Creator(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldCreator,
+		})
+	}
+	if value, ok := ruo.mutation.CreatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: role.FieldCreatedAt,
+		})
+	}
+	if value, ok := ruo.mutation.UpdatedAt(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: role.FieldUpdatedAt,
+		})
+	}
+	if value, ok := ruo.mutation.Version(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: role.FieldVersion,
+		})
+	}
+	if value, ok := ruo.mutation.AddedVersion(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: role.FieldVersion,
+		})
+	}
 	r = &Role{config: ruo.config}
 	_spec.Assign = r.assignValues
 	_spec.ScanValues = r.scanValues()

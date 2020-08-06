@@ -10,12 +10,13 @@ UNIQUE index_name (title(length))
 primary: 主键  
 udx_xxx: 唯一索引  
 idx_xxx: 索引  
-fk_xxxx: 外键  
 
+fk_xxxx: 外键  
+fk_account_user->user.id  
 ```sql model
 ARG table_prefix=
 
-includes=account,oauth2_third
+includes=
 excludes=
 ```
 
@@ -34,7 +35,7 @@ excludes=
 | platform      | 账户归属平台   | 字符串   | 1:ZGO(当前平台) 2:OA2-[OAuth2.id](第三方平台)       | varchar(16) DEFAULT 'ZGO', udx_account               |
 | verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2                             | varchar(16)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| password      | 登录密码       | 字符串   |                                                     | varchar(255), udx_passwd                             |
+| password      | 登录密码       | 字符串   |                                                     | varchar(255)                                         |
 | password_salt | 密码盐值       | 字符串   |                                                     | varchar(255)                                         |
 | password_type | 校验方式       | 字符串   | 1:DEF1(明文) 2:MD5 3:SHA1 4:...                     | varchar(16)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -48,7 +49,7 @@ excludes=
 | oauth2_time   | oauth2创建时间 | 时间格式 | 令牌生成时间                                        | timestamp                                            |
 | token_fake    | oauth2令牌     | 字符串   | 特殊的令牌,用于集群中应用间通信,可理解为永生令牌    | varchar(1024)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| creator       | 创建人         | 字符串   |                                                     | varchar(64), idx_creator                             |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |

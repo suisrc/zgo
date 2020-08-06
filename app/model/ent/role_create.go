@@ -4,7 +4,9 @@ package ent
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql/sqlgraph"
 	"github.com/facebookincubator/ent/schema/field"
@@ -18,6 +20,72 @@ type RoleCreate struct {
 	hooks    []Hook
 }
 
+// SetUID sets the uid field.
+func (rc *RoleCreate) SetUID(s string) *RoleCreate {
+	rc.mutation.SetUID(s)
+	return rc
+}
+
+// SetName sets the name field.
+func (rc *RoleCreate) SetName(s string) *RoleCreate {
+	rc.mutation.SetName(s)
+	return rc
+}
+
+// SetDesc sets the desc field.
+func (rc *RoleCreate) SetDesc(s string) *RoleCreate {
+	rc.mutation.SetDesc(s)
+	return rc
+}
+
+// SetCreator sets the creator field.
+func (rc *RoleCreate) SetCreator(s string) *RoleCreate {
+	rc.mutation.SetCreator(s)
+	return rc
+}
+
+// SetCreatedAt sets the created_at field.
+func (rc *RoleCreate) SetCreatedAt(t time.Time) *RoleCreate {
+	rc.mutation.SetCreatedAt(t)
+	return rc
+}
+
+// SetNillableCreatedAt sets the created_at field if the given value is not nil.
+func (rc *RoleCreate) SetNillableCreatedAt(t *time.Time) *RoleCreate {
+	if t != nil {
+		rc.SetCreatedAt(*t)
+	}
+	return rc
+}
+
+// SetUpdatedAt sets the updated_at field.
+func (rc *RoleCreate) SetUpdatedAt(t time.Time) *RoleCreate {
+	rc.mutation.SetUpdatedAt(t)
+	return rc
+}
+
+// SetNillableUpdatedAt sets the updated_at field if the given value is not nil.
+func (rc *RoleCreate) SetNillableUpdatedAt(t *time.Time) *RoleCreate {
+	if t != nil {
+		rc.SetUpdatedAt(*t)
+	}
+	return rc
+}
+
+// SetVersion sets the version field.
+func (rc *RoleCreate) SetVersion(i int) *RoleCreate {
+	rc.mutation.SetVersion(i)
+	return rc
+}
+
+// SetNillableVersion sets the version field if the given value is not nil.
+func (rc *RoleCreate) SetNillableVersion(i *int) *RoleCreate {
+	if i != nil {
+		rc.SetVersion(*i)
+	}
+	return rc
+}
+
 // Mutation returns the RoleMutation object of the builder.
 func (rc *RoleCreate) Mutation() *RoleMutation {
 	return rc.mutation
@@ -25,6 +93,30 @@ func (rc *RoleCreate) Mutation() *RoleMutation {
 
 // Save creates the Role in the database.
 func (rc *RoleCreate) Save(ctx context.Context) (*Role, error) {
+	if _, ok := rc.mutation.UID(); !ok {
+		return nil, &ValidationError{Name: "uid", err: errors.New("ent: missing required field \"uid\"")}
+	}
+	if _, ok := rc.mutation.Name(); !ok {
+		return nil, &ValidationError{Name: "name", err: errors.New("ent: missing required field \"name\"")}
+	}
+	if _, ok := rc.mutation.Desc(); !ok {
+		return nil, &ValidationError{Name: "desc", err: errors.New("ent: missing required field \"desc\"")}
+	}
+	if _, ok := rc.mutation.Creator(); !ok {
+		return nil, &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
+	}
+	if _, ok := rc.mutation.CreatedAt(); !ok {
+		v := role.DefaultCreatedAt()
+		rc.mutation.SetCreatedAt(v)
+	}
+	if _, ok := rc.mutation.UpdatedAt(); !ok {
+		v := role.DefaultUpdatedAt()
+		rc.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := rc.mutation.Version(); !ok {
+		v := role.DefaultVersion
+		rc.mutation.SetVersion(v)
+	}
 	var (
 		err  error
 		node *Role
@@ -85,5 +177,61 @@ func (rc *RoleCreate) createSpec() (*Role, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := rc.mutation.UID(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldUID,
+		})
+		r.UID = value
+	}
+	if value, ok := rc.mutation.Name(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldName,
+		})
+		r.Name = value
+	}
+	if value, ok := rc.mutation.Desc(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldDesc,
+		})
+		r.Desc = value
+	}
+	if value, ok := rc.mutation.Creator(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: role.FieldCreator,
+		})
+		r.Creator = value
+	}
+	if value, ok := rc.mutation.CreatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: role.FieldCreatedAt,
+		})
+		r.CreatedAt = value
+	}
+	if value, ok := rc.mutation.UpdatedAt(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeTime,
+			Value:  value,
+			Column: role.FieldUpdatedAt,
+		})
+		r.UpdatedAt = value
+	}
+	if value, ok := rc.mutation.Version(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: role.FieldVersion,
+		})
+		r.Version = value
+	}
 	return r, _spec
 }
