@@ -20,7 +20,10 @@ import (
 // Injectors from wire.go:
 
 func BuildInjector() (*Injector, func(), error) {
-	engine := middlewire.InitGinEngine()
+	bundle := api.NewBundle()
+	useEngine := api.NewUseEngine(bundle)
+	engine := middlewire.InitGinEngine(useEngine)
+	router := middlewire.NewRouter(engine)
 	adapter, err := casbinjson.NewCasbinAdapter()
 	if err != nil {
 		return nil, nil, err
@@ -30,8 +33,6 @@ func BuildInjector() (*Injector, func(), error) {
 		return nil, nil, err
 	}
 	auther := api.NewAuther()
-	bundle := api.NewBundle()
-	router := middlewire.NewRouter(engine)
 	auth := &api.Auth{
 		Enforcer: syncedEnforcer,
 		Auther:   auther,
@@ -60,11 +61,11 @@ func BuildInjector() (*Injector, func(), error) {
 	}
 	user := &api.User{}
 	options := &api.Options{
+		Bundle:   bundle,
 		Engine:   engine,
+		Router:   router,
 		Enforcer: syncedEnforcer,
 		Auther:   auther,
-		Bundle:   bundle,
-		Router:   router,
 		Auth:     auth,
 		Signin:   apiSignin,
 		User:     user,

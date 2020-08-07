@@ -28,6 +28,9 @@ func FormatCode(c *gin.Context, message *i18n.Message, args map[string]interface
 		})
 	}
 	// 加载i18n后,不会进入该分支
+	if args == nil {
+		return message.Other
+	}
 	text := message.Other
 	for key, val := range args {
 		text = strings.ReplaceAll(text, "{{."+key+"}}", toString(val))

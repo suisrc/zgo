@@ -11,7 +11,7 @@ import (
 // NewClient client
 func NewClient() (*sqlx.DB, func(), error) {
 	//db, err := sqlx.Connect("sqlite3", "file:db1?mode=memory&cache=shared&_fk=1")
-	db, err := sqlx.Connect(zdbc.DatabaseType, zdbc.DatabaseDSN)
+	db, err := sqlx.Connect(zdbc.DatabaseType, zdbc.DatabaseDSN())
 	if err != nil {
 		return nil, nil, err
 	}
