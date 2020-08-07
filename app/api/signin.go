@@ -39,20 +39,24 @@ func (a *Signin) signin(c *gin.Context) {
 	body := schema.SigninBody{}
 
 	if err := helper.ParseJSON(c, &body); err != nil {
-		logger.Infof(c, err.Error())
+		helper.FixResponse406Error(c, err, func() {
+			logger.Errorf(c, err.Error())
+		})
 		return
 	}
 
 	user, err := a.SigninService.Signin(c, &body)
 	if err != nil {
-		logger.Errorf(c, err.Error())
-		helper.ResError(c, &helper.Err401Unauthorized)
+		helper.FixResponse401Error(c, err, func() {
+			logger.Errorf(c, err.Error())
+		})
 		return
 	}
 	token, err := a.Auther.GenerateToken(c, user)
 	if err != nil {
-		logger.Errorf(c, err.Error())
-		helper.ResError(c, &helper.Err401Unauthorized)
+		helper.FixResponse401Error(c, err, func() {
+			logger.Errorf(c, err.Error())
+		})
 		return
 	}
 

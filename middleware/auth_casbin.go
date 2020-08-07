@@ -4,6 +4,7 @@ import (
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/helper"
+	"github.com/suisrc/zgo/modules/logger"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
@@ -40,6 +41,7 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 			i := helper.GetClientIP(c)
 			m := c.Request.Method
 			if b, err := enforcer.Enforce(r, a, d, p, i, m); err != nil {
+				logger.Errorf(c, err.Error())
 				helper.ResError(c, &helper.Err403Forbidden)
 				return
 			} else if !b {

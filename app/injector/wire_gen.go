@@ -50,12 +50,12 @@ func BuildInjector() (*Injector, func(), error) {
 		Entc: client,
 		Sqlx: db,
 	}
-	account := service.Account{
+	signin := service.Signin{
 		GPA: gpa,
 	}
-	signin := &api.Signin{
-		Auther:         auther,
-		AccountService: account,
+	apiSignin := &api.Signin{
+		Auther:        auther,
+		SigninService: signin,
 	}
 	user := &api.User{}
 	options := &api.Options{
@@ -64,7 +64,7 @@ func BuildInjector() (*Injector, func(), error) {
 		Auther:   auther,
 		Router:   router,
 		Auth:     auth,
-		Signin:   signin,
+		Signin:   apiSignin,
 		User:     user,
 	}
 	endpoints := api.InitEndpoints(options)

@@ -32,6 +32,7 @@ type ErrorInfo struct {
 	ErrorMessage string      `json:"errorMessage"`   // 向用户显示消息
 	ShowType     int         `json:"showType"`       //错误显示类型：0静音； 1条消息警告； 2消息错误； 4通知； 9页
 	TraceID      string      `json:"traceId"`        // 方便进行后端故障排除：唯一的请求ID
+	//Status       int         `json:"-"`
 }
 
 func (e *ErrorInfo) Error() string {

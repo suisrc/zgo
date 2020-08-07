@@ -3,14 +3,13 @@ package helper
 import (
 	"net/http"
 
-	"github.com/suisrc/zgo/modules/language"
-
 	"github.com/gin-gonic/gin"
 )
 
 // ResSuccess 包装响应错误
+// 禁止service层调用,请使用NewSuccess替换
 func ResSuccess(ctx *gin.Context, v interface{}) error {
-	res := NewOK(ctx, v)
+	res := NewSuccess(ctx, v)
 	//ctx.JSON(http.StatusOK, res)
 	//ctx.Abort()
 	ResJSON(ctx, http.StatusOK, res)
@@ -18,40 +17,25 @@ func ResSuccess(ctx *gin.Context, v interface{}) error {
 }
 
 // ResError 包装响应错误
+// 禁止service层调用,请使用NewWarpError替换
 func ResError(ctx *gin.Context, em *ErrorModel) error {
-	res := ErrorInfo{
-		Success:      false,
-		ErrorCode:    em.ErrorCode,
-		ErrorMessage: language.Sprintf(ctx, em.ErrorCode, em.ErrorMessage),
-		ShowType:     em.ShowType,
-		TraceID:      GetTraceID(ctx),
-	}
+	res := NewWrapError(ctx, em)
 	//ctx.JSON(http.StatusOK, res)
 	//ctx.Abort()
 	ResJSON(ctx, em.Status, res)
-	return &res
+	return res
 }
 
-// ResErrorResBody 包装响应错误
-func ResErrorResBody(ctx *gin.Context, em *ErrorModel) error {
-	res := ErrorInfo{
-		Success:      false,
-		ErrorCode:    em.ErrorCode,
-		ErrorMessage: language.Sprintf(ctx, em.ErrorCode, em.ErrorMessage),
-		ShowType:     em.ShowType,
-		TraceID:      GetTraceID(ctx),
+// ResJSON 响应JSON数据
+// 禁止service层调用
+func ResJSON(ctx *gin.Context, status int, v interface{}) {
+	if ctx == nil {
+		return
 	}
-	ResJSONResBody(ctx, em.Status, res)
-	return &res
-}
-
-// ResJSONResBody 响应JSON数据
-func ResJSONResBody(ctx *gin.Context, status int, v interface{}) {
 	buf, err := JSONMarshal(v)
 	if err != nil {
 		panic(err)
 	}
-	ctx.Set(ResBodyKey, buf)
 	if status == 0 {
 		status = http.StatusOK
 	}
@@ -59,12 +43,83 @@ func ResJSONResBody(ctx *gin.Context, status int, v interface{}) {
 	ctx.Abort()
 }
 
-// ResJSON 响应JSON数据
-func ResJSON(ctx *gin.Context, status int, v interface{}) {
+// IsResponseError 上级应用已经处理了返回值
+func IsResponseError(err error) bool {
+	switch err.(type) {
+	case *Success, *ErrorInfo:
+		return true
+	default:
+		return false
+	}
+}
+
+// FixResponse401Error 修复返回的异常
+func FixResponse401Error(c *gin.Context, err error, errfunc func()) {
+	if IsResponseError(err) {
+		ResJSON(c, http.StatusOK, err)
+		return
+	}
+	if errfunc != nil {
+		errfunc()
+	}
+	ResError(c, &Err401Unauthorized)
+}
+
+// FixResponse403Error 修复返回的异常
+func FixResponse403Error(c *gin.Context, err error, errfunc func()) {
+	if IsResponseError(err) {
+		ResJSON(c, http.StatusOK, err)
+		return
+	}
+	if errfunc != nil {
+		errfunc()
+	}
+	ResError(c, &Err403Forbidden)
+}
+
+// FixResponse406Error 修复返回的异常
+func FixResponse406Error(c *gin.Context, err error, errfunc func()) {
+	if IsResponseError(err) {
+		ResJSON(c, http.StatusOK, err)
+		return
+	}
+	if errfunc != nil {
+		errfunc()
+	}
+	ResError(c, &Err406NotAcceptable)
+}
+
+// FixResponse500Error 修复返回的异常
+func FixResponse500Error(c *gin.Context, err error, errfunc func()) {
+	if IsResponseError(err) {
+		ResJSON(c, http.StatusOK, err)
+		return
+	}
+	if errfunc != nil {
+		errfunc()
+	}
+	ResError(c, &Err500InternalServer)
+}
+
+// ResErrorResBody 包装响应错误
+// 禁止service层调用
+func ResErrorResBody(ctx *gin.Context, em *ErrorModel) error {
+	res := NewWrapError(ctx, em)
+	ResJSONResBody(ctx, em.Status, res)
+	return res
+}
+
+// ResJSONResBody 响应JSON数据
+// 禁止service层调用
+func ResJSONResBody(ctx *gin.Context, status int, v interface{}) {
+	if ctx == nil {
+		return
+	}
 	buf, err := JSONMarshal(v)
 	if err != nil {
 		panic(err)
 	}
+	ctx.Set(ResBodyKey, buf)
 	if status == 0 {
 		status = http.StatusOK
 	}

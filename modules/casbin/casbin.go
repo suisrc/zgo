@@ -28,11 +28,6 @@ func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(),
 	logger.Infof(nil, "loading casbin model[%s]", c.Model)
 	enforcer.EnableLog(c.Debug)
 
-	// 注册方法
-	enforcer.AddFunction("domainMatch", DomainMatchFunc)
-	enforcer.AddFunction("actionMatch", ActionMatchFunc)
-	enforcer.AddFunction("domainAudMatch", DomainMatchAudienceFunc)
-
 	err = enforcer.InitWithModelAndAdapter(enforcer.GetModel(), adapter)
 	if err != nil {
 		return nil, nil, err
@@ -46,6 +41,11 @@ func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(),
 			enforcer.StopAutoLoadPolicy()
 		}
 	}
+
+	// 注册方法
+	enforcer.AddFunction("domainMatch", DomainMatchFunc)
+	enforcer.AddFunction("actionMatch", ActionMatchFunc)
+	enforcer.AddFunction("domainAudMatch", DomainMatchAudienceFunc)
 
 	return enforcer, cleanFunc, nil
 }

@@ -1,6 +1,8 @@
 package helper
 
 import (
+	"fmt"
+
 	"github.com/suisrc/zgo/modules/language"
 
 	"github.com/gin-gonic/gin"
@@ -15,6 +17,10 @@ type ErrorModel struct {
 	ShowType     int
 	ErrorCode    string
 	ErrorMessage string
+}
+
+func (a *ErrorModel) Error() string {
+	return fmt.Sprintf("[%d]%s:%s", a.Status, a.ErrorCode, a.ErrorMessage)
 }
 
 // 定义错误
@@ -38,12 +44,26 @@ func NewError(ctx *gin.Context, showType int, code string, msg string, args ...i
 		ErrorMessage: language.Sprintf(ctx, code, msg, args...),
 		ShowType:     showType,
 		TraceID:      GetTraceID(ctx),
+		//Status:       http.StatusOK,
 	}
 	return res
 }
 
-// NewOK 包装响应结果
-func NewOK(ctx *gin.Context, data interface{}) *Success {
+// NewWrapError 包装响应错误
+func NewWrapError(ctx *gin.Context, em *ErrorModel) *ErrorInfo {
+	res := &ErrorInfo{
+		Success:      false,
+		ErrorCode:    em.ErrorCode,
+		ErrorMessage: language.Sprintf(ctx, em.ErrorCode, em.ErrorMessage),
+		ShowType:     em.ShowType,
+		TraceID:      GetTraceID(ctx),
+		//Status:       em.Status,
+	}
+	return res
+}
+
+// NewSuccess 包装响应结果
+func NewSuccess(ctx *gin.Context, data interface{}) *Success {
 	res := &Success{
 		Success: true,
 		Data:    data,

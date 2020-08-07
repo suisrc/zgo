@@ -1,7 +1,6 @@
 package helper
 
 import (
-	"log"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -50,6 +49,13 @@ func SetUserInfo(c *gin.Context, user UserInfo) {
 
 // GetTraceID 根据山下问,获取追踪ID
 func GetTraceID(c *gin.Context) string {
+	if c == nil {
+		v, err := uuid.NewRandom()
+		if err != nil {
+			panic(err)
+		}
+		return v.String()
+	}
 	if v, ok := c.Get(TraceIDKey); ok && v != "" {
 		return v.(string)
 	}
@@ -70,8 +76,7 @@ func GetTraceID(c *gin.Context) string {
 
 // GetClientIP 获取客户端IP
 func GetClientIP(c *gin.Context) string {
-	if v, err := c.Cookie("X-Forwarded-For"); err != nil && v != "" {
-		log.Println(v)
+	if v := c.GetHeader("X-Forwarded-For"); v != "" {
 		len := strings.Index(v, ",")
 		if len < 0 {
 			return v

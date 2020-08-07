@@ -76,16 +76,16 @@ func (s *SigninUser) GetAudience() string {
 
 // UserSignin user
 type UserSignin struct {
-	ID   int    `db:"id"`
-	UID  string `db:"uid"`
-	Name string `db:"name"`
+	ID   int    `db:"id" json:"-"`
+	UID  string `db:"uid" json:"id"`
+	Name string `db:"name" json:"name"`
 }
 
 // RoleSignin role
 type RoleSignin struct {
-	ID   int    `db:"id"`
-	UID  string `db:"uid"`
-	Name string `db:"name"`
+	ID   int    `db:"id" json:"-"`
+	UID  string `db:"uid" json:"id"`
+	Name string `db:"name" json:"name"`
 }
 
 // ClientSignin client
