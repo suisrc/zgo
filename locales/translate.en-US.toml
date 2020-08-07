@@ -1,4 +1,35 @@
-[PersonCatsX]
-hash = "sha1-135040cbb2b6c7b0c54ae469fbefe982723c7f32"
-one = "{{.Name}} 有 {{.Count}} 只猫."
-other = "{{.Name}} 有 {{.Count}} 只猫."
+[ERR-BAD-REQUEST]
+hash = "sha1-3e2df2e2f9318d28b5f686e6a03962955b02dc38"
+other = "Bad Request"
+
+[ERR-BAD-REQUEST-X]
+hash = "sha1-459441e1eebecc7b90bad07885d49735eb07bc51"
+other = "Not Acceptable - {{.error}}"
+
+[ERR-FORBIDDEN]
+hash = "sha1-fb4ffe66b91ad186f29f709e3fd0fc47946459ec"
+other = "Forbidden"
+
+[ERR-INTERNAL-SERVER]
+hash = "sha1-9a2de3626e9770e517b09fd45b2839c12bc71c78"
+other = "Internal Server Error"
+
+[ERR-METHOD-NOT-ALLOWED]
+hash = "sha1-63611effb125b165b98666830e11ac8820b74cf1"
+other = "Method Not Allowed"
+
+[ERR-NOT-ACCEPTABLE]
+hash = "sha1-8acbdefcb9494deb033ae103e7aacb7e54b75055"
+other = "Not Acceptable"
+
+[ERR-NOT-FOUND]
+hash = "sha1-d6276f4375c40583fe91d1c41324955240b93d4c"
+other = "Not Found"
+
+[ERR-TOO-MANY-REQUESTS]
+hash = "sha1-a5d254489380610b957eeab11c1fd35205ce0428"
+other = "Too Many Requests"
+
+[ERR-UNAUTHORIZED]
+hash = "sha1-c0df84351c686fb983cb803b0c7916ec09256fc5"
+other = "Unauthorized"
