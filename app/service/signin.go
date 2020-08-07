@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/modules/helper"
 
 	"github.com/suisrc/zgo/modules/logger"
@@ -15,20 +16,21 @@ type Signin struct {
 }
 
 // Signin 登入
+//============================================================================================
 func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUser, error) {
 
-	// 账户
+	// 查询账户信息
 	account := schema.AccountSignin{}
-	err := a.GPA.Sqlx.Get(&account, `select id, account, account_type, platform, verify_type, password, password_salt, password_type, user_id, role_id
+	err := a.GPA.Sqlx.Get(&account, `select id, verify_type, password, password_salt, password_type, user_id, role_id
 		from account where account=? and account_type='user' and platform='ZGO' and status=1`, b.Username)
 	if err != nil {
-		logger.Errorf(c, err.Error())
-		return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-PASSWD-ERROR", "用户或密码错误")
+		// logger.Errorf(c, err.Error()) // 未找对应的用户
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
 	// 验证密码
 	if b, err := a.verifyPassword(b.Password, &account); err != nil || !b {
-		logger.Errorf(c, err.Error())
-		return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-PASSWD-ERROR", "用户或密码错误")
+		// logger.Errorf(c, err.Error()) // 密码出现问题
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
 
 	suser := schema.SigninUser{}
@@ -38,7 +40,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		err := a.GPA.Sqlx.Get(&client, "select id, issuer, audience from user where client_key=?", b.Client)
 		if err != nil || !client.Issuer.Valid || !client.Audience.Valid {
 			logger.Errorf(c, err.Error())
-			return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-CLIENT-ERROR", "客户端错误")
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-ERROR", Other: "客户端错误"})
 		}
 
 		suser.Issuer = client.Issuer.String
@@ -54,7 +56,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		err = a.GPA.Sqlx.Get(&role, "select id, uid, name from role where id=?", account.RoleID)
 		if err != nil {
 			logger.Errorf(c, err.Error())
-			return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-ROLE-ERROR", "用户没有有效角色")
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
 		}
 		suser.RoleID = role.UID
 	} else if b.Role != "" {
@@ -62,7 +64,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		err = a.GPA.Sqlx.Get(&role, "select id, uid, name from role where uid=?", b.Role)
 		if err != nil {
 			logger.Errorf(c, err.Error())
-			return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-ROLE-ERROR", "用户没有有效角色")
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
 		}
 		suser.RoleID = role.UID
 	} else {
@@ -71,7 +73,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		err = a.GPA.Sqlx.Select(&roles, `select r.id, r.uid, r.name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=?`, account.UserID)
 		if err != nil {
 			logger.Errorf(c, err.Error())
-			return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-ROLE-ERROR", "用户没有有效角色")
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
 		}
 		switch len(roles) {
 		case 0:
@@ -80,7 +82,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 			err = a.GPA.Sqlx.Get(&role, "select id, uid, name from role where name=?", "default")
 			if err != nil {
 				logger.Errorf(c, err.Error())
-				return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-ROLE-ERROR", "用户没有有效角色")
+				return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
 			}
 			suser.RoleID = role.UID
 		case 1:
@@ -101,7 +103,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 	err = a.GPA.Sqlx.Get(&user, "select id, uid, name from user where id=?", account.UserID)
 	if err != nil {
 		logger.Errorf(c, err.Error())
-		return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-USER-ERROR", "用户不存在")
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
 	}
 	suser.UserName = user.Name
 	suser.UserID = user.UID
@@ -110,6 +112,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 }
 
 // 验证密码
+//============================================================================================
 func (a *Signin) verifyPassword(pwd string, acc *schema.AccountSignin) (bool, error) {
 	result := pwd == acc.Password.String
 	return result, nil

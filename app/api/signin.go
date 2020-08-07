@@ -24,6 +24,8 @@ func (a *Signin) Register(r gin.IRouter) {
 	// ua := middleware.UserAuthMiddleware(a.Auther)
 	// r.GET("signout", ua, a.signout)
 	r.GET("signout", a.signout)
+	r.GET("/signin/refresh", a.refresh)
+	r.POST("/signup", a.signup)
 }
 
 // Signin godoc
@@ -36,8 +38,8 @@ func (a *Signin) Register(r gin.IRouter) {
 // @Success 200 {object} helper.Success
 // @Router /signin [post]
 func (a *Signin) signin(c *gin.Context) {
-	body := schema.SigninBody{}
 
+	body := schema.SigninBody{}
 	if err := helper.ParseJSON(c, &body); err != nil {
 		helper.FixResponse406Error(c, err, func() {
 			logger.Errorf(c, err.Error())
@@ -87,18 +89,68 @@ func (a *Signin) signout(c *gin.Context) {
 	user, err := a.Auther.GetUserInfo(c)
 	if err != nil {
 		if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
-			helper.ResError(c, &helper.Err401Unauthorized)
+			helper.ResError(c, helper.Err401Unauthorized)
 			return
 		}
-		helper.ResError(c, &helper.Err400BadRequest)
+		helper.ResError(c, helper.Err400BadRequest)
 		return
 	}
 
 	// 执行登出
 	if err := a.Auther.DestroyToken(c, user); err != nil {
-		helper.ResError(c, &helper.Err400BadRequest)
+		helper.ResError(c, helper.Err400BadRequest)
 		return
 	}
 
 	helper.ResSuccess(c, "ok")
+}
+
+// Refresh godoc
+// @Tags sign
+// @Summary Refresh
+// @Description 刷新令牌
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Success 200 {object} helper.Success
+// @Router /signin/refresh [get]
+func (a *Signin) refresh(c *gin.Context) {
+	// 确定登陆用户的身份
+	user, err := a.Auther.GetUserInfo(c)
+	if err != nil {
+		if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
+			helper.ResError(c, helper.Err401Unauthorized)
+			return
+		}
+		helper.ResError(c, helper.Err400BadRequest)
+		return
+	}
+	token, err := a.Auther.GenerateToken(c, user)
+	if err != nil {
+		helper.FixResponse401Error(c, err, func() {
+			logger.Errorf(c, err.Error())
+		})
+		return
+	}
+
+	result := schema.SigninResult{
+		Status:  "ok",
+		Token:   token.GetAccessToken(),
+		Expired: token.GetExpiresAt(),
+		//Expired: token.GetExpiresAt() - time.Now().Unix(),
+	}
+	// 返回正常结果即可
+	helper.ResSuccess(c, &result)
+}
+
+// Signup godoc
+// @Tags sign
+// @Summary Signup
+// @Description 登陆
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} helper.Success
+// @Router /signup [post]
+func (a *Signin) signup(c *gin.Context) {
+	helper.ResSuccess(c, "功能为开放")
 }

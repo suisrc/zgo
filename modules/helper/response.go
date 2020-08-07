@@ -62,7 +62,7 @@ func FixResponse401Error(c *gin.Context, err error, errfunc func()) {
 	if errfunc != nil {
 		errfunc()
 	}
-	ResError(c, &Err401Unauthorized)
+	ResError(c, Err401Unauthorized)
 }
 
 // FixResponse403Error 修复返回的异常
@@ -74,7 +74,7 @@ func FixResponse403Error(c *gin.Context, err error, errfunc func()) {
 	if errfunc != nil {
 		errfunc()
 	}
-	ResError(c, &Err403Forbidden)
+	ResError(c, Err403Forbidden)
 }
 
 // FixResponse406Error 修复返回的异常
@@ -86,7 +86,7 @@ func FixResponse406Error(c *gin.Context, err error, errfunc func()) {
 	if errfunc != nil {
 		errfunc()
 	}
-	ResError(c, &Err406NotAcceptable)
+	ResError(c, Err406NotAcceptable)
 }
 
 // FixResponse500Error 修复返回的异常
@@ -98,7 +98,7 @@ func FixResponse500Error(c *gin.Context, err error, errfunc func()) {
 	if errfunc != nil {
 		errfunc()
 	}
-	ResError(c, &Err500InternalServer)
+	ResError(c, Err500InternalServer)
 }
 
 // ResErrorResBody 包装响应错误

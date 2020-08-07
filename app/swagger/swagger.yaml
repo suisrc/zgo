@@ -201,6 +201,23 @@ paths:
       summary: Signin
       tags:
       - sign
+  /signin/refresh:
+    get:
+      consumes:
+      - application/json
+      description: 刷新令牌
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: Refresh
+      tags:
+      - sign
   /signout:
     get:
       consumes:
@@ -216,6 +233,21 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Signin
+      tags:
+      - sign
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: 登陆
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      summary: Signup
       tags:
       - sign
   /user/hello:

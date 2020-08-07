@@ -74,6 +74,8 @@ func (s *SigninUser) GetAudience() string {
 	return s.Audience
 }
 
+//==============================================================================
+
 // UserSignin user
 type UserSignin struct {
 	ID   int    `db:"id" json:"-"`
@@ -98,9 +100,6 @@ type ClientSignin struct {
 // AccountSignin account
 type AccountSignin struct {
 	ID           int            `db:"id"`
-	Account      string         `db:"account"`
-	AccountType  string         `db:"account_type"`
-	Platform     string         `db:"platform"`
 	VerifyType   sql.NullString `db:"verify_type"`
 	Password     sql.NullString `db:"password"`
 	PasswordSalt sql.NullString `db:"password_salt"`

@@ -23,7 +23,7 @@ func CasbinMiddleware(enforcer *casbin.SyncedEnforcer, skippers ...SkipperFunc) 
 
 		u, ok := helper.GetUserInfo(c)
 		if !ok {
-			helper.ResError(c, &helper.Err401Unauthorized)
+			helper.ResError(c, helper.Err401Unauthorized)
 			return
 		}
 
@@ -35,10 +35,10 @@ func CasbinMiddleware(enforcer *casbin.SyncedEnforcer, skippers ...SkipperFunc) 
 		i := helper.GetClientIP(c)
 		m := c.Request.Method
 		if b, err := enforcer.Enforce(r, a, d, p, i, m); err != nil {
-			helper.ResError(c, &helper.Err401Unauthorized)
+			helper.ResError(c, helper.Err401Unauthorized)
 			return
 		} else if !b {
-			helper.ResError(c, &helper.Err401Unauthorized)
+			helper.ResError(c, helper.Err401Unauthorized)
 			return
 		}
 		c.Next()

@@ -1,0 +1,4 @@
+[PersonCatsX]
+hash = "sha1-135040cbb2b6c7b0c54ae469fbefe982723c7f32"
+one = "{{.Name}} 有 {{.Count}} 只猫."
+other = "{{.Name}} 有 {{.Count}} 只猫."

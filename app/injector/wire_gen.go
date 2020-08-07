@@ -30,6 +30,7 @@ func BuildInjector() (*Injector, func(), error) {
 		return nil, nil, err
 	}
 	auther := api.NewAuther()
+	bundle := api.NewBundle()
 	router := middlewire.NewRouter(engine)
 	auth := &api.Auth{
 		Enforcer: syncedEnforcer,
@@ -62,6 +63,7 @@ func BuildInjector() (*Injector, func(), error) {
 		Engine:   engine,
 		Enforcer: syncedEnforcer,
 		Auther:   auther,
+		Bundle:   bundle,
 		Router:   router,
 		Auth:     auth,
 		Signin:   apiSignin,

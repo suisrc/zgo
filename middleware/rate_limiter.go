@@ -46,7 +46,7 @@ func RateLimiterMiddleware(skippers ...SkipperFunc) gin.HandlerFunc {
 				h.Set("X-RateLimit-Remaining", strconv.FormatInt(limit-rate, 10))
 				delaySec := int64(delay / time.Second)
 				h.Set("X-RateLimit-Delay", strconv.FormatInt(delaySec, 10))
-				helper.ResError(c, &helper.Err429TooManyRequests)
+				helper.ResError(c, helper.Err429TooManyRequests)
 				return
 			}
 		}

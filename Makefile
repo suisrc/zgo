@@ -51,6 +51,14 @@ wire:
 entc:
 	go generate ./app/model/ent
 
+# go get -u github.com/nicksnyder/go-i18n/v2/goi18n
+# goi18n -help
+i18n:
+	goi18n extract -outdir locales -sourceLanguage zh-CN
+
+i18n-update:
+	cd locales && goi18n merge -sourceLanguage zh-CN active.zh-CN.toml translate.en-US.toml
+
 # go get -u github.com/mdempsky/gocode
 code:
 	gocode -s -debug

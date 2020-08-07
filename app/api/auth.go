@@ -5,11 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/modules/auth"
-	"github.com/suisrc/zgo/modules/auth/jwt"
-	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
-	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/helper"
-	"github.com/suisrc/zgo/modules/logger"
 )
 
 // Auth auth
@@ -46,23 +42,4 @@ func (a *Auth) authorize(c *gin.Context) {
 	// 权限判断有UserAuthCasbinMiddleware完成
 	// 仅仅返回正常结果即可
 	helper.ResSuccess(c, "ok")
-}
-
-// NewAuther of auth.Auther
-// 注册认证使用的auther内容
-func NewAuther() auth.Auther {
-	store, err := buntdb.NewStore(":memory:") // 使用内存缓存
-	if err != nil {
-		panic(err)
-	}
-	secret := config.C.JWTAuth.SigningSecret
-	if secret == "" {
-		secret = auth.UUID(128)
-		logger.Infof(nil, "jwt secret: %s", secret)
-	}
-	auther := jwt.New(store,
-		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
-	)
-
-	return auther
 }

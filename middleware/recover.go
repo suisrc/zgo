@@ -26,7 +26,7 @@ func RecoveryMiddleware() gin.HandlerFunc {
 			if err := recover(); err != nil {
 				stack := stack(3)
 				logger.StartTrace(c).WithField("stack", string(stack)).Errorf("[panic]: %v", err)
-				helper.ResError(c, &helper.Err500InternalServer)
+				helper.ResError(c, helper.Err500InternalServer)
 				// 结束
 			}
 		}()

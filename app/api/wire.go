@@ -1,13 +1,19 @@
 package api
 
 import (
+	"github.com/BurntSushi/toml"
 	"github.com/casbin/casbin/v2"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/middlewire"
 	"github.com/suisrc/zgo/modules/auth"
+	"github.com/suisrc/zgo/modules/auth/jwt"
+	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
 	casbinjson "github.com/suisrc/zgo/modules/casbin/adapter/json"
 	"github.com/suisrc/zgo/modules/config"
+	"github.com/suisrc/zgo/modules/logger"
+	"golang.org/x/text/language"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -20,6 +26,7 @@ var EndpointSet = wire.NewSet(
 	InitEndpoints,                  // 初始化接口方法
 	casbinjson.CasbinAdapterSet,    // Casbin依赖
 	NewAuther,                      // Auther注册
+	NewBundle,                      // 国际化注册
 
 	// 接口注册
 	wire.Struct(new(Auth), "*"),
@@ -36,6 +43,7 @@ type Options struct {
 	Engine   *gin.Engine
 	Enforcer *casbin.SyncedEnforcer
 	Auther   auth.Auther
+	Bundle   *i18n.Bundle
 	Router   middlewire.Router
 
 	// 接口注入
@@ -50,6 +58,9 @@ type Endpoints struct {
 
 // InitEndpoints init
 func InitEndpoints(o *Options) *Endpoints {
+	// 国际化
+	o.Engine.Use(middleware.I18nMiddleware(o.Bundle))
+
 	// 在根路由注册通用授权接口, (没有ContextPath限定,一般是给nginx使用)
 	// 在nginx注册认证接口时候,请放行zgo服务器其他接口,防止重复认证
 	o.Auth.RegisterWithUAC(o.Engine)
@@ -79,4 +90,33 @@ func InitEndpoints(o *Options) *Endpoints {
 	o.User.Register(r)
 
 	return &Endpoints{}
+}
+
+// NewAuther of auth.Auther
+// 注册认证使用的auther内容
+func NewAuther() auth.Auther {
+	store, err := buntdb.NewStore(":memory:") // 使用内存缓存
+	if err != nil {
+		panic(err)
+	}
+	secret := config.C.JWTAuth.SigningSecret
+	if secret == "" {
+		secret = auth.UUID(128)
+		logger.Infof(nil, "jwt secret: %s", secret)
+	}
+	auther := jwt.New(store,
+		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
+	)
+
+	return auther
+}
+
+// NewBundle 国际化
+func NewBundle() *i18n.Bundle {
+	//bundle := i18n.NewBundle(language.Chinese)
+	bundle := i18n.NewBundle(language.English)
+	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
+	bundle.LoadMessageFile("locales/active.zh-CN.toml")
+	bundle.LoadMessageFile("locales/active.en-US.toml")
+	return bundle
 }

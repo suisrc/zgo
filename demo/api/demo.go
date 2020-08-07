@@ -83,12 +83,12 @@ func (a *Demo) Set(c *gin.Context) {
 func (a *Demo) Get(c *gin.Context) {
 	idstr := c.Query("id")
 	if idstr == "" {
-		helper.ResError(c, &helper.Err406NotAcceptable)
+		helper.ResError(c, helper.Err406NotAcceptable)
 		return
 	}
 	id, err := strconv.Atoi(idstr)
 	if err != nil {
-		helper.ResError(c, &helper.Err406NotAcceptable)
+		helper.ResError(c, helper.Err406NotAcceptable)
 		return
 	}
 	res, err := a.GPA.DBE.Demo.Get(c, id)
@@ -112,12 +112,12 @@ func (a *Demo) Get(c *gin.Context) {
 func (a *Demo) Get1(c *gin.Context) {
 	idstr := c.Query("id")
 	if idstr == "" {
-		helper.ResError(c, &helper.Err406NotAcceptable)
+		helper.ResError(c, helper.Err406NotAcceptable)
 		return
 	}
 	id, err := strconv.Atoi(idstr)
 	if err != nil {
-		helper.ResError(c, &helper.Err406NotAcceptable)
+		helper.ResError(c, helper.Err406NotAcceptable)
 		return
 	}
 	res := &sqlxm.Demo{}

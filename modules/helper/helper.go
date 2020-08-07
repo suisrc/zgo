@@ -37,7 +37,9 @@ type UserInfoFunc interface {
 // GetUserInfo 用户
 func GetUserInfo(c *gin.Context) (UserInfo, bool) {
 	if v, ok := c.Get(UserInfoKey); ok {
-		return v.(UserInfo), true
+		if u, b := v.(UserInfo); b {
+			return u, true
+		}
 	}
 	return nil, false
 }
@@ -77,11 +79,24 @@ func GetTraceID(c *gin.Context) string {
 // GetClientIP 获取客户端IP
 func GetClientIP(c *gin.Context) string {
 	if v := c.GetHeader("X-Forwarded-For"); v != "" {
-		len := strings.Index(v, ",")
-		if len < 0 {
-			return v
+		if len := strings.Index(v, ","); len > 0 {
+			return v[:len]
 		}
-		return v[:len]
+		return v
 	}
 	return c.ClientIP()
+}
+
+// GetAcceptLanguage 获取浏览器语言
+func GetAcceptLanguage(c *gin.Context) string {
+	if v := c.GetHeader("Accept-Language"); v != "" {
+		if len := strings.Index(v, ","); len > 0 {
+			v = v[:len]
+		}
+		if len := strings.Index(v, ";"); len > 0 {
+			v = v[:len]
+		}
+		return v
+	}
+	return ""
 }

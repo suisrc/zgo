@@ -18,9 +18,9 @@ func TestIsResponseError(t *testing.T) {
 	b = IsResponseError(err)
 	assert.False(t, b)
 
-	b = IsResponseError(&Err403Forbidden)
+	b = IsResponseError(Err403Forbidden)
 	assert.False(t, b)
 
-	b = IsResponseError(ResError(nil, &Err403Forbidden))
+	b = IsResponseError(ResError(nil, Err403Forbidden))
 	assert.True(t, b)
 }

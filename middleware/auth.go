@@ -23,10 +23,10 @@ func UserAuthMiddleware(a auth.Auther, skippers ...SkipperFunc) gin.HandlerFunc 
 		user, err := a.GetUserInfo(c)
 		if err != nil {
 			if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
-				helper.ResError(c, &helper.Err401Unauthorized)
+				helper.ResError(c, helper.Err401Unauthorized)
 				return
 			}
-			helper.ResError(c, &helper.Err400BadRequest)
+			helper.ResError(c, helper.Err400BadRequest)
 			return
 		}
 		helper.SetUserInfo(c, user)

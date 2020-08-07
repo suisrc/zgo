@@ -26,10 +26,10 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 		user, err := auther.GetUserInfo(c)
 		if err != nil {
 			if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
-				helper.ResError(c, &helper.Err401Unauthorized)
+				helper.ResError(c, helper.Err401Unauthorized)
 				return
 			}
-			helper.ResError(c, &helper.Err400BadRequest)
+			helper.ResError(c, helper.Err400BadRequest)
 			return
 		}
 
@@ -42,10 +42,10 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 			m := c.Request.Method
 			if b, err := enforcer.Enforce(r, a, d, p, i, m); err != nil {
 				logger.Errorf(c, err.Error())
-				helper.ResError(c, &helper.Err403Forbidden)
+				helper.ResError(c, helper.Err403Forbidden)
 				return
 			} else if !b {
-				helper.ResError(c, &helper.Err403Forbidden)
+				helper.ResError(c, helper.Err403Forbidden)
 				return
 			}
 		}

@@ -9,7 +9,7 @@ import (
 // NoMethodHandler 未找到请求方法的处理函数
 func NoMethodHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		helper.ResError(c, &helper.Err405MethodNotAllowed)
+		helper.ResError(c, helper.Err405MethodNotAllowed)
 		// Abort, 终止
 	}
 }
@@ -17,7 +17,7 @@ func NoMethodHandler() gin.HandlerFunc {
 // NoRouteHandler 未找到请求路由的处理函数
 func NoRouteHandler() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		helper.ResError(c, &helper.Err404NotFound)
+		helper.ResError(c, helper.Err404NotFound)
 		// Abort, 终止
 	}
 }
