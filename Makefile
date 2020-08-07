@@ -55,9 +55,10 @@ entc:
 # goi18n -help
 i18n:
 	goi18n extract -outdir locales -sourceLanguage zh-CN
-
 i18n-update:
 	cd locales && goi18n merge -sourceLanguage zh-CN active.zh-CN.toml translate.en-US.toml
+i18n-merge:
+	cd locales && goi18n merge -sourceLanguage en-US active.en-US.toml translate.en-US.toml
 
 # go get -u github.com/mdempsky/gocode
 code:

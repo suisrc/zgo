@@ -92,7 +92,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 			// return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-ROLE-MULTI-ERROR", "多角色")
 			return nil, helper.NewSuccess(c, map[string]interface{}{
 				"status":  "error", // 登陆失败
-				"message": "请选择角色",
+				"message": helper.FormatText(c, &i18n.Message{ID: "service.signin.select-role-text", Other: "请选择角色"}),
 				"roles":   roles,
 			})
 		}

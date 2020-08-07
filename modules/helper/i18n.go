@@ -19,6 +19,11 @@ func FormatMessage(c *gin.Context, lc *i18n.LocalizeConfig) string {
 	return MustI18n(c).MustLocalize(lc)
 }
 
+// FormatText ft
+func FormatText(c *gin.Context, message *i18n.Message) string {
+	return FormatCode(c, message, nil)
+}
+
 // FormatCode fc
 func FormatCode(c *gin.Context, message *i18n.Message, args map[string]interface{}) string {
 	if localizer, ok := GetI18n(c); ok {

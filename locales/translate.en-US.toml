@@ -1,35 +1,23 @@
-[ERR-BAD-REQUEST]
-hash = "sha1-3e2df2e2f9318d28b5f686e6a03962955b02dc38"
-other = "Bad Request"
-
-[ERR-BAD-REQUEST-X]
-hash = "sha1-459441e1eebecc7b90bad07885d49735eb07bc51"
-other = "Not Acceptable - {{.error}}"
-
-[ERR-FORBIDDEN]
-hash = "sha1-fb4ffe66b91ad186f29f709e3fd0fc47946459ec"
-other = "Forbidden"
-
-[ERR-INTERNAL-SERVER]
-hash = "sha1-9a2de3626e9770e517b09fd45b2839c12bc71c78"
-other = "Internal Server Error"
-
-[ERR-METHOD-NOT-ALLOWED]
-hash = "sha1-63611effb125b165b98666830e11ac8820b74cf1"
-other = "Method Not Allowed"
-
-[ERR-NOT-ACCEPTABLE]
-hash = "sha1-8acbdefcb9494deb033ae103e7aacb7e54b75055"
-other = "Not Acceptable"
-
-[ERR-NOT-FOUND]
-hash = "sha1-d6276f4375c40583fe91d1c41324955240b93d4c"
-other = "Not Found"
-
-[ERR-TOO-MANY-REQUESTS]
-hash = "sha1-a5d254489380610b957eeab11c1fd35205ce0428"
-other = "Too Many Requests"
-
 [ERR-UNAUTHORIZED]
-hash = "sha1-c0df84351c686fb983cb803b0c7916ec09256fc5"
+hash = "sha1-c71fa0ab7cc6ad5622e35c85f23a8af55a7bf6dc"
 other = "Unauthorized"
+
+[WARN-SIGNIN-CLIENT-ERROR]
+hash = "sha1-951f78e33be1573ca35cafd3fa31a04ae08833a8"
+other = "client error"
+
+[WARN-SIGNIN-PASSWD-ERROR]
+hash = "sha1-70e4e871d99cb596e6ca1c4e91c6ffc036fe4311"
+other = "username or password error"
+
+[WARN-SIGNIN-ROLE-ERROR]
+hash = "sha1-8750f4cd761c656dc814e8db50f5d5ec92274e1b"
+other = "no role"
+
+[WARN-SIGNIN-USER-ERROR]
+hash = "sha1-1b2a3e6bd117d645641c9b0f79c5fb5dcbc5bd44"
+other = "user not found"
+
+["service.signin.select-role-text"]
+hash = "sha1-30741f3cf717344ac0d5c31cca2658083a94aa79"
+other = "Select Role"
