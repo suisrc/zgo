@@ -48,6 +48,7 @@ require (
 	github.com/swaggo/swag v1.6.7
 	github.com/tidwall/buntdb v1.1.2
 	github.com/urfave/cli/v2 v2.2.0
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
 	golang.org/x/net v0.0.0-20200707034311-ab3426394381 // indirect
 	golang.org/x/sys v0.0.0-20200728102440-3e129f6d46b1 // indirect
 	golang.org/x/text v0.3.3

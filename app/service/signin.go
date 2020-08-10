@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/modules/helper"
+	"github.com/suisrc/zgo/modules/passwd"
 
 	"github.com/suisrc/zgo/modules/logger"
 
@@ -12,7 +13,8 @@ import (
 
 // Signin 账户管理
 type Signin struct {
-	GPA
+	GPA                     // 数据库
+	Passwd passwd.Validator // 密码验证其
 }
 
 // Signin 登入
@@ -28,8 +30,10 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
 	// 验证密码
-	if b, err := a.verifyPassword(b.Password, &account); err != nil || !b {
-		// logger.Errorf(c, err.Error()) // 密码出现问题
+	if b, err := a.verifyPassword(b.Password, &account); err != nil {
+		logger.Errorf(c, err.Error()) // 密码验证发生异常
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
+	} else if !b {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
 
@@ -114,6 +118,37 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 // 验证密码
 //============================================================================================
 func (a *Signin) verifyPassword(pwd string, acc *schema.AccountSignin) (bool, error) {
-	result := pwd == acc.Password.String
-	return result, nil
+	ok, _ := a.Passwd.Verify(&PasswdCheck{
+		Account:  acc,
+		Password: pwd,
+	})
+	return ok, nil
+}
+
+// PasswdCheck 密码验证实体
+type PasswdCheck struct {
+	Account  *schema.AccountSignin
+	Password string
+}
+
+var _ passwd.IEntity = &PasswdCheck{}
+
+// Left 输入的密码
+func (a *PasswdCheck) Left() string {
+	return a.Password
+}
+
+// Right 保存的加密密码
+func (a *PasswdCheck) Right() string {
+	return a.Account.Password.String
+}
+
+// Salt 密码盐值
+func (a *PasswdCheck) Salt() string {
+	return a.Account.PasswordSalt.String
+}
+
+// Type 加密类型
+func (a *PasswdCheck) Type() string {
+	return a.Account.PasswordType.String
 }

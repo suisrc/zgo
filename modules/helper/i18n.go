@@ -32,7 +32,7 @@ func FormatCode(c *gin.Context, message *i18n.Message, args map[string]interface
 			TemplateData:   args,
 		})
 	}
-	// 加载i18n后,不会进入该分支
+	// 加载i18n中间件后,不会进入该分支,简单处理未加载i18n中间件时候的处理内容
 	if args == nil {
 		return message.Other
 	}
@@ -43,7 +43,7 @@ func FormatCode(c *gin.Context, message *i18n.Message, args map[string]interface
 	return text
 }
 
-// MustI18n 用户
+// MustI18n i18n
 func MustI18n(c *gin.Context) *i18n.Localizer {
 	localizer, ok := GetI18n(c)
 	if !ok {
@@ -52,7 +52,7 @@ func MustI18n(c *gin.Context) *i18n.Localizer {
 	return localizer
 }
 
-// GetI18n 用户
+// GetI18n i18n
 func GetI18n(c *gin.Context) (*i18n.Localizer, bool) {
 	if v, ok := c.Get(ResI18nKey); ok {
 		if l, b := v.(*i18n.Localizer); b {
@@ -62,7 +62,7 @@ func GetI18n(c *gin.Context) (*i18n.Localizer, bool) {
 	return nil, false
 }
 
-// SetI18n 用户
+// SetI18n i18n
 func SetI18n(c *gin.Context, l *i18n.Localizer) {
 	c.Set(ResI18nKey, l)
 }
