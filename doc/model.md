@@ -305,7 +305,8 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | resource      | 资源名         | 字符串   | 资源名可以重复, 即该资源标识一类资源而不是单独      | varchar(64), idx_resource_name                       |
-| methods       | 方法           | 字符串   | (GET)|(POST)|(PUT)|(DELETE)                         | varchar(64)                                          |
+| domain        | 域名           | 字符串   | api.io                                              | varchar(255)                                         |
+| methods       | 方法           | 字符串   | (GET)(POST)(PUT)(DELETE)                            | varchar(64)                                          |
 | path          | 路径           | 字符串   | /api/*                                              | varchar(255)                                         |
 | netmask       | 网络掩码       | 字符串   | 0.0.0.0/0                                           | varchar(64)                                          |
 | allow         | 允许vs拒绝     | 数值     | 1: allow 0:deny                                     | tinyint(4)                                           |

@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/BurntSushi/toml"
 	"github.com/casbin/casbin/v2"
+	"github.com/casbin/casbin/v2/persist"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middleware"
@@ -10,7 +11,8 @@ import (
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/auth/jwt"
 	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
-	casbinjson "github.com/suisrc/zgo/modules/casbin/adapter/json"
+	zgocasbin "github.com/suisrc/zgo/modules/casbin"
+	casbinmem "github.com/suisrc/zgo/modules/casbin/watcher/mem"
 	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/logger"
 	"golang.org/x/text/language"
@@ -26,8 +28,13 @@ var EndpointSet = wire.NewSet(
 	service.ServiceSet,             // 系统提供的服务列表
 	wire.Struct(new(Options), "*"), // 初始化接口参数
 	InitEndpoints,                  // 初始化接口方法
-	casbinjson.CasbinAdapterSet,    // Casbin依赖
+	service.CasbinAdapterSet,       // Casbin依赖
 	NewAuther,                      // Auther注册
+
+	//casbinjson.CasbinAdapterSet,    // Casbin依赖
+
+	wire.Bind(new(zgocasbin.PolicyVer), new(service.CasbinAdapter)),
+	casbinmem.NewCasbinWatcher,
 
 	// 接口注册
 	wire.Struct(new(Auth), "*"),
@@ -46,6 +53,7 @@ type Options struct {
 	Router   middlewire.Router      // 根路由
 	Enforcer *casbin.SyncedEnforcer // 权限认证
 	Auther   auth.Auther            // 令牌控制
+	Watcher  persist.Watcher        // casbin adapter
 
 	// 接口注入
 	Auth   *Auth

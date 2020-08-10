@@ -6,10 +6,11 @@ import "database/sql"
 type CasbinGpaResource struct {
 	ID       int            `db:"id"`
 	Resource sql.NullString `db:"resource"`
+	Domain   sql.NullString `db:"domain"`
 	Methods  sql.NullString `db:"methods"`
 	Path     sql.NullString `db:"path"`
 	Netmask  sql.NullString `db:"netmask"`
-	Allow    sql.NullString `db:"allow"`
+	Allow    sql.NullBool   `db:"allow"`
 	// description sql.NullString `db:"description"`
 	// status      sql.NullBool   `db:"status"`
 }

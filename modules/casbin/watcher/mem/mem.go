@@ -3,7 +3,7 @@ package casbinmem
 import (
 	"context"
 
-	"github.com/casbin/casbin"
+	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/persist"
 	cloudwatcher "github.com/rusenask/casbin-go-cloud-watcher"
 	zgocasbin "github.com/suisrc/zgo/modules/casbin"

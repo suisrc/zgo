@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-08-10 15:51:32 CST
+-- time: 2020-08-10 23:18:46 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -229,6 +229,8 @@ CREATE TABLE `user_role` (
 CREATE TABLE `resource` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `resource` varchar(64) DEFAULT NULL COMMENT '资源名',
+  `domain` varchar(255) DEFAULT NULL COMMENT '域名',
+  `methods` varchar(64) DEFAULT NULL COMMENT '方法',
   `path` varchar(255) DEFAULT NULL COMMENT '路径',
   `netmask` varchar(64) DEFAULT NULL COMMENT '网络掩码',
   `allow` tinyint(4) DEFAULT NULL COMMENT '允许vs拒绝',
@@ -357,8 +359,8 @@ ADD CONSTRAINT `fk_resource_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` 
 ADD CONSTRAINT `fk_resource_role_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
 
 ALTER TABLE `resource_user`
-ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`),
-ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
+ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
+ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
 
 ALTER TABLE `menu`
 ADD CONSTRAINT `fk_menu_parent_id` FOREIGN KEY (`parent_id`)  REFERENCES `menu` (`id`);
@@ -387,7 +389,7 @@ ADD CONSTRAINT `fk_menu_role_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu`
 -- INSERT INTO `role`(`id`, `uid`, `name`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `role_role`(`id`, `owner_id`, `child_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `user_role`(`id`, `user_id`, `role_id`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `resource`(`id`, `resource`, `path`, `netmask`, `allow`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `resource`(`id`, `resource`, `domain`, `methods`, `path`, `netmask`, `allow`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `resource_role`(`id`, `role_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `resource_user`(`id`, `user_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `menu`(`id`, `parent_id`, `name`, `sequence`, `icon`, `router`, `memo`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
