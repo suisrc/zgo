@@ -41,6 +41,7 @@ func NewClient() (*ent.Client, func(), error) {
 	}
 
 	// defer client.Close()
+	// runtime.SetFinalizer(client, func(client *Client){client.Close()})
 	clean := func() {
 		client.Close()
 	}

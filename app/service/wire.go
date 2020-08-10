@@ -11,7 +11,7 @@ import (
 
 // ServiceSet wire注入服务
 var ServiceSet = wire.NewSet(
-	wire.Struct(new(passwd.Validator), "*"), // 密码验证其
+	wire.Struct(new(passwd.Validator), "*"), // 密码验证
 	entc.NewClient,                          // 数据库连接注册
 	sqlxc.NewClient,                         // 数据库连接注册
 	wire.Struct(new(GPA), "*"),              // 数据库服务
@@ -30,6 +30,6 @@ type ResultRef struct {
 
 // GPA golang persistence api 数据持久化
 type GPA struct {
-	Entc *ent.Client // ent client
-	Sqlx *sqlx.DB    // sqlx client
+	Entc *ent.Client // ent client, 数据修改和插入
+	Sqlx *sqlx.DB    // sqlx client, 数据查询
 }

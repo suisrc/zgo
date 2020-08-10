@@ -13,6 +13,12 @@ import (
 	"github.com/casbin/casbin/v2/persist"
 )
 
+// PolicyVer 政策版本信息
+type PolicyVer interface {
+	PolicyVer() string
+	PolicySet(string) error
+}
+
 // NewCasbinEnforcer 初始化casbin enforcer
 func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(), error) {
 	c := config.C.Casbin

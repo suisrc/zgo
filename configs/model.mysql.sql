@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-08-06 10:13:34 CST
+-- time: 2020-08-10 15:51:32 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -10,14 +10,14 @@ CREATE TABLE `account` (
   `account` varchar(255) DEFAULT NULL COMMENT '账户',
   `account_type` varchar(16) DEFAULT 'user' COMMENT '账户类型',
   `platform` varchar(16) DEFAULT 'ZGO' COMMENT '账户归属平台',
-  `verify_type` varchar(16) DEFAULT NULL COMMENT '校验方式',
+  `verify_type` varchar(16) DEFAULT 'PASSWD' COMMENT '校验方式',
   `password` varchar(255) DEFAULT NULL COMMENT '登录密码',
   `password_salt` varchar(255) DEFAULT NULL COMMENT '密码盐值',
   `password_type` varchar(16) DEFAULT NULL COMMENT '校验方式',
   `user_id` int(11) DEFAULT NULL COMMENT '用户标识',
   `role_id` int(11) DEFAULT NULL COMMENT '角色标识',
   `status` tinyint(4) DEFAULT 1 COMMENT '状态',
-  `desc` varchar(255) DEFAULT NULL COMMENT '账户描述',
+  `description` varchar(255) DEFAULT NULL COMMENT '账户描述',
   `oauth2_id` int(11) DEFAULT NULL COMMENT 'oauth2认证',
   `oauth2_token` varchar(1024) DEFAULT NULL COMMENT 'oauth2令牌',
   `oauth2_time` timestamp DEFAULT NULL COMMENT 'oauth2创建时间',
@@ -189,7 +189,8 @@ CREATE TABLE `role` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `uid` varchar(64) DEFAULT NULL COMMENT '唯一标识',
   `name` varchar(64) DEFAULT NULL COMMENT '角色名',
-  `desc` varchar(128) DEFAULT NULL COMMENT '角色描述',
+  `description` varchar(128) DEFAULT NULL COMMENT '角色描述',
+  `status` tinyint(4) DEFAULT 1 COMMENT '状态',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
@@ -231,7 +232,8 @@ CREATE TABLE `resource` (
   `path` varchar(255) DEFAULT NULL COMMENT '路径',
   `netmask` varchar(64) DEFAULT NULL COMMENT '网络掩码',
   `allow` tinyint(4) DEFAULT NULL COMMENT '允许vs拒绝',
-  `desc` varchar(128) DEFAULT NULL COMMENT '描述',
+  `description` varchar(128) DEFAULT NULL COMMENT '描述',
+  `status` tinyint(4) DEFAULT 1 COMMENT '状态',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
@@ -355,8 +357,8 @@ ADD CONSTRAINT `fk_resource_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` 
 ADD CONSTRAINT `fk_resource_role_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
 
 ALTER TABLE `resource_user`
-ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
-ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
+ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`),
+ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
 
 ALTER TABLE `menu`
 ADD CONSTRAINT `fk_menu_parent_id` FOREIGN KEY (`parent_id`)  REFERENCES `menu` (`id`);
@@ -369,5 +371,28 @@ ALTER TABLE `menu_role`
 ADD CONSTRAINT `fk_menu_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
 ADD CONSTRAINT `fk_menu_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
 ADD CONSTRAINT `fk_menu_role_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu` (`id`);
+
+-- -------------------------------------------------------
+-- -------------------------------------------------------
+-- insert into 
+-- -------------------------------------------------------
+-- INSERT INTO `account`(`id`, `account`, `account_type`, `platform`, `verify_type`, `password`, `password_salt`, `password_type`, `user_id`, `role_id`, `status`, `description`, `oauth2_id`, `oauth2_token`, `oauth2_time`, `token_fake`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
+-- INSERT INTO `oauth2_third`(`id`, `platform`, `agent_id`, `suite_id`, `app_id`, `app_secret`, `authorize_url`, `token_url`, `profile_url`, `domain_def`, `domain_check`, `js_secret`, `state_secret`, `callback`, `cb_encrypt`, `cb_token`, `cb_encoding`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
+-- INSERT INTO `oauth2_token`(`id`, `oauth2_id`, `access_token`, `expires_in`, `create_time`, `sync_lock`, `call_count`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
+-- INSERT INTO `oauth2_client`(`id`, `client_key`, `audience`, `issuer`, `expired`, `token_type`, `s_method`, `s_secret`, `token_getter`, `signin_url`, `signin_force`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
+-- INSERT INTO `oauth2_account`(`id`, `client_id`, `secret`, `expired`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
+-- INSERT INTO `user`(`id`, `uid`, `name`) VALUES ()
+-- INSERT INTO `user_detail`(`id`, `user_id`, `nickname`, `avatar`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
+-- INSERT INTO `user_message`(`id`, `uid`, `avatar`, `title`, `datetime`, `type`, `read`, `description`, `clickClose`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `role`(`id`, `uid`, `name`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `role_role`(`id`, `owner_id`, `child_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `user_role`(`id`, `user_id`, `role_id`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `resource`(`id`, `resource`, `path`, `netmask`, `allow`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `resource_role`(`id`, `role_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `resource_user`(`id`, `user_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `menu`(`id`, `parent_id`, `name`, `sequence`, `icon`, `router`, `memo`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `menu_action`(`id`, `menu_id`, `role_id`, `code`, `name`, `disable`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `menu_role`(`id`, `role_id`, `user_id`, `menu_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `tag_common`(`id`, `owner_id`, `type`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 
 -- -------------------------------------------------------

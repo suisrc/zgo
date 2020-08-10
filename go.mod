@@ -7,6 +7,8 @@ require (
 	github.com/LyricTian/gzip v0.1.1
 	github.com/NebulousLabs/fastrand v0.0.0-20181203155948-6fb6489aac4e
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+	github.com/billcobbler/casbin-redis-watcher/v2 v2.0.0-20200124034411-c05521d98fa2
+	github.com/casbin/casbin v1.9.1
 	github.com/casbin/casbin/v2 v2.8.6
 	github.com/casbin/json-adapter/v2 v2.0.0
 	github.com/casbin/redis-adapter/v2 v2.0.1
@@ -42,6 +44,7 @@ require (
 	github.com/onsi/ginkgo v1.14.0 // indirect
 	github.com/pelletier/go-toml v1.8.0 // indirect
 	github.com/pkg/errors v0.9.1
+	github.com/rusenask/casbin-go-cloud-watcher v0.0.0-20200412170359-c7485109e787
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.5.1
 	github.com/swaggo/gin-swagger v1.2.0

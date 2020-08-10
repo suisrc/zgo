@@ -76,29 +76,59 @@ func (s *SigninUser) GetAudience() string {
 
 //==============================================================================
 
-// UserSignin user
-type UserSignin struct {
+// SigninGpaUser user
+type SigninGpaUser struct {
 	ID   int    `db:"id" json:"-"`
 	UID  string `db:"uid" json:"id"`
 	Name string `db:"name" json:"name"`
 }
 
-// RoleSignin role
-type RoleSignin struct {
+// SQLByID sql select
+func (*SigninGpaUser) SQLByID() string {
+	return "select id, uid, name from user where id=?"
+}
+
+// SigninGpaRole role
+type SigninGpaRole struct {
 	ID   int    `db:"id" json:"-"`
 	UID  string `db:"uid" json:"id"`
 	Name string `db:"name" json:"name"`
 }
 
-// ClientSignin client
-type ClientSignin struct {
+// SQLByID sql select
+func (*SigninGpaRole) SQLByID() string {
+	return "select id, uid, name from  role where id=?"
+}
+
+// SQLByUID sql select
+func (*SigninGpaRole) SQLByUID() string {
+	return "select id, uid, name from role where uid=?"
+}
+
+// SQLByName sql select
+func (*SigninGpaRole) SQLByName() string {
+	return "select id, uid, name from role where name=?"
+}
+
+// SQLByUserID sql select
+func (*SigninGpaRole) SQLByUserID() string {
+	return "select id, uid, name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=?"
+}
+
+// SigninGpaClient client
+type SigninGpaClient struct {
 	ID       int            `db:"id"`
 	Issuer   sql.NullString `db:"issuer"`
 	Audience sql.NullString `db:"audience"`
 }
 
-// AccountSignin account
-type AccountSignin struct {
+// SQLByClientKey sql select
+func (*SigninGpaClient) SQLByClientKey() string {
+	return "select id, issuer, audience from user where client_key=?"
+}
+
+// SigninGpaAccount account
+type SigninGpaAccount struct {
 	ID           int            `db:"id"`
 	VerifyType   sql.NullString `db:"verify_type"`
 	Password     sql.NullString `db:"password"`
@@ -110,4 +140,9 @@ type AccountSignin struct {
 
 	// SQLX1 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
 	// SQLX2 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
+}
+
+// SQLByAccount sql select
+func (*SigninGpaAccount) SQLByAccount() string {
+	return "select id, verify_type, password, password_salt, password_type, user_id, role_id, oauth2_id from account where account=? and account_type='user' and platform='ZGO' and status=1"
 }

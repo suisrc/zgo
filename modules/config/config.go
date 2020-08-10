@@ -56,7 +56,8 @@ type HTTP struct {
 type Casbin struct {
 	Enable           bool
 	Debug            bool
-	Model            string //
+	Model            string
+	Watcher          string // 策略监控器
 	AutoLoad         bool
 	AutoLoadInternal int
 	PolicyType       string // file | mysql | sqlite3 | postgres | redis | restful

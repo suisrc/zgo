@@ -22,9 +22,8 @@ type Signin struct {
 func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUser, error) {
 
 	// 查询账户信息
-	account := schema.AccountSignin{}
-	err := a.GPA.Sqlx.Get(&account, `select id, verify_type, password, password_salt, password_type, user_id, role_id
-		from account where account=? and account_type='user' and platform='ZGO' and status=1`, b.Username)
+	account := schema.SigninGpaAccount{}
+	err := a.GPA.Sqlx.Get(&account, account.SQLByAccount(), b.Username)
 	if err != nil {
 		// logger.Errorf(c, err.Error()) // 未找对应的用户
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
@@ -40,8 +39,8 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 	suser := schema.SigninUser{}
 	// 客户端
 	if b.Client != "" {
-		client := schema.ClientSignin{}
-		err := a.GPA.Sqlx.Get(&client, "select id, issuer, audience from user where client_key=?", b.Client)
+		client := schema.SigninGpaClient{}
+		err := a.GPA.Sqlx.Get(&client, client.SQLByClientKey(), b.Client)
 		if err != nil || !client.Issuer.Valid || !client.Audience.Valid {
 			logger.Errorf(c, err.Error())
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-ERROR", Other: "客户端错误"})
@@ -56,16 +55,16 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 
 	// 角色
 	if account.RoleID.Valid {
-		role := schema.RoleSignin{}
-		err = a.GPA.Sqlx.Get(&role, "select id, uid, name from role where id=?", account.RoleID)
+		role := schema.SigninGpaRole{}
+		err = a.GPA.Sqlx.Get(&role, role.SQLByID(), account.RoleID)
 		if err != nil {
 			logger.Errorf(c, err.Error())
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
 		}
 		suser.RoleID = role.UID
 	} else if b.Role != "" {
-		role := schema.RoleSignin{}
-		err = a.GPA.Sqlx.Get(&role, "select id, uid, name from role where uid=?", b.Role)
+		role := schema.SigninGpaRole{}
+		err = a.GPA.Sqlx.Get(&role, role.SQLByUID(), b.Role)
 		if err != nil {
 			logger.Errorf(c, err.Error())
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
@@ -73,8 +72,9 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		suser.RoleID = role.UID
 	} else {
 		// 多角色问题
-		roles := []schema.RoleSignin{}
-		err = a.GPA.Sqlx.Select(&roles, `select r.id, r.uid, r.name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=?`, account.UserID)
+		role := schema.SigninGpaRole{}
+		roles := []schema.SigninGpaRole{}
+		err = a.GPA.Sqlx.Select(&roles, role.SQLByUserID(), account.UserID)
 		if err != nil {
 			logger.Errorf(c, err.Error())
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
@@ -82,8 +82,8 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		switch len(roles) {
 		case 0:
 			// 没有角色,赋值默认角色
-			role := schema.RoleSignin{}
-			err = a.GPA.Sqlx.Get(&role, "select id, uid, name from role where name=?", "default")
+			role := schema.SigninGpaRole{}
+			err = a.GPA.Sqlx.Get(&role, role.SQLByName(), "default")
 			if err != nil {
 				logger.Errorf(c, err.Error())
 				return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
@@ -103,8 +103,8 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 	}
 
 	// 用户
-	user := schema.UserSignin{}
-	err = a.GPA.Sqlx.Get(&user, "select id, uid, name from user where id=?", account.UserID)
+	user := schema.SigninGpaUser{}
+	err = a.GPA.Sqlx.Get(&user, user.SQLByID(), account.UserID)
 	if err != nil {
 		logger.Errorf(c, err.Error())
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
@@ -117,7 +117,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 
 // 验证密码
 //============================================================================================
-func (a *Signin) verifyPassword(pwd string, acc *schema.AccountSignin) (bool, error) {
+func (a *Signin) verifyPassword(pwd string, acc *schema.SigninGpaAccount) (bool, error) {
 	ok, _ := a.Passwd.Verify(&PasswdCheck{
 		Account:  acc,
 		Password: pwd,
@@ -127,7 +127,7 @@ func (a *Signin) verifyPassword(pwd string, acc *schema.AccountSignin) (bool, er
 
 // PasswdCheck 密码验证实体
 type PasswdCheck struct {
-	Account  *schema.AccountSignin
+	Account  *schema.SigninGpaAccount
 	Password string
 }
 

@@ -239,6 +239,22 @@ func (a *model) build() (string, error) {
 	}
 
 	content += "\n-- -------------------------------------------------------"
+
+	content += "\n-- -------------------------------------------------------\n-- insert into "
+	content += "\n-- -------------------------------------------------------\n"
+	for _, ct1 := range a.entitys {
+		sql, err := ct1.insertsql()
+		if err != nil {
+			log.Println("构建插入发生异常:" + ct1.name)
+			continue
+		}
+		if sql == "" {
+			continue
+		}
+		content += "-- " + sql + "\n"
+	}
+
+	content += "\n-- -------------------------------------------------------"
 	return content, nil
 }
 
@@ -339,5 +355,14 @@ func (a *entity) foreign() (string, error) {
 	}
 
 	content = content[:len(content)-2] + ";"
+	return content, nil
+}
+
+func (a *entity) insertsql() (string, error) {
+	content := "INSERT INTO `" + a.name + "`("
+	for _, f := range a.fields {
+		content += "`" + f.name + "`, "
+	}
+	content = content[:len(content)-2] + ") VALUES ()"
 	return content, nil
 }

@@ -17,6 +17,6 @@ var CasbinAdapterSet = wire.NewSet(casbin.NewCasbinEnforcer, NewCasbinAdapter)
 func NewCasbinAdapter() persist.Adapter {
 	// Initialize a Redis adapter and use it in a Casbin enforcer:
 	// key => casbin_rules
-	adapter := redis.NewAdapter("tcp", "127.0.0.1:6379") // Your Redis network and address.
+	adapter := redis.NewAdapter("tcp", "redis-svc:6379") // Your Redis network and address.
 	return adapter
 }

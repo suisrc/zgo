@@ -45,7 +45,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | user_id       | 用户标识       | 数值     |                                                     | int(11), fk_account_user->user.id                    |
 | role_id       | 角色标识       | 数值     | 如果不为空,表示账户和角色绑定                       | int(11), fk_account_role->role.id                    |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
-| desc          | 账户描述       | 字符串   |                                                     | varchar(255)                                         |
+| description   | 账户描述       | 字符串   |                                                     | varchar(255)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | oauth2_id     | oauth2认证     | 数值     |                                                     | int(11), fk_account_oauth2->oauth2_third.id          |
 | oauth2_token  | oauth2令牌     | 字符串   | 服务器间通信令牌有二种, 用户 VS 服务器              | varchar(1024)                                        |
@@ -259,7 +259,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), udx_role_uid                            |
 | name          | 角色名         | 字符串   |                                                     | varchar(64), udx_role_name                           |
-| desc          | 角色描述       | 字符串   |                                                     | varchar(128)                                         |
+| description   | 角色描述       | 字符串   |                                                     | varchar(128)                                         |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -309,7 +309,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | path          | 路径           | 字符串   | /api/*                                              | varchar(255)                                         |
 | netmask       | 网络掩码       | 字符串   | 0.0.0.0/0                                           | varchar(64)                                          |
 | allow         | 允许vs拒绝     | 数值     | 1: allow 0:deny                                     | tinyint(4)                                           |
-| desc          | 描述           | 字符串   |                                                     | varchar(128)                                         |
+| description   | 描述           | 字符串   |                                                     | varchar(128)                                         |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
