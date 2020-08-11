@@ -47,13 +47,20 @@ func (u *UserClaims) GetUserID() string {
 
 // GetRoleID role
 func (u *UserClaims) GetRoleID() string {
-	if u.Role == "" {
-		if u.Subject == "1" {
-			return "admin" // 作为默认系统用户
-		}
-		return "default" // 当用户没有权限的时候,启动默认权限
-	}
+	// if u.Role == "" {
+	// 	if u.Subject == "1" {
+	// 		return "admin" // 作为默认系统用户
+	// 	}
+	// 	return "default" // 当用户没有权限的时候,启动默认权限
+	// }
 	return u.Role
+}
+
+// SetRoleID role
+func (u *UserClaims) SetRoleID(nrole string) string {
+	orole := u.Role
+	u.Role = nrole
+	return orole
 }
 
 // GetTokenID token

@@ -2,11 +2,13 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/modules/helper"
 )
 
 // User 用户管理器
 type User struct {
+	service.GPA
 }
 
 // Register 注册接口
@@ -27,7 +29,7 @@ func (a *User) Register(r gin.IRouter) {
  * 只有基本信息
  */
 // @Tags user
-// @Summary user current
+// @Summary 查询当前用户信息
 // @Description 查询当前用户信息
 // @Accept  json
 // @Produce  json
@@ -42,7 +44,7 @@ func (a *User) userCurrent(c *gin.Context) {
  * 动态验证用户权限问题
  */
 // @Tags user
-// @Summary user current access
+// @Summary 查询当前用户信息
 // @Description 查询当前用户信息
 // @Accept  json
 // @Produce  json
@@ -58,7 +60,7 @@ func (a *User) userCurrentAccess(c *gin.Context) {
  * 查询当前用户信息
  */
 // @Tags user
-// @Summary user current notices
+// @Summary 查询当前用户信息
 // @Description 查询当前用户信息
 // @Accept  json
 // @Produce  json

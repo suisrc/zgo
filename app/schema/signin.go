@@ -54,6 +54,13 @@ func (s *SigninUser) GetRoleID() string {
 	return s.RoleID
 }
 
+// SetRoleID 角色ID
+func (s *SigninUser) SetRoleID(nrole string) string {
+	orole := s.RoleID
+	s.RoleID = nrole
+	return orole
+}
+
 // GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
 func (s *SigninUser) GetTokenID() string {
 	return s.TokenID

@@ -86,6 +86,13 @@ func (u *UserInfo) GetRoleID() string {
 	return u.RoleID
 }
 
+// SetRoleID role
+func (u *UserInfo) SetRoleID(r string) string {
+	x := u.RoleID
+	u.RoleID = r
+	return x
+}
+
 // GetTokenID token
 func (u *UserInfo) GetTokenID() string {
 	return u.TokenID

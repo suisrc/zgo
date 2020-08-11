@@ -3,6 +3,8 @@ package service
 import (
 	"errors"
 
+	"github.com/suisrc/zgo/middleware"
+
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
 	"github.com/google/wire"
@@ -73,9 +75,9 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 		}
 		persist.LoadPolicyLine(line, model)
 		logger.Infof(nil, "loading casbin: %s", line)
-		if !nosignin && r.Resource.String == "nosignin" {
+		if !nosignin && r.Resource.String == middleware.NoSignin {
 			nosignin = true
-		} else if !norole && r.Resource.String == "norole" {
+		} else if !norole && r.Resource.String == middleware.NoRole {
 			norole = true
 		}
 	}

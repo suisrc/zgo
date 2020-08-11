@@ -41,6 +41,8 @@ type UserInfo interface {
 	// GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
 	GetTokenID() string
 
+	// 赋予用户临时角色,用户替换,返回之前的角色
+	SetRoleID(string) string
 	// GetProps() 获取私有属性,该内容会被加密, 注意:内容敏感,不要存储太多的内容
 	GetProps() (interface{}, bool)
 

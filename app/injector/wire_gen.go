@@ -59,7 +59,9 @@ func BuildInjector() (*Injector, func(), error) {
 		Auther:        auther,
 		SigninService: signin,
 	}
-	user := &api.User{}
+	user := &api.User{
+		GPA: gpa,
+	}
 	options := &api.Options{
 		Engine:   engine,
 		Router:   router,
@@ -70,8 +72,6 @@ func BuildInjector() (*Injector, func(), error) {
 		User:     user,
 	}
 	endpoints := api.InitEndpoints(options)
-	swagger := middlewire.NewSwagger(engine)
-	healthz := middlewire.NewHealthz(engine)
 	watcher, cleanup4, err := casbinmem.NewCasbinWatcher(casbinAdapter, syncedEnforcer)
 	if err != nil {
 		cleanup3()
@@ -79,15 +79,23 @@ func BuildInjector() (*Injector, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	i18n := &service.I18n{
+		GPA:    gpa,
+		Bundle: bundle,
+	}
+	i18nLoader := service.InitI18nLoader(i18n)
+	swagger := middlewire.NewSwagger(engine)
+	healthz := middlewire.NewHealthz(engine)
 	injector := &Injector{
-		Engine:    engine,
-		Endpoints: endpoints,
-		Swagger:   swagger,
-		Healthz:   healthz,
-		Bundle:    bundle,
-		Enforcer:  syncedEnforcer,
-		Auther:    auther,
-		Watcher:   watcher,
+		Engine:     engine,
+		Endpoints:  endpoints,
+		Bundle:     bundle,
+		Enforcer:   syncedEnforcer,
+		Auther:     auther,
+		Watcher:    watcher,
+		I18nLoader: i18nLoader,
+		Swagger:    swagger,
+		Healthz:    healthz,
 	}
 	return injector, func() {
 		cleanup4()

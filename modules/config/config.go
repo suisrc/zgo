@@ -26,6 +26,7 @@ type Config struct {
 	Postgres     Postgres
 	Sqlite3      Sqlite3
 	WWW          WWW
+	I18N         I18N
 	MiddleConfig MiddleConfig
 }
 
@@ -127,6 +128,11 @@ type Redis struct {
 type WWW struct {
 	Index   string `default:"index.html"`
 	RootDir string `default:"www"`
+}
+
+// I18N 国际化
+type I18N struct {
+	DBEnable bool `default:"false"`
 }
 
 //===============================================分割线

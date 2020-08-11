@@ -10,6 +10,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+var (
+	// NoSignin 未登陆
+	NoSignin = "nosignin"
+	// NoRole 无角色
+	NoRole = "norole"
+)
+
 // UserAuthCasbinMiddleware 用户授权中间件
 func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforcer, skippers ...SkipperFunc) gin.HandlerFunc {
 	if !config.C.JWTAuth.Enable {
@@ -46,7 +53,7 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 
 		if err != nil {
 			if err == auth.ErrNoneToken && conf.NoSignin {
-				r = "nosignin"                  // 用户未登陆,且允许执行未登陆认证
+				r = NoSignin                    // 用户未登陆,且允许执行未登陆认证
 				erm = helper.Err401Unauthorized // 替换403异常,因为当前用户未登陆
 			} else if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
 				helper.ResError(c, helper.Err401Unauthorized) // 无有效登陆用户
@@ -58,7 +65,7 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 		} else {
 			r = user.GetRoleID() // 请求角色
 			if r == "" && conf.NoRole {
-				r = "norole" // 用户无角色,且允许执行无角色认证
+				r = NoRole // 用户无角色,且允许执行无角色认证
 			} else {
 				helper.ResError(c, helper.Err403Forbidden) // 无角色,禁止访问
 				return
