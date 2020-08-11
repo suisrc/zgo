@@ -8,6 +8,7 @@ import (
 	"github.com/google/wire"
 	"github.com/suisrc/zgo/app/schema"
 	zgocasbin "github.com/suisrc/zgo/modules/casbin"
+	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/logger"
 )
 
@@ -46,6 +47,7 @@ var _ persist.Adapter = (*CasbinAdapter)(nil)
 
 // LoadPolicy loads policy from database.
 func (a CasbinAdapter) LoadPolicy(model model.Model) error {
+	nosignin, norole := false, false
 	// resouces
 	resource0 := schema.CasbinGpaResource{}
 	resources := []schema.CasbinGpaResource{}
@@ -55,6 +57,9 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 		return nil
 	}
 	for _, r := range resources {
+		if !r.Resource.Valid {
+			continue
+		}
 		line := "p"
 		line += "," + r.Resource.String
 		line += "," + r.Domain.String
@@ -68,7 +73,15 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 		}
 		persist.LoadPolicyLine(line, model)
 		logger.Infof(nil, "loading casbin: %s", line)
+		if !nosignin && r.Resource.String == "nosignin" {
+			nosignin = true
+		} else if !norole && r.Resource.String == "norole" {
+			norole = true
+		}
 	}
+
+	config.C.Casbin.NoSignin = nosignin // 覆盖性修改默认配置
+	config.C.Casbin.NoRole = norole     // 覆盖性修改默认配置
 	// role
 	role0 := schema.CasbinGpaResourceRole{}
 	roles := []schema.CasbinGpaResourceRole{}
@@ -77,6 +90,9 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 		return nil
 	}
 	for _, r := range roles {
+		if !r.Role.Valid || !r.Resource.Valid {
+			continue
+		}
 		line := "g"
 		line += "," + r.Role.String
 		line += "," + r.Resource.String
@@ -91,6 +107,9 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 		return nil
 	}
 	for _, r := range roleroles {
+		if !r.Owner.Valid || !r.Child.Valid {
+			continue
+		}
 		line := "g"
 		line += "," + r.Owner.String
 		line += "," + r.Child.String

@@ -22,9 +22,8 @@ import (
 
 // InjectorSet 注入Injector
 var InjectorSet = wire.NewSet(
-	middlewire.NewHealthz, // 健康检查
-	NewBundle,             // 国际化注册
-	NewAuther,             // Auther注册
+	NewBundle, // 国际化注册
+	NewAuther, // Auther注册
 
 	wire.Bind(new(zgocasbin.PolicyVer), new(service.CasbinAdapter)), // Casbin版本
 	service.CasbinAdapterSet,   // Casbin依赖
@@ -34,6 +33,7 @@ var InjectorSet = wire.NewSet(
 
 // InjectorEndSet 注入Injector
 var InjectorEndSet = wire.NewSet(
+	middlewire.NewHealthz,           // 健康检查
 	middlewire.NewSwagger,           // swagger
 	wire.Struct(new(Injector), "*"), // 注册器
 )
@@ -44,15 +44,16 @@ var InjectorEndSet = wire.NewSet(
 
 // Injector 注入器(用于初始化完成之后的引用)
 type Injector struct {
-	Engine    *gin.Engine
-	Endpoints *api.Endpoints
-	Swagger   middlewire.Swagger
-	Healthz   middlewire.Healthz
+	Engine    *gin.Engine    // gin引擎
+	Endpoints *api.Endpoints // api接口
 
 	Bundle   *i18n.Bundle           // 国际化
 	Enforcer *casbin.SyncedEnforcer // 权限认证
 	Auther   auth.Auther            // 令牌控制
-	Watcher  persist.Watcher        // casbin adapter
+	Watcher  persist.Watcher        // casbin观察者
+
+	Swagger middlewire.Swagger
+	Healthz middlewire.Healthz
 }
 
 //======================================
