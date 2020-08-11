@@ -24,33 +24,62 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 		}
 
 		user, err := auther.GetUserInfo(c)
-		if err != nil {
-			if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
-				helper.ResError(c, helper.Err401Unauthorized)
+		if !conf.Enable {
+			// casbin禁用, 只判定是否登陆
+			if err != nil {
+				// 获取登陆信息异常
+				if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
+					helper.ResError(c, helper.Err401Unauthorized)
+					return
+				}
+				helper.ResError(c, helper.Err400BadRequest)
 				return
 			}
-			helper.ResError(c, helper.Err400BadRequest)
+			helper.SetUserInfo(c, user)
+			c.Next()
 			return
 		}
 
-		if conf.Enable {
-			r := user.GetRoleID()
-			a := user.GetAudience()
-			d := c.Request.URL.Host
-			p := c.Request.URL.Path
-			i := helper.GetClientIP(c)
-			m := c.Request.Method
-			if b, err := enforcer.Enforce(r, a, d, p, i, m); err != nil {
-				logger.Errorf(c, err.Error())
-				helper.ResError(c, helper.Err403Forbidden)
+		// 需要执行casbin授权
+		var r, a string // 角色, jwt授权方
+
+		if err != nil {
+			if err == auth.ErrNoneToken && conf.NoSignin {
+				r = "nosignin" // 用户未登陆,且允许执行未登陆认证
+			} else if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
+				helper.ResError(c, helper.Err401Unauthorized) // 无有效登陆用户
 				return
-			} else if !b {
-				helper.ResError(c, helper.Err403Forbidden)
+			} else {
+				helper.ResError(c, helper.Err400BadRequest) // 解析jwt令牌出现未知错误
 				return
 			}
+		} else {
+			r = user.GetRoleID() // 请求角色
+			if r == "" && conf.NoRole {
+				r = "norole" // 用户无角色,且允许执行无角色认证
+			} else {
+				helper.ResError(c, helper.Err403Forbidden) // 无角色,禁止访问
+				return
+			}
+			a = user.GetAudience() // jwt授权方
 		}
 
-		helper.SetUserInfo(c, user)
+		d := c.Request.URL.Host    // 请求域名
+		p := c.Request.URL.Path    // 请求路径
+		i := helper.GetClientIP(c) // 客户端IP
+		m := c.Request.Method      // 请求方法
+		if b, err := enforcer.Enforce(r, a, d, p, i, m); err != nil {
+			logger.Errorf(c, err.Error()) // 授权发生异常
+			helper.ResError(c, helper.Err403Forbidden)
+			return
+		} else if !b {
+			helper.ResError(c, helper.Err403Forbidden)
+			return
+		}
+
+		if user != nil {
+			helper.SetUserInfo(c, user)
+		}
 		c.Next()
 	}
 }

@@ -82,13 +82,14 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		switch len(roles) {
 		case 0:
 			// 没有角色,赋值默认角色
-			role := schema.SigninGpaRole{}
-			err = a.GPA.Sqlx.Get(&role, role.SQLByName(), "default")
-			if err != nil {
-				logger.Errorf(c, err.Error())
-				return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
-			}
-			suser.RoleID = role.UID
+			// do nothings, 目前默认角色问题已经迁移到[norole]问题中处理
+			// role := schema.SigninGpaRole{}
+			// err = a.GPA.Sqlx.Get(&role, role.SQLByName(), "default")
+			// if err != nil {
+			// 	logger.Errorf(c, err.Error())
+			// 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
+			// }
+			// suser.RoleID = role.UID
 		case 1:
 			suser.RoleID = roles[0].UID
 		default:

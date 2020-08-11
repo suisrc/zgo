@@ -58,8 +58,10 @@ type Casbin struct {
 	Debug            bool
 	Model            string
 	Watcher          string // 策略监控器
-	AutoLoad         bool
-	AutoLoadInternal int
+	NoRole           bool   // 验证无角色权限
+	NoSignin         bool   // 验证无登陆权限
+	AutoLoad         bool   // 自动重新加载权限
+	AutoLoadInternal int    // 刷新权限间隔,单位:秒
 	PolicyType       string // file | mysql | sqlite3 | postgres | redis | restful
 	PolicySource     string // policy.json | root:1234@tcp(127.0.0.1:3306)/yourdb | http://xxx.xxx/api/casbin/policy.rule
 	PolicyTable      string // casbin_rule

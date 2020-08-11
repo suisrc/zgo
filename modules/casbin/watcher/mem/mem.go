@@ -7,6 +7,7 @@ import (
 	"github.com/casbin/casbin/v2/persist"
 	cloudwatcher "github.com/rusenask/casbin-go-cloud-watcher"
 	zgocasbin "github.com/suisrc/zgo/modules/casbin"
+	"github.com/suisrc/zgo/modules/logger"
 
 	// Enable in-memory driver
 	_ "github.com/rusenask/casbin-go-cloud-watcher/drivers/mempubsub"
@@ -30,6 +31,7 @@ func NewCasbinWatcher(pv zgocasbin.PolicyVer, enforcer *casbin.SyncedEnforcer) (
 		if pv.PolicyVer() != ver { // 控制执行的版本
 			enforcer.LoadPolicy()
 			pv.PolicySet(ver)
+			logger.Infof(nil, "reloading casbin: version => %s", ver)
 		}
 	})
 	return watcher, cancel, nil

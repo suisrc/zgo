@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// UserAuthMiddleware 用户授权中间件
+// UserAuthMiddleware 用户授权中间件,废弃,请使用UserAuthCasbinMiddleware
 func UserAuthMiddleware(a auth.Auther, skippers ...SkipperFunc) gin.HandlerFunc {
 	if !config.C.JWTAuth.Enable {
 		return EmptyMiddleware()

@@ -51,7 +51,7 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 	resources := []schema.CasbinGpaResource{}
 	err := a.GPA.Sqlx.Select(&resources, resource0.SQLByALL())
 	if err != nil {
-		logger.Infof(nil, "loading casbin: none ->"+err.Error())
+		logger.Infof(nil, "loading casbin: none -> %s", err.Error())
 		return nil
 	}
 	for _, r := range resources {
@@ -67,7 +67,7 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 			line += ",deny"
 		}
 		persist.LoadPolicyLine(line, model)
-		logger.Infof(nil, "loading casbin: "+line)
+		logger.Infof(nil, "loading casbin: %s", line)
 	}
 	// role
 	role0 := schema.CasbinGpaResourceRole{}
@@ -81,7 +81,7 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 		line += "," + r.Role.String
 		line += "," + r.Resource.String
 		persist.LoadPolicyLine(line, model)
-		logger.Infof(nil, "loading casbin: "+line)
+		logger.Infof(nil, "loading casbin: %s", line)
 	}
 	// role-role
 	rolerole0 := schema.CasbinGpaRoleRole{}
@@ -95,7 +95,7 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 		line += "," + r.Owner.String
 		line += "," + r.Child.String
 		persist.LoadPolicyLine(line, model)
-		logger.Infof(nil, "loading casbin: "+line)
+		logger.Infof(nil, "loading casbin: %s", line)
 	}
 
 	return nil
@@ -103,7 +103,7 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 
 // SavePolicy saves policy to database.
 func (a CasbinAdapter) SavePolicy(model model.Model) error {
-	// 该方法只要通知系统接受更新
+	// 该方法只要通知系统接受更新, 无处理任何内容
 	return nil
 }
 

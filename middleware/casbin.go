@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// CasbinMiddleware casbin中间件
+// CasbinMiddleware casbin中间件,废弃,请使用UserAuthCasbinMiddleware
 func CasbinMiddleware(enforcer *casbin.SyncedEnforcer, skippers ...SkipperFunc) gin.HandlerFunc {
 	conf := config.C.Casbin
 	if !conf.Enable {

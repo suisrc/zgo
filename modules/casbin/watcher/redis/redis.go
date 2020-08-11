@@ -4,6 +4,7 @@ import (
 	"github.com/casbin/casbin/v2"
 	"github.com/casbin/casbin/v2/persist"
 	zgocasbin "github.com/suisrc/zgo/modules/casbin"
+	"github.com/suisrc/zgo/modules/logger"
 
 	rediswatcher "github.com/billcobbler/casbin-redis-watcher/v2"
 )
@@ -23,6 +24,7 @@ func NewCasbinWatcher(pv zgocasbin.PolicyVer, enforcer *casbin.SyncedEnforcer) (
 		if pv.PolicyVer() != ver { // 控制执行的版本
 			enforcer.LoadPolicy()
 			pv.PolicySet(ver)
+			logger.Infof(nil, "reloading casbin: version => %s", ver)
 		}
 	})
 	return watcher, nil
