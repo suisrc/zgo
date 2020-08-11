@@ -37,6 +37,17 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 	}
 
 	suser := schema.SigninUser{}
+	// 用户
+	user := schema.SigninGpaUser{}
+	err = a.GPA.Sqlx.Get(&user, user.SQLByID(), account.UserID)
+	if err != nil {
+		logger.Errorf(c, err.Error()) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
+	} else if !user.Status {
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
+	}
+	suser.UserName = user.Name
+	suser.UserID = user.UID
 	// 客户端
 	if b.Client != "" {
 		client := schema.SigninGpaClient{}
@@ -102,16 +113,6 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 			})
 		}
 	}
-
-	// 用户
-	user := schema.SigninGpaUser{}
-	err = a.GPA.Sqlx.Get(&user, user.SQLByID(), account.UserID)
-	if err != nil {
-		logger.Errorf(c, err.Error())
-		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
-	}
-	suser.UserName = user.Name
-	suser.UserID = user.UID
 
 	return &suser, nil
 }

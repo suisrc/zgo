@@ -200,6 +200,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), udx_user_uid                            |
 | name          | 用户名         | 字符串   |                                                     | varchar(64), udx_user_name                           |
+| status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
 
 ---
 ## 用户详情实体(`user_detail`)

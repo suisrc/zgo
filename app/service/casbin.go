@@ -82,6 +82,7 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 
 	config.C.Casbin.NoSignin = nosignin // 覆盖性修改默认配置
 	config.C.Casbin.NoRole = norole     // 覆盖性修改默认配置
+	logger.Infof(nil, "loading casbin: nosignin: %t, norole: %t", nosignin, norole)
 	// role
 	role0 := schema.CasbinGpaResourceRole{}
 	roles := []schema.CasbinGpaResourceRole{}

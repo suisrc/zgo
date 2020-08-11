@@ -78,14 +78,15 @@ func (s *SigninUser) GetAudience() string {
 
 // SigninGpaUser user
 type SigninGpaUser struct {
-	ID   int    `db:"id" json:"-"`
-	UID  string `db:"uid" json:"id"`
-	Name string `db:"name" json:"name"`
+	ID     int    `db:"id" json:"-"`
+	UID    string `db:"uid" json:"id"`
+	Name   string `db:"name" json:"name"`
+	Status bool   `db:"status" json:"-"`
 }
 
 // SQLByID sql select
 func (*SigninGpaUser) SQLByID() string {
-	return "select id, uid, name from user where id=?"
+	return "select id, uid, name, status from user where id=?"
 }
 
 // SigninGpaRole role
@@ -97,22 +98,22 @@ type SigninGpaRole struct {
 
 // SQLByID sql select
 func (*SigninGpaRole) SQLByID() string {
-	return "select id, uid, name from  role where id=?"
+	return "select id, uid, name from  role where id=? and status=1"
 }
 
 // SQLByUID sql select
 func (*SigninGpaRole) SQLByUID() string {
-	return "select id, uid, name from role where uid=?"
+	return "select id, uid, name from role where uid=? and status=1"
 }
 
 // SQLByName sql select
 func (*SigninGpaRole) SQLByName() string {
-	return "select id, uid, name from role where name=?"
+	return "select id, uid, name from role where name=? and status=1"
 }
 
 // SQLByUserID sql select
 func (*SigninGpaRole) SQLByUserID() string {
-	return "select id, uid, name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=?"
+	return "select r.id, r.uid, r.name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
 }
 
 // SigninGpaClient client
