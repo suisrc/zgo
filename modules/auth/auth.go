@@ -40,6 +40,8 @@ type UserInfo interface {
 	GetRoleID() string
 	// GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
 	GetTokenID() string
+	// GetSignInID 登陆ID, 本身不具备任何意义,只是标记登陆方式
+	GetSignInID() int
 
 	// 赋予用户临时角色,用户替换,返回之前的角色
 	SetRoleID(string) string

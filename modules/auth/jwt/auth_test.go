@@ -69,6 +69,7 @@ type UserInfo struct {
 	TokenID  string
 	Issuer   string
 	Audience string
+	SIID     int
 }
 
 // GetUserName name
@@ -96,6 +97,11 @@ func (u *UserInfo) SetRoleID(r string) string {
 // GetTokenID token
 func (u *UserInfo) GetTokenID() string {
 	return u.TokenID
+}
+
+// GetSignInID token
+func (u *UserInfo) GetSignInID() int {
+	return u.SIID
 }
 
 // GetIssuer issuer

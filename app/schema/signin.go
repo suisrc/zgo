@@ -37,6 +37,7 @@ type SigninUser struct {
 	TokenID  string
 	Issuer   string
 	Audience string
+	SIID     int
 }
 
 // GetUserName 用户名
@@ -64,6 +65,11 @@ func (s *SigninUser) SetRoleID(nrole string) string {
 // GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
 func (s *SigninUser) GetTokenID() string {
 	return s.TokenID
+}
+
+// GetSignInID token
+func (s *SigninUser) GetSignInID() int {
+	return s.SIID
 }
 
 // GetProps 获取私有属性,该内容会被加密, 注意:内容敏感,不要存储太多的内容

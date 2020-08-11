@@ -26,6 +26,9 @@ type UserInfo interface {
 	GetTokenID() string
 	GetIssuer() string
 	GetAudience() string
+
+	GetSignInID() int
+	SetRoleID(string) string
 }
 
 // UserInfoFunc user

@@ -37,6 +37,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 	}
 
 	suser := schema.SigninUser{}
+	suser.SIID = account.ID
 	// 用户
 	user := schema.SigninGpaUser{}
 	err = a.GPA.Sqlx.Get(&user, user.SQLByID(), account.UserID)

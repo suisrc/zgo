@@ -343,9 +343,10 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | uid           | 唯一标识       | 字符串   |                                                     | varchar(32), udx_menu_uid                            |
 | name          | 菜单名称       | 字符串   |                                                     | varchar(64)                                          |
-| group         | 菜单分组       | 字符串   |                                                     | varchar(64)                                          |
 | local         | 菜单名称       | 字符串   | 可以直接抽取前端i18n对应的内容                      | varchar(128)                                         |
 | sequence      | 排序值         | 数值     |                                                     | tinyint(4) DEFAULT 64                                |
+| group         | 菜单分组       | 字符串   |                                                     | varchar(64)                                          |
+| group_local   | 菜单分组       | 字符串   |                                                     | varchar(64)                                          |
 | icon          | 图标           | 字符串   |                                                     | varchar(255)                                         |
 | router        | 访问路由       | 字符串   |                                                     | varchar(255)                                         |
 | memo          | 备注           | 字符串   |                                                     | varchar(255)                                         |
@@ -360,16 +361,36 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 ## 角色自定义菜单实体(`menu_role`)
 
 角色具有包含角色的性质,所有在处理角色上,需要遍历角色,规则如下:  
-1.先通过用户+角色获取用户定制菜单,如果非空,直接结束,该规则不进行递归遍历,通常认为是用户自定义菜单.菜单需要通过2或者3验证权限  
-2.使用角色获取菜单, 如果非空,直接结束,由于角色递归, 需要进行递归遍历  
-3.如果都没有的情况下,使用role_id=nil and user_id=nil获取菜单,不进行递归,该菜单列表认为是所有人可见的默认菜单  
+1.使用角色获取菜单, 如果非空,直接结束,由于角色递归, 需要进行递归遍历  
+2.如果都没有的情况下,使用role_id=nil获取菜单,不进行递归,该菜单列表认为是所有人可见的默认菜单  
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| pid           | 父节点         | 数值     |                                                     | int(11), idx_parent_id                               |
+| uid           | 唯一标识       | 字符串   |                                                     | varchar(32), udx_menu_role_uid                       |
+| name          | 菜单名称       | 字符串   | 父节点不能为空,子节点为空,使用menu_id替换           | varchar(64)                                          |
+| local         | 菜单名称       | 字符串   |                                                     | varchar(128)                                         |
+| sequence      | 排序值         | 数值     |                                                     | tinyint(4) DEFAULT 64                                |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_role_role_id->role.id               |
-| user_id       | 用户 ID        | 数值     | null: 对角色有效, 否则, 仅对用户有效                | int(11), fk_menu_role_user_id->user.id               |
 | menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_role_menu_id->menu.id               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+
+---
+## 角色自定义菜单实体(`menu_user`)
+
+用户自定义菜单
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_user_role_id->role.id               |
+| user_id       | 用户 ID        | 数值     |                                                     | int(11), fk_menu_user_user_id->user.id               |
+| menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_user_menu_id->menu.id               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
