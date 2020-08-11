@@ -97,7 +97,7 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 			continue
 		}
 		line := "g"
-		line += "," + r.Role.String
+		line += "," + middleware.RolePrefix + r.Role.String
 		line += "," + r.Resource.String
 		persist.LoadPolicyLine(line, model)
 		logger.Infof(nil, "loading casbin: %s", line)
@@ -114,8 +114,8 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 			continue
 		}
 		line := "g"
-		line += "," + r.Owner.String
-		line += "," + r.Child.String
+		line += "," + middleware.RolePrefix + r.Owner.String
+		line += "," + middleware.RolePrefix + r.Child.String
 		persist.LoadPolicyLine(line, model)
 		logger.Infof(nil, "loading casbin: %s", line)
 	}

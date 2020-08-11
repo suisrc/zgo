@@ -15,6 +15,8 @@ var (
 	NoSignin = "nosignin"
 	// NoRole 无角色
 	NoRole = "norole"
+	// RolePrefix 角色前缀
+	RolePrefix = "r:"
 )
 
 // UserAuthCasbinMiddleware 用户授权中间件
@@ -63,12 +65,16 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 				return
 			}
 		} else {
-			r = user.GetRoleID() // 请求角色
-			if r == "" && conf.NoRole {
-				r = NoRole // 用户无角色,且允许执行无角色认证
+			ur := user.GetRoleID() // 请求角色
+			if ur == "" {
+				if conf.NoRole {
+					r = NoRole // 用户无角色,且允许执行无角色认证
+				} else {
+					helper.ResError(c, helper.Err403Forbidden) // 无角色,禁止访问
+					return
+				}
 			} else {
-				helper.ResError(c, helper.Err403Forbidden) // 无角色,禁止访问
-				return
+				r = RolePrefix + ur
 			}
 			a = user.GetAudience() // jwt授权方
 		}
