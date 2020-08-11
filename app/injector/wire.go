@@ -18,30 +18,8 @@ import (
 	"github.com/suisrc/zgo/app/api"
 	"github.com/suisrc/zgo/middlewire"
 
-	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
 )
-
-// InjectorSet 注入Injector
-var InjectorSet = wire.NewSet(
-	wire.Struct(new(Injector), "*"),
-	middlewire.NewSwagger,
-	middlewire.NewHealthz,
-)
-
-//======================================
-// 注入控制器
-//======================================
-
-// Injector 注入器(用于初始化完成之后的引用)
-type Injector struct {
-	Engine    *gin.Engine
-	Endpoints *api.Endpoints
-	Swagger   middlewire.Swagger
-	Healthz   middlewire.Healthz
-
-	//Enforcer *casbin.SyncedEnforcer
-}
 
 // BuildInjector 生成注入器
 func BuildInjector() (*Injector, func(), error) {
@@ -49,10 +27,7 @@ func BuildInjector() (*Injector, func(), error) {
 		InjectorSet,              // wire索引
 		middlewire.DefaultGinSet, // gin引擎
 		api.EndpointSet,          // 服务接口
+		InjectorEndSet,           // wire索引
 	)
 	return new(Injector), nil, nil
 }
-
-//======================================
-// END
-//======================================

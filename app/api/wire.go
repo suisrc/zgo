@@ -1,21 +1,13 @@
 package api
 
 import (
-	"github.com/BurntSushi/toml"
 	"github.com/casbin/casbin/v2"
-	"github.com/casbin/casbin/v2/persist"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/middlewire"
 	"github.com/suisrc/zgo/modules/auth"
-	"github.com/suisrc/zgo/modules/auth/jwt"
-	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
-	zgocasbin "github.com/suisrc/zgo/modules/casbin"
-	casbinmem "github.com/suisrc/zgo/modules/casbin/watcher/mem"
 	"github.com/suisrc/zgo/modules/config"
-	"github.com/suisrc/zgo/modules/logger"
-	"golang.org/x/text/language"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -23,18 +15,10 @@ import (
 
 // EndpointSet wire注入声明
 var EndpointSet = wire.NewSet(
-	NewBundle,                      // 国际化注册
 	NewUseEngine,                   // 增加引擎中间件
 	service.ServiceSet,             // 系统提供的服务列表
 	wire.Struct(new(Options), "*"), // 初始化接口参数
 	InitEndpoints,                  // 初始化接口方法
-	service.CasbinAdapterSet,       // Casbin依赖
-	NewAuther,                      // Auther注册
-
-	//casbinjson.CasbinAdapterSet,    // Casbin依赖
-
-	wire.Bind(new(zgocasbin.PolicyVer), new(service.CasbinAdapter)),
-	casbinmem.NewCasbinWatcher,
 
 	// 接口注册
 	wire.Struct(new(Auth), "*"),
@@ -48,12 +32,10 @@ var EndpointSet = wire.NewSet(
 
 // Options options
 type Options struct {
-	Bundle   *i18n.Bundle           // 国际化
 	Engine   *gin.Engine            // 服务器
 	Router   middlewire.Router      // 根路由
 	Enforcer *casbin.SyncedEnforcer // 权限认证
 	Auther   auth.Auther            // 令牌控制
-	Watcher  persist.Watcher        // casbin adapter
 
 	// 接口注入
 	Auth   *Auth
@@ -111,33 +93,4 @@ func NewUseEngine(bundle *i18n.Bundle) middlewire.UseEngine {
 		// 国际化, 全部国际化
 		app.Use(middleware.I18nMiddleware(bundle))
 	}
-}
-
-// NewBundle 国际化
-func NewBundle() *i18n.Bundle {
-	bundle := i18n.NewBundle(language.Chinese)
-	//bundle := i18n.NewBundle(language.English)
-	bundle.RegisterUnmarshalFunc("toml", toml.Unmarshal)
-	bundle.LoadMessageFile("locales/active.zh-CN.toml")
-	bundle.LoadMessageFile("locales/active.en-US.toml")
-	return bundle
-}
-
-// NewAuther of auth.Auther
-// 注册认证使用的auther内容
-func NewAuther() auth.Auther {
-	store, err := buntdb.NewStore(":memory:") // 使用内存缓存
-	if err != nil {
-		panic(err)
-	}
-	secret := config.C.JWTAuth.SigningSecret
-	if secret == "" {
-		secret = auth.UUID(128)
-		logger.Infof(nil, "jwt secret: %s", secret)
-	}
-	auther := jwt.New(store,
-		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
-	)
-
-	return auther
 }

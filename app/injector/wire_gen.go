@@ -6,8 +6,6 @@
 package injector
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/google/wire"
 	"github.com/suisrc/zgo/app/api"
 	"github.com/suisrc/zgo/app/model/entc"
 	"github.com/suisrc/zgo/app/model/sqlxc"
@@ -21,7 +19,7 @@ import (
 // Injectors from wire.go:
 
 func BuildInjector() (*Injector, func(), error) {
-	bundle := api.NewBundle()
+	bundle := NewBundle()
 	useEngine := api.NewUseEngine(bundle)
 	engine := middlewire.InitGinEngine(useEngine)
 	router := middlewire.NewRouter(engine)
@@ -47,14 +45,7 @@ func BuildInjector() (*Injector, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	auther := api.NewAuther()
-	watcher, cleanup4, err := casbinmem.NewCasbinWatcher(casbinAdapter, syncedEnforcer)
-	if err != nil {
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
+	auther := NewAuther()
 	auth := &api.Auth{
 		Enforcer: syncedEnforcer,
 		Auther:   auther,
@@ -70,12 +61,10 @@ func BuildInjector() (*Injector, func(), error) {
 	}
 	user := &api.User{}
 	options := &api.Options{
-		Bundle:   bundle,
 		Engine:   engine,
 		Router:   router,
 		Enforcer: syncedEnforcer,
 		Auther:   auther,
-		Watcher:  watcher,
 		Auth:     auth,
 		Signin:   apiSignin,
 		User:     user,
@@ -83,11 +72,22 @@ func BuildInjector() (*Injector, func(), error) {
 	endpoints := api.InitEndpoints(options)
 	swagger := middlewire.NewSwagger(engine)
 	healthz := middlewire.NewHealthz(engine)
+	watcher, cleanup4, err := casbinmem.NewCasbinWatcher(casbinAdapter, syncedEnforcer)
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	injector := &Injector{
 		Engine:    engine,
 		Endpoints: endpoints,
 		Swagger:   swagger,
 		Healthz:   healthz,
+		Bundle:    bundle,
+		Enforcer:  syncedEnforcer,
+		Auther:    auther,
+		Watcher:   watcher,
 	}
 	return injector, func() {
 		cleanup4()
@@ -95,17 +95,4 @@ func BuildInjector() (*Injector, func(), error) {
 		cleanup2()
 		cleanup()
 	}, nil
-}
-
-// wire.go:
-
-// InjectorSet 注入Injector
-var InjectorSet = wire.NewSet(wire.Struct(new(Injector), "*"), middlewire.NewSwagger, middlewire.NewHealthz)
-
-// Injector 注入器(用于初始化完成之后的引用)
-type Injector struct {
-	Engine    *gin.Engine
-	Endpoints *api.Endpoints
-	Swagger   middlewire.Swagger
-	Healthz   middlewire.Healthz
 }
