@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/suisrc/zgo/demo/model/ent"
-	"github.com/suisrc/zgo/demo/model/entc"
+	"github.com/suisrc/zgo/app/model/ent"
+	"github.com/suisrc/zgo/app/model/entc"
 )
 
 // Demo 用户
@@ -14,7 +14,7 @@ type Demo struct {
 
 // T1WithTx 更新用户信息
 func (s *Demo) T1WithTx(ctx context.Context) (string, error) {
-	res, err := entc.WithTxV(ctx, s.DBE, func(tx *ent.Tx) (interface{}, error) {
+	res, err := entc.WithTxV(ctx, s.Entc, func(tx *ent.Tx) (interface{}, error) {
 		return "ok", nil
 	})
 	if err != nil {
@@ -26,7 +26,7 @@ func (s *Demo) T1WithTx(ctx context.Context) (string, error) {
 // T9WithTx 更新用户信息
 func (s *Demo) T9WithTx(ctx context.Context, body map[string]interface{}) (string, error) {
 	ref := &ResultRef{}
-	err := entc.WithTx(ctx, s.DBE, func(tx *ent.Tx) error {
+	err := entc.WithTx(ctx, s.Entc, func(tx *ent.Tx) error {
 		ref.D = "ok"
 		return nil
 	})

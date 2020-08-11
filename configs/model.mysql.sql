@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-08-11 11:18:57 CST
+-- time: 2020-08-11 14:10:02 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -141,8 +141,8 @@ CREATE TABLE `user` (
   `uid` varchar(64) DEFAULT NULL COMMENT '唯一标识',
   `name` varchar(64) DEFAULT NULL COMMENT '用户名',
   `status` tinyint(4) DEFAULT 1 COMMENT '状态',
-  UNIQUE udx_user_name(`name`),
   UNIQUE udx_user_uid(`uid`),
+  UNIQUE udx_user_name(`name`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -257,18 +257,6 @@ CREATE TABLE `resource_role` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
--- 资源用户实体
-CREATE TABLE `resource_user` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
-  `user_id` int(11) DEFAULT NULL COMMENT '角色',
-  `resource` varchar(64) DEFAULT NULL COMMENT '资源名',
-  `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
-  `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
-  `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
-  `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
--- -------------------------------------------------------
 -- 菜单实体
 CREATE TABLE `menu` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
@@ -334,9 +322,9 @@ CREATE TABLE `tag_common` (
 -- 表外键
 -- -------------------------------------------------------
 ALTER TABLE `account`
-ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
 ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
-ADD CONSTRAINT `fk_account_oauth2` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`);
+ADD CONSTRAINT `fk_account_oauth2` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`),
+ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
 
 ALTER TABLE `oauth2_token`
 ADD CONSTRAINT `fk_oa2_token_id` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`);
@@ -352,16 +340,12 @@ ADD CONSTRAINT `fk_role_owner_id` FOREIGN KEY (`owner_id`)  REFERENCES `role` (`
 ADD CONSTRAINT `fk_role_child_id` FOREIGN KEY (`child_id`)  REFERENCES `role` (`id`);
 
 ALTER TABLE `user_role`
-ADD CONSTRAINT `fk_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
-ADD CONSTRAINT `fk_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
+ADD CONSTRAINT `fk_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
+ADD CONSTRAINT `fk_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`);
 
 ALTER TABLE `resource_role`
 ADD CONSTRAINT `fk_resource_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
 ADD CONSTRAINT `fk_resource_role_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
-
-ALTER TABLE `resource_user`
-ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
-ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
 
 ALTER TABLE `menu`
 ADD CONSTRAINT `fk_menu_parent_id` FOREIGN KEY (`parent_id`)  REFERENCES `menu` (`id`);
@@ -392,7 +376,6 @@ ADD CONSTRAINT `fk_menu_role_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu`
 -- INSERT INTO `user_role`(`id`, `user_id`, `role_id`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `resource`(`id`, `resource`, `domain`, `methods`, `path`, `netmask`, `allow`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `resource_role`(`id`, `role_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `resource_user`(`id`, `user_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `menu`(`id`, `parent_id`, `name`, `sequence`, `icon`, `router`, `memo`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `menu_action`(`id`, `menu_id`, `role_id`, `code`, `name`, `disable`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `menu_role`(`id`, `role_id`, `user_id`, `menu_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()

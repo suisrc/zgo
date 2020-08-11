@@ -13,19 +13,59 @@ type User struct {
 func (a *User) Register(r gin.IRouter) {
 	user := r.Group("user")
 
-	user.GET("hello", a.hello)
+	current := user.Group("current")
+	{
+		current.GET("", a.userCurrent)
+		current.GET("access", a.userCurrentAccess)
+		current.GET("notices", a.userCurrentAccess)
+	}
 }
 
-// hello godoc
+/**
+ * 查询当前用户信息
+ * 一般在用户收起登陆，或者首次打开页面时候触发
+ * 只有基本信息
+ */
 // @Tags user
-// @Summary hello
-// @Description 用户接口测试
+// @Summary user current
+// @Description 查询当前用户信息
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
-// @Router /user/hello [get]
-func (a *User) hello(c *gin.Context) {
-	// 返回正常结果即可
+// @Router /user/current [get]
+func (a *User) userCurrent(c *gin.Context) {
+	helper.ResSuccess(c, "ok")
+}
+
+/**
+ * 动态验证用户权限问题
+ */
+// @Tags user
+// @Summary user current access
+// @Description 查询当前用户信息
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Success 200 {object} helper.Success
+// @Router /user/current/access [get]
+func (a *User) userCurrentAccess(c *gin.Context) {
+
+	helper.ResSuccess(c, "ok")
+}
+
+/**
+ * 查询当前用户信息
+ */
+// @Tags user
+// @Summary user current notices
+// @Description 查询当前用户信息
+// @Accept  json
+// @Produce  json
+// @Security ApiKeyAuth
+// @Success 200 {object} helper.Success
+// @Router /user/current/notices [get]
+func (a *User) userCurrentNotices(c *gin.Context) {
+
 	helper.ResSuccess(c, "ok")
 }

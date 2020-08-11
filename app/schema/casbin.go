@@ -29,7 +29,7 @@ type CasbinGpaResourceRole struct {
 
 // SQLByALL sql select
 func (*CasbinGpaResourceRole) SQLByALL() string {
-	return "select id, resource, r.uid as role from resource_role rr inner join role r on r.id = rr.role_id where r.status=1"
+	return "select rr.id, rr.resource, r.uid as role from resource_role rr inner join role r on r.id = rr.role_id where r.status=1"
 }
 
 // CasbinGpaRoleRole policy => g
@@ -41,7 +41,7 @@ type CasbinGpaRoleRole struct {
 
 // SQLByALL sql select
 func (*CasbinGpaRoleRole) SQLByALL() string {
-	return `select id, ro.uid as owner, rc.uid as child 
+	return `select rr.id, ro.uid as owner, rc.uid as child 
 			from role_role rr 
 			inner join role ro on ro.id = rr.owner_id 
 			inner join role rc on rc.id = rr.child_id 
