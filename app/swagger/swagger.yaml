@@ -1,26 +1,5 @@
 basePath: /api
 definitions:
-  helper.ErrorInfo:
-    properties:
-      data:
-        description: 响应数据
-        type: object
-      errorCode:
-        description: 错误代码
-        type: string
-      errorMessage:
-        description: 向用户显示消息
-        type: string
-      showType:
-        description: 错误显示类型：0静音； 1条消息警告； 2消息错误； 4通知； 9页
-        type: integer
-      success:
-        description: 请求成功, false
-        type: boolean
-      traceId:
-        description: 方便进行后端故障排除：唯一的请求ID
-        type: string
-    type: object
   helper.Success:
     properties:
       data:
@@ -32,21 +11,6 @@ definitions:
       traceId:
         description: 方便进行后端故障排除：唯一的请求ID
         type: string
-    type: object
-  schema.DemoSet:
-    properties:
-      code:
-        description: 编号
-        type: string
-      memo:
-        description: 备注
-        type: string
-      name:
-        description: 名称
-        type: string
-    required:
-    - code
-    - name
     type: object
   schema.SigninBody:
     properties:
@@ -101,84 +65,6 @@ paths:
       summary: Authorize
       tags:
       - auth
-  /demo/get:
-    get:
-      consumes:
-      - application/json
-      description: Get
-      parameters:
-      - description: Demo id
-        in: query
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/helper.ErrorInfo'
-      summary: Get
-      tags:
-      - demo
-  /demo/get1:
-    get:
-      consumes:
-      - application/json
-      description: Get
-      parameters:
-      - description: Demo id
-        in: query
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/helper.ErrorInfo'
-      summary: Get
-      tags:
-      - demo
-  /demo/hello:
-    get:
-      consumes:
-      - application/json
-      description: Hello world
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: ok
-          schema:
-            type: string
-      summary: Hello
-      tags:
-      - demo
-  /demo/set:
-    post:
-      consumes:
-      - application/json
-      description: Set
-      parameters:
-      - description: Demo Info
-        in: body
-        name: item
-        schema:
-          $ref: '#/definitions/schema.DemoSet'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/helper.ErrorInfo'
-      summary: Set
-      tags:
-      - demo
   /signin:
     post:
       consumes:
@@ -250,11 +136,11 @@ paths:
       summary: Signup
       tags:
       - sign
-  /user/hello:
+  /user/current:
     get:
       consumes:
       - application/json
-      description: 用户接口测试
+      description: 查询当前用户信息
       produces:
       - application/json
       responses:
@@ -264,7 +150,41 @@ paths:
             $ref: '#/definitions/helper.Success'
       security:
       - ApiKeyAuth: []
-      summary: hello
+      summary: user current
+      tags:
+      - user
+  /user/current/access:
+    get:
+      consumes:
+      - application/json
+      description: 查询当前用户信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: user current access
+      tags:
+      - user
+  /user/current/notices:
+    get:
+      consumes:
+      - application/json
+      description: 查询当前用户信息
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: user current notices
       tags:
       - user
 schemes:

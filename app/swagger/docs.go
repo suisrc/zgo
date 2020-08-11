@@ -56,126 +56,6 @@ var doc = `{
                 }
             }
         },
-        "/demo/get": {
-            "get": {
-                "description": "Get",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "demo"
-                ],
-                "summary": "Get",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Demo id",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/helper.ErrorInfo"
-                        }
-                    }
-                }
-            }
-        },
-        "/demo/get1": {
-            "get": {
-                "description": "Get",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "demo"
-                ],
-                "summary": "Get",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Demo id",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/helper.ErrorInfo"
-                        }
-                    }
-                }
-            }
-        },
-        "/demo/hello": {
-            "get": {
-                "description": "Hello world",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "demo"
-                ],
-                "summary": "Hello",
-                "responses": {
-                    "200": {
-                        "description": "ok",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
-        "/demo/set": {
-            "post": {
-                "description": "Set",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "demo"
-                ],
-                "summary": "Set",
-                "parameters": [
-                    {
-                        "description": "Demo Info",
-                        "name": "item",
-                        "in": "body",
-                        "schema": {
-                            "$ref": "#/definitions/schema.DemoSet"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/helper.ErrorInfo"
-                        }
-                    }
-                }
-            }
-        },
         "/signin": {
             "post": {
                 "description": "登陆",
@@ -289,14 +169,14 @@ var doc = `{
                 }
             }
         },
-        "/user/hello": {
+        "/user/current": {
             "get": {
                 "security": [
                     {
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "用户接口测试",
+                "description": "查询当前用户信息",
                 "consumes": [
                     "application/json"
                 ],
@@ -306,7 +186,63 @@ var doc = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "hello",
+                "summary": "user current",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/current/access": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "查询当前用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "user current access",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/current/notices": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "查询当前用户信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "user current notices",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -319,35 +255,6 @@ var doc = `{
         }
     },
     "definitions": {
-        "helper.ErrorInfo": {
-            "type": "object",
-            "properties": {
-                "data": {
-                    "description": "响应数据",
-                    "type": "object"
-                },
-                "errorCode": {
-                    "description": "错误代码",
-                    "type": "string"
-                },
-                "errorMessage": {
-                    "description": "向用户显示消息",
-                    "type": "string"
-                },
-                "showType": {
-                    "description": "错误显示类型：0静音； 1条消息警告； 2消息错误； 4通知； 9页",
-                    "type": "integer"
-                },
-                "success": {
-                    "description": "请求成功, false",
-                    "type": "boolean"
-                },
-                "traceId": {
-                    "description": "方便进行后端故障排除：唯一的请求ID",
-                    "type": "string"
-                }
-            }
-        },
         "helper.Success": {
             "type": "object",
             "properties": {
@@ -361,27 +268,6 @@ var doc = `{
                 },
                 "traceId": {
                     "description": "方便进行后端故障排除：唯一的请求ID",
-                    "type": "string"
-                }
-            }
-        },
-        "schema.DemoSet": {
-            "type": "object",
-            "required": [
-                "code",
-                "name"
-            ],
-            "properties": {
-                "code": {
-                    "description": "编号",
-                    "type": "string"
-                },
-                "memo": {
-                    "description": "备注",
-                    "type": "string"
-                },
-                "name": {
-                    "description": "名称",
                     "type": "string"
                 }
             }
