@@ -49,9 +49,9 @@ func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(),
 	}
 
 	// 注册方法
-	enforcer.AddFunction("domainMatch", DomainMatchFunc)
-	enforcer.AddFunction("actionMatch", ActionMatchFunc)
-	enforcer.AddFunction("domainAudMatch", DomainMatchAudienceFunc)
+	enforcer.AddFunction("fdom", DomainMatchFunc)
+	enforcer.AddFunction("fact", ActionMatchFunc)
+	enforcer.AddFunction("fdoma", DomainMatchAudienceFunc)
 
 	return enforcer, cleanFunc, nil
 }

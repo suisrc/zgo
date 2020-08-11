@@ -336,6 +336,20 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+## 资源角色实体(`resource_user`)
+
+用于对某一个用户进行单独屏蔽操作, 非特殊情况下不推荐使用
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| user_id       | 用户           | 数值     |                                                     | int(11), fk_resource_user_id->user.id                |
+| resource      | 资源名         | 字符串   |                                                     | varchar(64), fk_resource_user_res->resource.resource |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 ---
 ## 菜单实体(`menu`)
 
@@ -375,6 +389,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | local         | 菜单名称       | 字符串   |                                                     | varchar(128)                                         |
 | sequence      | 排序值         | 数值     |                                                     | tinyint(4) DEFAULT 64                                |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_role_role_id->role.id               |
+| role_uid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_uid                            |
 | menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_role_menu_id->menu.id               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -392,9 +407,10 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | pid           | 父节点         | 数值     |                                                     | int(11), idx_parent_id                               |
 | uid           | 唯一标识       | 字符串   |                                                     | varchar(64), udx_menu_role_uid                       |
-| name          | 菜单名称       | 字符串   | 注意,这是用于自定义菜单,无需国际化处理              | varchar(64)                                          |
+| name          | 菜单名称       | 字符串   | 注意,这是用户自定义菜单,无需国际化处理              | varchar(64)                                          |
 | sequence      | 排序值         | 数值     |                                                     | tinyint(4) DEFAULT 64                                |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_user_role_id->role.id               |
+| role_uid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_uid                            |
 | menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_role_menu_id->menu.id               |
 | user_id       | 用户 ID        | 数值     |                                                     | int(11), fk_menu_user_user_id->user.id               |
 | menu_role_id  | 波及 ID        | 数值     | 当权限发生变更后，会收到影响或者波及的ID            | int(11), idx_menu_role_id                            |
@@ -417,6 +433,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_action_menu_id->menu.id             |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_action_role_id->role.id             |
+| role_uid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_uid                            |
 | code          | 动作编号       | 字符串   |                                                     | varchar(64), idx_menu_action_code                    |
 | name          | 动作名称       | 字符串   |                                                     | varchar(64), idx_menu_action_name                    |
 | disable       | 状态           | 数值     | 0:启用 1:禁用                                       | tinyint(4) DEFAULT 0                                 |

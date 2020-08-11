@@ -11,12 +11,14 @@ import (
 )
 
 var (
-	// NoSignin 未登陆
-	NoSignin = "nosignin"
-	// NoRole 无角色
-	NoRole = "norole"
-	// RolePrefix 角色前缀
-	RolePrefix = "r:"
+	// CasbinNoSignin 未登陆
+	CasbinNoSignin = "nosignin"
+	// CasbinNoRole 无角色
+	CasbinNoRole = "norole"
+	// CasbinRolePrefix 角色前缀
+	CasbinRolePrefix = "r:"
+	// CasbinUserPrefix 角色前缀
+	CasbinUserPrefix = "u:"
 )
 
 // UserAuthCasbinMiddleware 用户授权中间件
@@ -50,12 +52,12 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 		}
 
 		// 需要执行casbin授权
-		var r, a string               // 角色, jwt授权方
+		var sub, usr, aud string      // 角色, 用户,  jwt授权方
 		erm := helper.Err403Forbidden // casbin验证失败后返回的异常
 
 		if err != nil {
 			if err == auth.ErrNoneToken && conf.NoSignin {
-				r = NoSignin                    // 用户未登陆,且允许执行未登陆认证
+				sub = CasbinNoSignin            // 用户未登陆,且允许执行未登陆认证
 				erm = helper.Err401Unauthorized // 替换403异常,因为当前用户未登陆
 			} else if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
 				helper.ResError(c, helper.Err401Unauthorized) // 无有效登陆用户
@@ -68,22 +70,24 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 			ur := user.GetRoleID() // 请求角色
 			if ur == "" {
 				if conf.NoRole {
-					r = NoRole // 用户无角色,且允许执行无角色认证
+					sub = CasbinNoRole // 用户无角色,且允许执行无角色认证,
 				} else {
 					helper.ResError(c, helper.Err403Forbidden) // 无角色,禁止访问
 					return
 				}
 			} else {
-				r = RolePrefix + ur
+				sub = CasbinRolePrefix + ur
 			}
-			a = user.GetAudience() // jwt授权方
+			if !conf.NoUser {
+				usr = CasbinUserPrefix + user.GetUserID() // 用户
+			}
+			aud = user.GetAudience() // jwt授权方
 		}
-
-		d := c.Request.URL.Host    // 请求域名
-		p := c.Request.URL.Path    // 请求路径
-		i := helper.GetClientIP(c) // 客户端IP
-		m := c.Request.Method      // 请求方法
-		if b, err := enforcer.Enforce(r, a, d, p, i, m); err != nil {
+		dom := c.Request.URL.Host    // 请求域名
+		pat := c.Request.URL.Path    // 请求路径
+		cip := helper.GetClientIP(c) // 客户端IP
+		act := c.Request.Method      // 请求方法
+		if b, err := enforcer.Enforce(sub, usr, dom, aud, pat, cip, act); err != nil {
 			logger.Errorf(c, err.Error()) // 授权发生异常
 			helper.ResError(c, erm)
 			return

@@ -32,6 +32,18 @@ func (*CasbinGpaResourceRole) SQLByALL() string {
 	return "select rr.id, rr.resource, r.uid as role from resource_role rr inner join role r on r.id = rr.role_id where r.status=1"
 }
 
+// CasbinGpaResourceUser policy => g
+type CasbinGpaResourceUser struct {
+	ID       int            `db:"id"`
+	User     sql.NullString `db:"user"`
+	Resource sql.NullString `db:"resource"`
+}
+
+// SQLByALL sql select
+func (*CasbinGpaResourceUser) SQLByALL() string {
+	return "select ru.id, ru.resource, r.uid as user from resource_user ru inner join role r on r.id = rr.role_id where r.status=1"
+}
+
 // CasbinGpaRoleRole policy => g
 type CasbinGpaRoleRole struct {
 	ID    int            `db:"id"`

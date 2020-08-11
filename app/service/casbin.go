@@ -8,6 +8,7 @@ import (
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
 	"github.com/google/wire"
+	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/schema"
 	zgocasbin "github.com/suisrc/zgo/modules/casbin"
 	"github.com/suisrc/zgo/modules/config"
@@ -49,7 +50,7 @@ var _ persist.Adapter = (*CasbinAdapter)(nil)
 
 // LoadPolicy loads policy from database.
 func (a CasbinAdapter) LoadPolicy(model model.Model) error {
-	nosignin, norole := false, false
+	nosignin, norole, nouser := false, false, true
 	// resouces
 	resource0 := schema.CasbinGpaResource{}
 	resources := []schema.CasbinGpaResource{}
@@ -75,21 +76,45 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 		}
 		persist.LoadPolicyLine(line, model)
 		logger.Infof(nil, "loading casbin: %s", line)
-		if !nosignin && r.Resource.String == middleware.NoSignin {
+		if !nosignin && r.Resource.String == middleware.CasbinNoSignin {
 			nosignin = true
-		} else if !norole && r.Resource.String == middleware.NoRole {
+		} else if !norole && r.Resource.String == middleware.CasbinNoRole {
 			norole = true
 		}
 	}
-
+	// user
+	user0 := schema.CasbinGpaResourceUser{}
+	users := []schema.CasbinGpaResourceUser{}
+	err = a.GPA.Sqlx.Select(&users, user0.SQLByALL())
+	if err != nil && !sqlxc.IsNotFound(err) {
+		logger.Infof(nil, "loading casbin: user -> %s", err.Error())
+	}
+	for _, r := range users {
+		if !r.User.Valid || !r.Resource.Valid {
+			continue
+		}
+		line := "g2"
+		line += "," + middleware.CasbinUserPrefix + r.User.String
+		line += "," + r.Resource.String
+		persist.LoadPolicyLine(line, model)
+		logger.Infof(nil, "loading casbin: %s", line)
+		if nouser {
+			nouser = false
+		}
+	}
+	// config
 	config.C.Casbin.NoSignin = nosignin // 覆盖性修改默认配置
 	config.C.Casbin.NoRole = norole     // 覆盖性修改默认配置
-	logger.Infof(nil, "loading casbin: nosignin: %t, norole: %t", nosignin, norole)
+	config.C.Casbin.NoUser = nouser     // 覆盖性修改默认配置
+	logger.Infof(nil, "loading casbin: nosignin: %t, norole: %t, nouser: %t", nosignin, norole, nouser)
 	// role
 	role0 := schema.CasbinGpaResourceRole{}
 	roles := []schema.CasbinGpaResourceRole{}
 	err = a.GPA.Sqlx.Select(&roles, role0.SQLByALL())
 	if err != nil {
+		if !sqlxc.IsNotFound(err) {
+			logger.Infof(nil, "loading casbin: role -> %s", err.Error())
+		}
 		return nil
 	}
 	for _, r := range roles {
@@ -97,7 +122,7 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 			continue
 		}
 		line := "g"
-		line += "," + middleware.RolePrefix + r.Role.String
+		line += "," + middleware.CasbinRolePrefix + r.Role.String
 		line += "," + r.Resource.String
 		persist.LoadPolicyLine(line, model)
 		logger.Infof(nil, "loading casbin: %s", line)
@@ -107,6 +132,9 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 	roleroles := []schema.CasbinGpaRoleRole{}
 	err = a.GPA.Sqlx.Select(&roleroles, rolerole0.SQLByALL())
 	if err != nil {
+		if !sqlxc.IsNotFound(err) {
+			logger.Infof(nil, "loading casbin: role-role -> %s", err.Error())
+		}
 		return nil
 	}
 	for _, r := range roleroles {
@@ -114,8 +142,8 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 			continue
 		}
 		line := "g"
-		line += "," + middleware.RolePrefix + r.Owner.String
-		line += "," + middleware.RolePrefix + r.Child.String
+		line += "," + middleware.CasbinRolePrefix + r.Owner.String
+		line += "," + middleware.CasbinRolePrefix + r.Child.String
 		persist.LoadPolicyLine(line, model)
 		logger.Infof(nil, "loading casbin: %s", line)
 	}
