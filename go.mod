@@ -47,7 +47,7 @@ require (
 	github.com/rusenask/casbin-go-cloud-watcher v0.0.0-20200412170359-c7485109e787
 	github.com/sirupsen/logrus v1.6.0
 	github.com/stretchr/testify v1.5.1
-	github.com/suisrc/gin-i18n v0.1.0
+	github.com/suisrc/gin-i18n v0.1.1
 	github.com/swaggo/gin-swagger v1.2.0
 	github.com/swaggo/swag v1.6.7
 	github.com/tidwall/buntdb v1.1.2
