@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	gi18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/modules/helper"
 	"github.com/suisrc/zgo/modules/passwd"
 
@@ -109,7 +110,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 			// return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-ROLE-MULTI-ERROR", "多角色")
 			return nil, helper.NewSuccess(c, map[string]interface{}{
 				"status":  "error", // 登陆失败
-				"message": helper.FormatText(c, &i18n.Message{ID: "service.signin.select-role-text", Other: "请选择角色"}),
+				"message": gi18n.FormatText(c, &i18n.Message{ID: "service.signin.select-role-text", Other: "请选择角色"}),
 				"roles":   roles,
 			})
 		}

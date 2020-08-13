@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-08-11 17:41:36 CST
+-- time: 2020-08-12 09:16:49 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -256,14 +256,27 @@ CREATE TABLE `resource_role` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
+-- 资源角色实体
+CREATE TABLE `resource_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
+  `user_id` int(11) DEFAULT NULL COMMENT '用户',
+  `resource` varchar(64) DEFAULT NULL COMMENT '资源名',
+  `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
+  `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
+  `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+-- -------------------------------------------------------
 -- 菜单实体
 CREATE TABLE `menu` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `uid` varchar(32) DEFAULT NULL COMMENT '唯一标识',
   `name` varchar(64) DEFAULT NULL COMMENT '菜单名称',
-  `group` varchar(64) DEFAULT NULL COMMENT '菜单分组',
   `local` varchar(128) DEFAULT NULL COMMENT '菜单名称',
   `sequence` tinyint(4) DEFAULT 64 COMMENT '排序值',
+  `group` varchar(64) DEFAULT NULL COMMENT '菜单分组',
+  `group_local` varchar(64) DEFAULT NULL COMMENT '菜单分组',
   `icon` varchar(255) DEFAULT NULL COMMENT '图标',
   `router` varchar(255) DEFAULT NULL COMMENT '访问路由',
   `memo` varchar(255) DEFAULT NULL COMMENT '备注',
@@ -279,13 +292,45 @@ CREATE TABLE `menu` (
 -- 角色自定义菜单实体
 CREATE TABLE `menu_role` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
+  `pid` int(11) DEFAULT NULL COMMENT '父节点',
+  `uid` varchar(32) DEFAULT NULL COMMENT '唯一标识',
+  `name` varchar(64) DEFAULT NULL COMMENT '菜单名称',
+  `local` varchar(128) DEFAULT NULL COMMENT '菜单名称',
+  `sequence` tinyint(4) DEFAULT 64 COMMENT '排序值',
   `role_id` int(11) DEFAULT NULL COMMENT '角色 ID',
-  `user_id` int(11) DEFAULT NULL COMMENT '用户 ID',
+  `role_uid` varchar(64) DEFAULT NULL COMMENT '角色 UID',
   `menu_id` int(11) DEFAULT NULL COMMENT '菜单 ID',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  UNIQUE udx_menu_role_uid(`uid`),
+  INDEX idx_parent_id(`pid`),
+  INDEX idx_role_uid(`role_uid`),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+-- -------------------------------------------------------
+-- 角色自定义菜单实体
+CREATE TABLE `menu_user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
+  `pid` int(11) DEFAULT NULL COMMENT '父节点',
+  `uid` varchar(64) DEFAULT NULL COMMENT '唯一标识',
+  `name` varchar(64) DEFAULT NULL COMMENT '菜单名称',
+  `sequence` tinyint(4) DEFAULT 64 COMMENT '排序值',
+  `role_id` int(11) DEFAULT NULL COMMENT '角色 ID',
+  `role_uid` varchar(64) DEFAULT NULL COMMENT '角色 UID',
+  `menu_id` int(11) DEFAULT NULL COMMENT '菜单 ID',
+  `user_id` int(11) DEFAULT NULL COMMENT '用户 ID',
+  `menu_role_id` int(11) DEFAULT NULL COMMENT '波及 ID',
+  `status` tinyint(4) DEFAULT 1 COMMENT '状态',
+  `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
+  `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
+  `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  UNIQUE udx_menu_role_uid(`uid`),
+  INDEX idx_role_uid(`role_uid`),
+  INDEX idx_menu_role_id(`menu_role_id`),
+  INDEX idx_parent_id(`pid`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -294,6 +339,7 @@ CREATE TABLE `menu_action` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `menu_id` int(11) DEFAULT NULL COMMENT '菜单 ID',
   `role_id` int(11) DEFAULT NULL COMMENT '角色 ID',
+  `role_uid` varchar(64) DEFAULT NULL COMMENT '角色 UID',
   `code` varchar(64) DEFAULT NULL COMMENT '动作编号',
   `name` varchar(64) DEFAULT NULL COMMENT '动作名称',
   `disable` tinyint(4) DEFAULT 0 COMMENT '状态',
@@ -301,6 +347,7 @@ CREATE TABLE `menu_action` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  INDEX idx_role_uid(`role_uid`),
   INDEX idx_menu_action_code(`code`),
   INDEX idx_menu_action_name(`name`),
   PRIMARY KEY (`id`)
@@ -347,9 +394,9 @@ CREATE TABLE `i18n_language` (
 -- 表外键
 -- -------------------------------------------------------
 ALTER TABLE `account`
+ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
 ADD CONSTRAINT `fk_account_oauth2` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`),
-ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
-ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`);
+ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
 
 ALTER TABLE `oauth2_token`
 ADD CONSTRAINT `fk_oa2_token_id` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`);
@@ -372,14 +419,22 @@ ALTER TABLE `resource_role`
 ADD CONSTRAINT `fk_resource_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
 ADD CONSTRAINT `fk_resource_role_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
 
+ALTER TABLE `resource_user`
+ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
+ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
+
 ALTER TABLE `menu_role`
 ADD CONSTRAINT `fk_menu_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
-ADD CONSTRAINT `fk_menu_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
 ADD CONSTRAINT `fk_menu_role_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu` (`id`);
 
+ALTER TABLE `menu_user`
+ADD CONSTRAINT `fk_menu_user_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
+ADD CONSTRAINT `fk_menu_role_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu` (`id`),
+ADD CONSTRAINT `fk_menu_user_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
+
 ALTER TABLE `menu_action`
-ADD CONSTRAINT `fk_menu_action_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
-ADD CONSTRAINT `fk_menu_action_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu` (`id`);
+ADD CONSTRAINT `fk_menu_action_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu` (`id`),
+ADD CONSTRAINT `fk_menu_action_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`);
 
 -- -------------------------------------------------------
 -- -------------------------------------------------------
@@ -398,9 +453,11 @@ ADD CONSTRAINT `fk_menu_action_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `men
 -- INSERT INTO `user_role`(`id`, `user_id`, `role_id`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `resource`(`id`, `resource`, `domain`, `methods`, `path`, `netmask`, `allow`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `resource_role`(`id`, `role_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `menu`(`id`, `uid`, `name`, `group`, `local`, `sequence`, `icon`, `router`, `memo`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `menu_role`(`id`, `role_id`, `user_id`, `menu_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `menu_action`(`id`, `menu_id`, `role_id`, `code`, `name`, `disable`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `resource_user`(`id`, `user_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `menu`(`id`, `uid`, `name`, `local`, `sequence`, `group`, `group_local`, `icon`, `router`, `memo`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `menu_role`(`id`, `pid`, `uid`, `name`, `local`, `sequence`, `role_id`, `role_uid`, `menu_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `menu_user`(`id`, `pid`, `uid`, `name`, `sequence`, `role_id`, `role_uid`, `menu_id`, `user_id`, `menu_role_id`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `menu_action`(`id`, `menu_id`, `role_id`, `role_uid`, `code`, `name`, `disable`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `tag_common`(`id`, `owner_id`, `type`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 -- INSERT INTO `i18n_language`(`id`, `mid`, `lang`, `description`, `left_delim`, `right_delim`, `zero`, `one`, `two`, `few`, `many`, `other`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
 

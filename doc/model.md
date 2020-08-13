@@ -336,6 +336,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
+---
 ## 资源角色实体(`resource_user`)
 
 用于对某一个用户进行单独屏蔽操作, 非特殊情况下不推荐使用
@@ -350,6 +351,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+
 ---
 ## 菜单实体(`menu`)
 

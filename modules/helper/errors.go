@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	gi18n "github.com/suisrc/gin-i18n"
 
 	"github.com/gin-gonic/gin"
 )
@@ -41,7 +42,7 @@ func NewError(ctx *gin.Context, showType int, emsg *i18n.Message, args map[strin
 	res := &ErrorInfo{
 		Success:      false,
 		ErrorCode:    emsg.ID,
-		ErrorMessage: FormatCode(ctx, emsg, args),
+		ErrorMessage: gi18n.FormatMessage(ctx, emsg, args),
 		ShowType:     showType,
 		TraceID:      GetTraceID(ctx),
 		//Status:       http.StatusOK,
@@ -59,7 +60,7 @@ func NewWrapError(ctx *gin.Context, em *ErrorModel) *ErrorInfo {
 	res := &ErrorInfo{
 		Success:      false,
 		ErrorCode:    em.ErrorMessage.ID,
-		ErrorMessage: FormatCode(ctx, em.ErrorMessage, em.ErrorArgs),
+		ErrorMessage: gi18n.FormatMessage(ctx, em.ErrorMessage, em.ErrorArgs),
 		ShowType:     em.ShowType,
 		TraceID:      GetTraceID(ctx),
 		//Status:       em.Status,
