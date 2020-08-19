@@ -49,3 +49,22 @@ func AesDecrypt(cipherText string, keys []byte) (string, error) {
 	plainTextBytes := content[16:]
 	return string(plainTextBytes), nil
 }
+
+// AesEncryptStr aes
+func AesEncryptStr(plainText string) (string, string, error) {
+	keys := RandomBytes(32)
+	cipherText, err := AesEncrypt(plainText, keys)
+	if err != nil {
+		return "", "", err
+	}
+	return cipherText, Base64EncodeToString(keys), nil
+}
+
+// AesDecryptStr aes
+func AesDecryptStr(cipherText, keysStr string) (string, error) {
+	keys, err := Base64DecodeString(keysStr)
+	if err != nil {
+		return "", err
+	}
+	return AesDecrypt(cipherText, keys)
+}

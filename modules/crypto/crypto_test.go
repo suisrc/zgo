@@ -59,7 +59,7 @@ func TestAes32(t *testing.T) {
 	assert.True(t, true)
 }
 
-func TestWxCrypto(t *testing.T) {
+func TestCrypto(t *testing.T) {
 	aesKey0 := RandomAes32()
 	log.Println(aesKey0)
 
@@ -74,6 +74,21 @@ func TestWxCrypto(t *testing.T) {
 
 	s2, err2 := AesDecrypt(s1, aesKey1)
 	assert.Nil(t, err2)
+
+	log.Println(s2)
+
+	assert.Equal(t, s0, s2)
+}
+
+func TestCrypto2(t *testing.T) {
+	s0 := "kdixkdiskdiDiskc"
+
+	s1, key, _ := AesEncryptStr(s0)
+
+	log.Println(key)
+	log.Println(s1)
+
+	s2, _ := AesDecryptStr(s1, key)
 
 	log.Println(s2)
 
