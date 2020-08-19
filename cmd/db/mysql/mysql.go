@@ -237,7 +237,6 @@ func (a *model) build() (string, error) {
 		}
 		content += "\n" + sql + "\n"
 	}
-
 	content += "\n-- -------------------------------------------------------"
 
 	content += "\n-- -------------------------------------------------------\n-- insert into "
@@ -251,10 +250,38 @@ func (a *model) build() (string, error) {
 		if sql == "" {
 			continue
 		}
+		content += "-- " + sql + ";\n"
+	}
+	content += "\n-- -------------------------------------------------------"
+
+	content += "\n-- -------------------------------------------------------\n-- drop table "
+	content += "\n-- -------------------------------------------------------\n"
+	for _, ct1 := range a.entitys {
+		sql, err := ct1.dropforeign()
+		if err != nil {
+			log.Println("构建删除发生异常:" + ct1.name)
+			continue
+		}
+		if sql == "" {
+			continue
+		}
+		sql = strings.ReplaceAll(sql, "DROP FOREIGN KEY ", "-- DROP FOREIGN KEY ")
 		content += "-- " + sql + "\n"
 	}
-
+	content += "-- \n"
+	for _, ct1 := range a.entitys {
+		sql, err := ct1.dropsql()
+		if err != nil {
+			log.Println("构建删除发生异常:" + ct1.name)
+			continue
+		}
+		if sql == "" {
+			continue
+		}
+		content += "-- " + sql + ";\n"
+	}
 	content += "\n-- -------------------------------------------------------"
+
 	return content, nil
 }
 
@@ -364,5 +391,24 @@ func (a *entity) insertsql() (string, error) {
 		content += "`" + f.name + "`, "
 	}
 	content = content[:len(content)-2] + ") VALUES ()"
+	return content, nil
+}
+
+func (a *entity) dropsql() (string, error) {
+	content := "DROP TABLE IF EXISTS `" + a.name + "`"
+	return content, nil
+}
+
+func (a *entity) dropforeign() (string, error) {
+	if len(a.fkmap) == 0 {
+		return "", nil
+	}
+	content := "ALTER TABLE `" + a.name + "`\n"
+
+	for key := range a.fkmap {
+		content += "DROP FOREIGN KEY `" + key + "`,\n"
+	}
+
+	content = content[:len(content)-2] + ";"
 	return content, nil
 }

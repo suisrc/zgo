@@ -1,18 +1,7 @@
-package passwd
+package crypto
 
-import "github.com/NebulousLabs/fastrand"
-
-func reverse(str string) string {
-	bytes := []rune(str)
-	for from, to := 0, len(bytes)-1; from < to; from, to = from+1, to-1 {
-		bytes[from], bytes[to] = bytes[to], bytes[from]
-	}
-	str = string(bytes)
-	return str
-}
-
-// Encrypt 简单的加密算法, 破坏其本身字符串的特征, 当用于对同一个MD5值进行处理
-func Encrypt(buffers []byte, randoms []byte) []byte {
+// MaskEncrypt 简单的加密算法, 破坏其本身字符串的特征, 当用于对同一个MD5值进行处理
+func MaskEncrypt(buffers []byte, randoms []byte) []byte {
 	lenBuf := len(buffers)
 	lenEnd := lenBuf / 2
 	for index := 0; index < lenEnd; index += 2 {
@@ -33,8 +22,8 @@ func Encrypt(buffers []byte, randoms []byte) []byte {
 	return buffers
 }
 
-// Decrypt 简单的解密算法
-func Decrypt(buffers []byte, randoms []byte) []byte {
+// MaskDecrypt 简单的解密算法
+func MaskDecrypt(buffers []byte, randoms []byte) []byte {
 	lenBuf := len(buffers)
 	lenRan := len(randoms)
 	for index, offset := 0, 0; index < lenBuf; index++ {
@@ -53,19 +42,4 @@ func Decrypt(buffers []byte, randoms []byte) []byte {
 		buffers[index] ^= ^buffers[offset]
 	}
 	return buffers
-}
-
-// UUID uuid
-func UUID(length int64) string {
-	ele := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-		"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
-		"o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"}
-
-	elen := len(ele)
-	uuid := ""
-	var i int64
-	for i = 0; i < length; i++ {
-		uuid += ele[fastrand.Intn(elen)]
-	}
-	return uuid
 }

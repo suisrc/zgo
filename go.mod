@@ -7,7 +7,7 @@ require (
 	github.com/NebulousLabs/fastrand v0.0.0-20181203155948-6fb6489aac4e
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/billcobbler/casbin-redis-watcher/v2 v2.0.0-20200124034411-c05521d98fa2
-	github.com/casbin/casbin v1.9.1
+	github.com/casbin/casbin v1.9.1 // indirect
 	github.com/casbin/casbin/v2 v2.8.6
 	github.com/casbin/json-adapter/v2 v2.0.0
 	github.com/casbin/redis-adapter/v2 v2.0.1

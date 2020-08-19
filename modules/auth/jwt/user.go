@@ -34,7 +34,7 @@ type UserClaims struct {
 	jwt.StandardClaims
 	Name       string      `json:"nam,omitempty"` // 用户名
 	Role       string      `json:"rol,omitempty"` // 角色ID, role id
-	SIID       int         `json:"sii,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式
+	SIID       string      `json:"sii,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式
 	Properties interface{} `json:"pps,omitempty"` // 用户的额外属性
 }
 
@@ -72,7 +72,7 @@ func (u *UserClaims) GetTokenID() string {
 }
 
 // GetSignInID token
-func (u *UserClaims) GetSignInID() int {
+func (u *UserClaims) GetSignInID() string {
 	return u.SIID
 }
 

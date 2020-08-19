@@ -28,33 +28,33 @@ excludes=
 当前用户如果绑定用户名,邮箱,手机登陆,意味着该用户具有3个本地实体
 密码加密方式, password_type -> MD5和SHA1是一种依赖MD5和SHA1的自定义变种加密方式, BCR是标准的bcrypt加密,BCR2和BCR3是对盐值进行了加密
 BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpassword为基础的位运算加密,不会影响其执行速度, 注意,其可以基于本身进行解密处理
-经过测试, MD5和SHA1 -> 0.170s/万次, BCR -> 6.67s/百次, MD5和SHA1的执行效率大约是BCR的4000~5000倍, 在非必要请求下,请使用MD5或者SHA1
+经过测试, MD5和SHA1 -> 0.170s/万次, BCR -> 667s/万次, MD5和SHA1的执行效率大约是BCR的4000~5000倍, 在非必要请求下,请使用MD5或者SHA1
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | --------------------------------------------------- | ---------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| pid           | 上级账户       | 字符串   | 当前账户验证密码的方式为PID时候,使用上级账户验证    | int(11)                                              |
 | account       | 账户           | 字符串   | 账户和账户类型和账户归属平台构成唯一标识            | varchar(255), udx_account                            |
-| account_type  | 账户类型       | 字符串   | 1:user 2:mobile 3:email 4:openid 5:unionid 6:token  | varchar(16) DEFAULT 'user', udx_account              |
-| platform      | 账户归属平台   | 字符串   | 1:ZGO(当前平台) 2:OA2-[OAuth2.id](第三方平台)       | varchar(16) DEFAULT 'ZGO', udx_account               |
-| verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2                             | varchar(16) DEFAULT 'PASSWD'                         |
+| account_type  | 账户类型       | 字符串   | 1:user 2:mobile 3:email 4:openid 5:unionid 6:token  | tinyint(4) DEFAULT '1', udx_account                  |
+| platform_id   | 账户归属平台   | 字符串   |                                                     | int(11), udx_account,fk_platform_id->oauth2_platform.id |
+| verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2 4:PID                       | tinyint(4) DEFAULT '1'                               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| password      | 登录密码       | 字符串   |                                                     | varchar(255)                                         |
+| password      | 登录密码       | 字符串   | 1.密码, 2:签名密钥 3:密钥 4:密钥                    | varchar(255)                                         |
 | password_salt | 密码盐值       | 字符串   |                                                     | varchar(255)                                         |
-| password_type | 校验方式       | 字符串   | 1:(明文) 2:MD5 3:SHA1 4: BCR 5: BCR2                | varchar(16)                                          |
+| password_type | 校验方式       | 字符串   | 1:(明文) 2:MD5 3:SHA1 4: BCR 5: BCR2 6: BCR3        | varchar(16)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| user_id       | 用户标识       | 数值     |                                                     | int(11), fk_account_user->user.id                    |
+| user_id       | 用户标识       | 数值     |                                                     | int(11) NOT NULL, fk_account_user->user.id           |
 | role_id       | 角色标识       | 数值     | 如果不为空,表示账户和角色绑定                       | int(11), fk_account_role->role.id                    |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
 | description   | 账户描述       | 字符串   |                                                     | varchar(255)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| oauth2_id     | oauth2认证     | 数值     |                                                     | int(11), fk_account_oauth2->oauth2_third.id          |
-| oauth2_token  | oauth2令牌     | 字符串   | 服务器间通信令牌有二种, 用户 VS 服务器              | varchar(1024)                                        |
-| oauth2_time   | oauth2创建时间 | 时间格式 | 令牌生成时间                                        | timestamp                                            |
-| token_fake    | oauth2令牌     | 字符串   | 特殊的令牌,用于集群中应用间通信,可理解为永生令牌    | varchar(1024)                                        |
+| oa2_token     | oauth2令牌     | 字符串   | 服务器间通信令牌有二种, 用户 VS 服务器              | varchar(1024)                                        |
+| oa2_expired   | oauth2过期时间 | 时间格式 | 令牌过期时间                                        | timestamp                                            |
+| token_fake    | 伪造令牌       | 字符串   | 特殊永生令牌, 备用                                  | varchar(1024)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
-| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 | 等同于上次登陆时间                                  | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
@@ -65,7 +65,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
-## 第三方登陆实体(`oauth2_third`)
+## 第三方登陆实体(`oauth2_platform`)
 
 用于第三方授权登陆我们的系统
 
@@ -111,7 +111,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| oauth2_id     | 平台           | 字符串   |                                                     | int(11), fk_oa2_token_id->oauth2_third.id            |
+| oauth2_id     | 平台           | 字符串   |                                                     | int(11), fk_oa2_token_id->oauth2_platform.id         |
 | access_token  | 代理商标识     | 字符串   |                                                     | varchar(1024)                                        |
 | expires_in    | 有限期间隔     | 字符串   |                                                     | int(11) DEFAULT 7200                                 |
 | create_time   | 凭据创建时间   | 字符串   | 凭据是由远程服务器创建成功,和created_at不同         | timestamp                                            |
@@ -253,6 +253,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 ## 角色实体(`role`)
 
 一个用户登陆系统后,只能有一个角色存在,如果有多角色的情况,需要进行选择
+本质上角色是没有域的概念的,但是为了方便管理,所以证件域的选项
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
@@ -261,6 +262,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | name          | 角色名         | 字符串   |                                                     | varchar(64), udx_role_name                           |
 | description   | 角色描述       | 字符串   |                                                     | varchar(128)                                         |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
+| domain        | 域             | 字符串   | 角色有域, 多系统账户来说,角色应该是跨域的           | varchar(255)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
@@ -367,6 +369,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | icon          | 图标           | 字符串   |                                                     | varchar(255)                                         |
 | router        | 访问路由       | 字符串   |                                                     | varchar(255)                                         |
 | memo          | 备注           | 字符串   |                                                     | varchar(255)                                         |
+| domain        | 域名           | 字符串   |                                                     | varchar(255)                                         |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -391,7 +394,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | local         | 菜单名称       | 字符串   |                                                     | varchar(128)                                         |
 | sequence      | 排序值         | 数值     |                                                     | tinyint(4) DEFAULT 64                                |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_role_role_id->role.id               |
-| role_uid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_uid                            |
+| role_uid      | 角色 UID       | 字符串   | 与role_id效果相同                                   | varchar(64), idx_role_uid                            |
 | menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_role_menu_id->menu.id               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -402,21 +405,17 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 ---
 ## 角色自定义菜单实体(`menu_user`)
 
-用户自定义菜单, 用户可以在自己可以查看的菜单中选择常用的菜单,进行展示
+用户自定义菜单, 用户可以在自己可以查看的菜单中选择常用的菜单,进行展示,
+展示的内容
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| pid           | 父节点         | 数值     |                                                     | int(11), idx_parent_id                               |
-| uid           | 唯一标识       | 字符串   |                                                     | varchar(64), udx_menu_role_uid                       |
-| name          | 菜单名称       | 字符串   | 注意,这是用户自定义菜单,无需国际化处理              | varchar(64)                                          |
-| sequence      | 排序值         | 数值     |                                                     | tinyint(4) DEFAULT 64                                |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_user_role_id->role.id               |
 | role_uid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_uid                            |
-| menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_role_menu_id->menu.id               |
 | user_id       | 用户 ID        | 数值     |                                                     | int(11), fk_menu_user_user_id->user.id               |
-| menu_role_id  | 波及 ID        | 数值     | 当权限发生变更后，会收到影响或者波及的ID            | int(11), idx_menu_role_id                            |
-| status        | 状态           | 数值     | 1:启用 0:禁用 非用户配置，权限变更波及              | tinyint(4) DEFAULT 1                                 |
+| user_uid      | 用户 UID       | 字符串   |                                                     | varchar(64), idx_user_uid                            |
+| menu_ids      | 菜单 ID        | 字符串   | menu uid list                                       | varchar(4096)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |

@@ -37,7 +37,7 @@ type SigninUser struct {
 	TokenID  string
 	Issuer   string
 	Audience string
-	SIID     int
+	SIID     string
 }
 
 // GetUserName 用户名
@@ -68,7 +68,7 @@ func (s *SigninUser) GetTokenID() string {
 }
 
 // GetSignInID token
-func (s *SigninUser) GetSignInID() int {
+func (s *SigninUser) GetSignInID() string {
 	return s.SIID
 }
 

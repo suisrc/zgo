@@ -19,7 +19,7 @@ func (a *User) Register(r gin.IRouter) {
 	{
 		current.GET("", a.userCurrent)
 		current.GET("access", a.userCurrentAccess)
-		current.GET("notices", a.userCurrentAccess)
+		current.GET("notices", a.userCurrentNotices)
 	}
 }
 

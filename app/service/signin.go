@@ -1,6 +1,8 @@
 package service
 
 import (
+	"strconv"
+
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	gi18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/modules/helper"
@@ -38,7 +40,9 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 	}
 
 	suser := schema.SigninUser{}
-	suser.SIID = account.ID
+	if account.ID > 0 {
+		suser.SIID = strconv.Itoa(account.ID)
+	}
 	// 用户
 	user := schema.SigninGpaUser{}
 	err = a.GPA.Sqlx.Get(&user, user.SQLByID(), account.UserID)

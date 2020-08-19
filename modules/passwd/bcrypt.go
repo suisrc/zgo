@@ -1,16 +1,15 @@
 package passwd
 
 import (
-	"encoding/base64"
 	"strings"
 
-	"golang.org/x/crypto/bcrypt"
+	"github.com/suisrc/zgo/modules/crypto"
 )
 
 // VerifyBcrypt bcrypt
 func VerifyBcrypt(ent IEntity) (bool, error) {
 	hashpass := ent.Salt() + ent.Right()
-	err := bcrypt.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
+	err := crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
 	if err != nil {
 		return false, err
 	}
@@ -19,7 +18,7 @@ func VerifyBcrypt(ent IEntity) (bool, error) {
 
 // GenerateBcrypt bcrypt
 func GenerateBcrypt(password string, ptype string) (*GeneratePasswd, error) {
-	pwd, err := bcrypt.GenerateFromPassword([]byte(password), bCost)
+	pwd, err := crypto.GenerateFromPassword([]byte(password), bCost)
 	if err != nil {
 		return nil, err
 	}
@@ -35,12 +34,12 @@ func GenerateBcrypt(password string, ptype string) (*GeneratePasswd, error) {
 
 // VerifyBcrypt2 bcrypt
 func VerifyBcrypt2(ent IEntity) (bool, error) {
-	salt, err := base64.StdEncoding.DecodeString(ent.Salt())
+	salt, err := crypto.Base64DecodeString(ent.Salt())
 	if err != nil {
 		return false, nil
 	}
-	hashpass := reverse(string(salt)) + ent.Right()
-	err = bcrypt.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
+	hashpass := crypto.Reverse(string(salt)) + ent.Right()
+	err = crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
 	if err != nil {
 		return false, err
 	}
@@ -49,14 +48,14 @@ func VerifyBcrypt2(ent IEntity) (bool, error) {
 
 // GenerateBcrypt2 bcrypt
 func GenerateBcrypt2(password string, ptype string) (*GeneratePasswd, error) {
-	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 9)
+	pwd, err := crypto.GenerateFromPassword([]byte(password), 9)
 	if err != nil {
 		return nil, err
 	}
 	pwdstr := string(pwd)
 	// $ver$cost$[salte:22]hashpass
 	offset := strings.LastIndex(pwdstr, "$") + 22
-	salt := base64.StdEncoding.EncodeToString([]byte(reverse(pwdstr[:offset])))
+	salt := crypto.Base64EncodeToString([]byte(crypto.Reverse(pwdstr[:offset])))
 	return &GeneratePasswd{
 		Password:     pwdstr[offset:],
 		PasswordType: ptype,
@@ -66,14 +65,14 @@ func GenerateBcrypt2(password string, ptype string) (*GeneratePasswd, error) {
 
 // VerifyBcrypt3 bcrypt
 func VerifyBcrypt3(ent IEntity) (bool, error) {
-	salx, err := base64.StdEncoding.DecodeString(ent.Salt())
+	salx, err := crypto.Base64DecodeString(ent.Salt())
 	if err != nil {
 		return false, nil
 	}
-	sbyt := Decrypt(salx, []byte(ent.Right()))
+	sbyt := crypto.MaskDecrypt(salx, []byte(ent.Right()))
 	salt := string(sbyt)
 	hashpass := salt + ent.Right()
-	err = bcrypt.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
+	err = crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
 	if err != nil {
 		return false, err
 	}
@@ -82,7 +81,7 @@ func VerifyBcrypt3(ent IEntity) (bool, error) {
 
 // GenerateBcrypt3 bcrypt
 func GenerateBcrypt3(password string, ptype string) (*GeneratePasswd, error) {
-	pwd, err := bcrypt.GenerateFromPassword([]byte(password), 9)
+	pwd, err := crypto.GenerateFromPassword([]byte(password), 9)
 	if err != nil {
 		return nil, err
 	}
@@ -91,8 +90,8 @@ func GenerateBcrypt3(password string, ptype string) (*GeneratePasswd, error) {
 	offset := strings.LastIndex(pwdstr, "$") + 22
 	salt := pwdstr[:offset]
 	rpwd := pwdstr[offset:]
-	sbyt := Encrypt([]byte(salt), []byte(rpwd))
-	salx := base64.StdEncoding.EncodeToString(sbyt)
+	sbyt := crypto.MaskEncrypt([]byte(salt), []byte(rpwd))
+	salx := crypto.Base64EncodeToString(sbyt)
 	return &GeneratePasswd{
 		Password:     rpwd,
 		PasswordType: ptype,

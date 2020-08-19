@@ -27,7 +27,7 @@ type UserInfo interface {
 	GetIssuer() string
 	GetAudience() string
 
-	GetSignInID() int
+	GetSignInID() string
 	SetRoleID(string) string
 }
 

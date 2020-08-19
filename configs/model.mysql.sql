@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-08-12 09:16:49 CST
+-- time: 2020-08-18 12:28:05 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -8,9 +8,10 @@
 CREATE TABLE `account` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `account` varchar(255) DEFAULT NULL COMMENT '账户',
-  `account_type` varchar(16) DEFAULT 'user' COMMENT '账户类型',
-  `platform` varchar(16) DEFAULT 'ZGO' COMMENT '账户归属平台',
-  `verify_type` varchar(16) DEFAULT 'PASSWD' COMMENT '校验方式',
+  `account_type` tinyint(4) DEFAULT '1' COMMENT '账户类型',
+  `platform_id` int(11) DEFAULT NULL COMMENT '账户归属平台',
+  `verify_type` tinyint(4) DEFAULT '1' COMMENT '校验方式',
+  `pid` int(11) DEFAULT NULL COMMENT '上级账户',
   `password` varchar(255) DEFAULT NULL COMMENT '登录密码',
   `password_salt` varchar(255) DEFAULT NULL COMMENT '密码盐值',
   `password_type` varchar(16) DEFAULT NULL COMMENT '校验方式',
@@ -18,10 +19,9 @@ CREATE TABLE `account` (
   `role_id` int(11) DEFAULT NULL COMMENT '角色标识',
   `status` tinyint(4) DEFAULT 1 COMMENT '状态',
   `description` varchar(255) DEFAULT NULL COMMENT '账户描述',
-  `oauth2_id` int(11) DEFAULT NULL COMMENT 'oauth2认证',
-  `oauth2_token` varchar(1024) DEFAULT NULL COMMENT 'oauth2令牌',
-  `oauth2_time` timestamp DEFAULT NULL COMMENT 'oauth2创建时间',
-  `token_fake` varchar(1024) DEFAULT NULL COMMENT 'oauth2令牌',
+  `oa2_token` varchar(1024) DEFAULT NULL COMMENT 'oauth2令牌',
+  `oa2_expired` timestamp DEFAULT NULL COMMENT 'oauth2过期时间',
+  `token_fake` varchar(1024) DEFAULT NULL COMMENT '伪造令牌',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
@@ -32,12 +32,12 @@ CREATE TABLE `account` (
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
   `number_2` int(11) DEFAULT NULL COMMENT '备用字段',
   `number_3` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE udx_account(`account`,`account_type`,`platform`),
+  UNIQUE udx_account(`account`,`account_type`,`platform_id`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
 -- 第三方登陆实体
-CREATE TABLE `oauth2_third` (
+CREATE TABLE `oauth2_platform` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `platform` varchar(32) NOT NULL COMMENT '平台',
   `agent_id` varchar(255) DEFAULT NULL COMMENT '代理商标识',
@@ -191,6 +191,7 @@ CREATE TABLE `role` (
   `name` varchar(64) DEFAULT NULL COMMENT '角色名',
   `description` varchar(128) DEFAULT NULL COMMENT '角色描述',
   `status` tinyint(4) DEFAULT 1 COMMENT '状态',
+  `domain` varchar(255) DEFAULT NULL COMMENT '域',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
@@ -280,6 +281,7 @@ CREATE TABLE `menu` (
   `icon` varchar(255) DEFAULT NULL COMMENT '图标',
   `router` varchar(255) DEFAULT NULL COMMENT '访问路由',
   `memo` varchar(255) DEFAULT NULL COMMENT '备注',
+  `domain` varchar(255) DEFAULT NULL COMMENT '域名',
   `status` tinyint(4) DEFAULT 1 COMMENT '状态',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
@@ -305,32 +307,25 @@ CREATE TABLE `menu_role` (
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   UNIQUE udx_menu_role_uid(`uid`),
-  INDEX idx_parent_id(`pid`),
   INDEX idx_role_uid(`role_uid`),
+  INDEX idx_parent_id(`pid`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
 -- 角色自定义菜单实体
 CREATE TABLE `menu_user` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
-  `pid` int(11) DEFAULT NULL COMMENT '父节点',
-  `uid` varchar(64) DEFAULT NULL COMMENT '唯一标识',
-  `name` varchar(64) DEFAULT NULL COMMENT '菜单名称',
-  `sequence` tinyint(4) DEFAULT 64 COMMENT '排序值',
   `role_id` int(11) DEFAULT NULL COMMENT '角色 ID',
   `role_uid` varchar(64) DEFAULT NULL COMMENT '角色 UID',
-  `menu_id` int(11) DEFAULT NULL COMMENT '菜单 ID',
   `user_id` int(11) DEFAULT NULL COMMENT '用户 ID',
-  `menu_role_id` int(11) DEFAULT NULL COMMENT '波及 ID',
-  `status` tinyint(4) DEFAULT 1 COMMENT '状态',
+  `user_uid` varchar(64) DEFAULT NULL COMMENT '用户 UID',
+  `menu_ids` varchar(4096) DEFAULT NULL COMMENT '菜单 ID',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  UNIQUE udx_menu_role_uid(`uid`),
   INDEX idx_role_uid(`role_uid`),
-  INDEX idx_menu_role_id(`menu_role_id`),
-  INDEX idx_parent_id(`pid`),
+  INDEX idx_user_uid(`user_uid`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -394,12 +389,12 @@ CREATE TABLE `i18n_language` (
 -- 表外键
 -- -------------------------------------------------------
 ALTER TABLE `account`
-ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
-ADD CONSTRAINT `fk_account_oauth2` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`),
-ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
+ADD CONSTRAINT `fk_platform_id` FOREIGN KEY (`platform_id`)  REFERENCES `oauth2_platform` (`id`),
+ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
+ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`);
 
 ALTER TABLE `oauth2_token`
-ADD CONSTRAINT `fk_oa2_token_id` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_third` (`id`);
+ADD CONSTRAINT `fk_oa2_token_id` FOREIGN KEY (`oauth2_id`)  REFERENCES `oauth2_platform` (`id`);
 
 ALTER TABLE `oauth2_account`
 ADD CONSTRAINT `fk_oa2_client_id` FOREIGN KEY (`client_id`)  REFERENCES `oauth2_client` (`id`);
@@ -412,16 +407,16 @@ ADD CONSTRAINT `fk_role_owner_id` FOREIGN KEY (`owner_id`)  REFERENCES `role` (`
 ADD CONSTRAINT `fk_role_child_id` FOREIGN KEY (`child_id`)  REFERENCES `role` (`id`);
 
 ALTER TABLE `user_role`
-ADD CONSTRAINT `fk_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
-ADD CONSTRAINT `fk_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`);
+ADD CONSTRAINT `fk_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
+ADD CONSTRAINT `fk_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
 
 ALTER TABLE `resource_role`
 ADD CONSTRAINT `fk_resource_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
 ADD CONSTRAINT `fk_resource_role_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
 
 ALTER TABLE `resource_user`
-ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`),
-ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`);
+ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `resource` (`resource`),
+ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
 
 ALTER TABLE `menu_role`
 ADD CONSTRAINT `fk_menu_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
@@ -429,7 +424,6 @@ ADD CONSTRAINT `fk_menu_role_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu`
 
 ALTER TABLE `menu_user`
 ADD CONSTRAINT `fk_menu_user_role_id` FOREIGN KEY (`role_id`)  REFERENCES `role` (`id`),
-ADD CONSTRAINT `fk_menu_role_menu_id` FOREIGN KEY (`menu_id`)  REFERENCES `menu` (`id`),
 ADD CONSTRAINT `fk_menu_user_user_id` FOREIGN KEY (`user_id`)  REFERENCES `user` (`id`);
 
 ALTER TABLE `menu_action`
@@ -440,25 +434,82 @@ ADD CONSTRAINT `fk_menu_action_role_id` FOREIGN KEY (`role_id`)  REFERENCES `rol
 -- -------------------------------------------------------
 -- insert into 
 -- -------------------------------------------------------
--- INSERT INTO `account`(`id`, `account`, `account_type`, `platform`, `verify_type`, `password`, `password_salt`, `password_type`, `user_id`, `role_id`, `status`, `description`, `oauth2_id`, `oauth2_token`, `oauth2_time`, `token_fake`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
--- INSERT INTO `oauth2_third`(`id`, `platform`, `agent_id`, `suite_id`, `app_id`, `app_secret`, `authorize_url`, `token_url`, `profile_url`, `domain_def`, `domain_check`, `js_secret`, `state_secret`, `callback`, `cb_encrypt`, `cb_token`, `cb_encoding`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
--- INSERT INTO `oauth2_token`(`id`, `oauth2_id`, `access_token`, `expires_in`, `create_time`, `sync_lock`, `call_count`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
--- INSERT INTO `oauth2_client`(`id`, `client_key`, `audience`, `issuer`, `expired`, `token_type`, `s_method`, `s_secret`, `token_getter`, `signin_url`, `signin_force`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
--- INSERT INTO `oauth2_account`(`id`, `client_id`, `secret`, `expired`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
--- INSERT INTO `user`(`id`, `uid`, `name`, `status`) VALUES ()
--- INSERT INTO `user_detail`(`id`, `nickname`, `avatar`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ()
--- INSERT INTO `user_message`(`id`, `uid`, `avatar`, `title`, `datetime`, `type`, `read`, `description`, `clickClose`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `role`(`id`, `uid`, `name`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `role_role`(`id`, `owner_id`, `child_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `user_role`(`id`, `user_id`, `role_id`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `resource`(`id`, `resource`, `domain`, `methods`, `path`, `netmask`, `allow`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `resource_role`(`id`, `role_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `resource_user`(`id`, `user_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `menu`(`id`, `uid`, `name`, `local`, `sequence`, `group`, `group_local`, `icon`, `router`, `memo`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `menu_role`(`id`, `pid`, `uid`, `name`, `local`, `sequence`, `role_id`, `role_uid`, `menu_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `menu_user`(`id`, `pid`, `uid`, `name`, `sequence`, `role_id`, `role_uid`, `menu_id`, `user_id`, `menu_role_id`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `menu_action`(`id`, `menu_id`, `role_id`, `role_uid`, `code`, `name`, `disable`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `tag_common`(`id`, `owner_id`, `type`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
--- INSERT INTO `i18n_language`(`id`, `mid`, `lang`, `description`, `left_delim`, `right_delim`, `zero`, `one`, `two`, `few`, `many`, `other`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ()
+-- INSERT INTO `account`(`id`, `account`, `account_type`, `platform_id`, `verify_type`, `pid`, `password`, `password_salt`, `password_type`, `user_id`, `role_id`, `status`, `description`, `oa2_token`, `oa2_expired`, `token_fake`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ();
+-- INSERT INTO `oauth2_platform`(`id`, `platform`, `agent_id`, `suite_id`, `app_id`, `app_secret`, `authorize_url`, `token_url`, `profile_url`, `domain_def`, `domain_check`, `js_secret`, `state_secret`, `callback`, `cb_encrypt`, `cb_token`, `cb_encoding`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ();
+-- INSERT INTO `oauth2_token`(`id`, `oauth2_id`, `access_token`, `expires_in`, `create_time`, `sync_lock`, `call_count`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ();
+-- INSERT INTO `oauth2_client`(`id`, `client_key`, `audience`, `issuer`, `expired`, `token_type`, `s_method`, `s_secret`, `token_getter`, `signin_url`, `signin_force`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ();
+-- INSERT INTO `oauth2_account`(`id`, `client_id`, `secret`, `expired`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ();
+-- INSERT INTO `user`(`id`, `uid`, `name`, `status`) VALUES ();
+-- INSERT INTO `user_detail`(`id`, `nickname`, `avatar`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ();
+-- INSERT INTO `user_message`(`id`, `uid`, `avatar`, `title`, `datetime`, `type`, `read`, `description`, `clickClose`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `role`(`id`, `uid`, `name`, `description`, `status`, `domain`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `role_role`(`id`, `owner_id`, `child_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `user_role`(`id`, `user_id`, `role_id`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `resource`(`id`, `resource`, `domain`, `methods`, `path`, `netmask`, `allow`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `resource_role`(`id`, `role_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `resource_user`(`id`, `user_id`, `resource`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `menu`(`id`, `uid`, `name`, `local`, `sequence`, `group`, `group_local`, `icon`, `router`, `memo`, `domain`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `menu_role`(`id`, `pid`, `uid`, `name`, `local`, `sequence`, `role_id`, `role_uid`, `menu_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `menu_user`(`id`, `role_id`, `role_uid`, `user_id`, `user_uid`, `menu_ids`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `menu_action`(`id`, `menu_id`, `role_id`, `role_uid`, `code`, `name`, `disable`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `tag_common`(`id`, `owner_id`, `type`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `i18n_language`(`id`, `mid`, `lang`, `description`, `left_delim`, `right_delim`, `zero`, `one`, `two`, `few`, `many`, `other`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+
+-- -------------------------------------------------------
+-- -------------------------------------------------------
+-- drop table 
+-- -------------------------------------------------------
+-- ALTER TABLE `account`
+-- DROP FOREIGN KEY `fk_platform_id`,
+-- DROP FOREIGN KEY `fk_account_user`,
+-- DROP FOREIGN KEY `fk_account_role`;
+-- ALTER TABLE `oauth2_token`
+-- DROP FOREIGN KEY `fk_oa2_token_id`;
+-- ALTER TABLE `oauth2_account`
+-- DROP FOREIGN KEY `fk_oa2_client_id`;
+-- ALTER TABLE `user_detail`
+-- DROP FOREIGN KEY `fk_user_detail`;
+-- ALTER TABLE `role_role`
+-- DROP FOREIGN KEY `fk_role_owner_id`,
+-- DROP FOREIGN KEY `fk_role_child_id`;
+-- ALTER TABLE `user_role`
+-- DROP FOREIGN KEY `fk_role_user_id`,
+-- DROP FOREIGN KEY `fk_role_role_id`;
+-- ALTER TABLE `resource_role`
+-- DROP FOREIGN KEY `fk_resource_role_id`,
+-- DROP FOREIGN KEY `fk_resource_role_res`;
+-- ALTER TABLE `resource_user`
+-- DROP FOREIGN KEY `fk_resource_user_id`,
+-- DROP FOREIGN KEY `fk_resource_user_res`;
+-- ALTER TABLE `menu_role`
+-- DROP FOREIGN KEY `fk_menu_role_role_id`,
+-- DROP FOREIGN KEY `fk_menu_role_menu_id`;
+-- ALTER TABLE `menu_user`
+-- DROP FOREIGN KEY `fk_menu_user_user_id`,
+-- DROP FOREIGN KEY `fk_menu_user_role_id`;
+-- ALTER TABLE `menu_action`
+-- DROP FOREIGN KEY `fk_menu_action_menu_id`,
+-- DROP FOREIGN KEY `fk_menu_action_role_id`;
+-- 
+-- DROP TABLE IF EXISTS `account`;
+-- DROP TABLE IF EXISTS `oauth2_platform`;
+-- DROP TABLE IF EXISTS `oauth2_token`;
+-- DROP TABLE IF EXISTS `oauth2_client`;
+-- DROP TABLE IF EXISTS `oauth2_account`;
+-- DROP TABLE IF EXISTS `user`;
+-- DROP TABLE IF EXISTS `user_detail`;
+-- DROP TABLE IF EXISTS `user_message`;
+-- DROP TABLE IF EXISTS `role`;
+-- DROP TABLE IF EXISTS `role_role`;
+-- DROP TABLE IF EXISTS `user_role`;
+-- DROP TABLE IF EXISTS `resource`;
+-- DROP TABLE IF EXISTS `resource_role`;
+-- DROP TABLE IF EXISTS `resource_user`;
+-- DROP TABLE IF EXISTS `menu`;
+-- DROP TABLE IF EXISTS `menu_role`;
+-- DROP TABLE IF EXISTS `menu_user`;
+-- DROP TABLE IF EXISTS `menu_action`;
+-- DROP TABLE IF EXISTS `tag_common`;
+-- DROP TABLE IF EXISTS `i18n_language`;
 
 -- -------------------------------------------------------
