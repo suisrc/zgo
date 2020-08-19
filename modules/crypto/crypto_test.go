@@ -40,10 +40,21 @@ func TestBase64(t *testing.T) {
 	log.Println(string(s2))
 
 	s3, _ := Base64DecodeString(s0 + "=")
+	log.Println(len(s3))
 	log.Println(s3)
 
 	s4, _ := Base64DecodeStringMIME(s0 + "=")
 	log.Println(s4)
+
+	assert.True(t, true)
+}
+
+func TestAes32(t *testing.T) {
+	s0 := RandomAes32()
+	log.Println(s0)
+
+	s2, _ := Base64DecodeString(s0)
+	log.Println(s2)
 
 	assert.True(t, true)
 }

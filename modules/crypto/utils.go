@@ -1,6 +1,9 @@
 package crypto
 
-import "strings"
+import (
+	"bytes"
+	"strings"
+)
 
 // Reverse 字符串倒序
 func Reverse(str string) string {
@@ -61,4 +64,18 @@ func FixSufStrLen(pstr string, plen int) string {
 		sbir.WriteByte('0')
 	}
 	return sbir.String()
+}
+
+// PKCS7Padding 使用PKCS7进行填充
+func PKCS7Padding(cipherText []byte, blockSize int) []byte {
+	padding := blockSize - len(cipherText)%blockSize
+	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(cipherText, padtext...)
+}
+
+// PKCS7UnPadding 删除PKCS7填充
+func PKCS7UnPadding(origData []byte) []byte {
+	length := len(origData)
+	unpadding := int(origData[length-1])
+	return origData[:(length - unpadding)]
 }

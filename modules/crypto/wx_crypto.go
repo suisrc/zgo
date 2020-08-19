@@ -26,7 +26,8 @@ func WxPKCS7Encode(count int) []byte {
 		amountToPad = blockSize
 	}
 	// 获得补位所用的字符
-	padChr := WxChr(amountToPad)
+	// 将数字转化成ASCII码对应的字符，用于对明文进行补码
+	padChr := rune(amountToPad & 0xFF)
 	var tmp bytes.Buffer
 	for index := 0; index < amountToPad; index++ {
 		tmp.WriteRune(padChr)
@@ -43,63 +44,6 @@ func WxPKCS7Decode(decrypted []byte) []byte {
 		pad = 0
 	}
 	return decrypted[:len(decrypted)-int(pad)]
-}
-
-// PKCS7Padding 使用PKCS7进行填充
-func PKCS7Padding(cipherText []byte, blockSize int) []byte {
-	padding := blockSize - len(cipherText)%blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(cipherText, padtext...)
-}
-
-// PKCS7UnPadding 删除PKCS7填充
-func PKCS7UnPadding(origData []byte) []byte {
-	length := len(origData)
-	unpadding := int(origData[length-1])
-	return origData[:(length - unpadding)]
-}
-
-// WxChr 将数字转化成ASCII码对应的字符，用于对明文进行补码
-// @param a 需要转化的数字
-// @return 转化得到的字符
-func WxChr(a int) rune {
-	target := rune(a & 0xFF)
-	return target
-}
-
-// WxByteGroup byte group
-type WxByteGroup struct {
-	ByteContainer bytes.Buffer
-}
-
-// ToBytes to
-func (a WxByteGroup) ToBytes() []byte {
-	return a.ByteContainer.Bytes()
-}
-
-// AddBytes add
-func (a WxByteGroup) AddBytes(bytes []byte) {
-	a.ByteContainer.Write(bytes)
-}
-
-// Size size
-func (a WxByteGroup) Size() int {
-	return a.ByteContainer.Len()
-}
-
-// WxNewCrypto new
-func WxNewCrypto(appid, token, encodingAesKey string) *WxCrypto {
-	// 必须使用RFC2045标准执行解密
-	aesKey, err := Base64DecodeStringMIME(encodingAesKey)
-	if err != nil {
-		panic(err)
-	}
-	return &WxCrypto{
-		AesKey:         aesKey,
-		Token:          token,
-		AppID:          appid,
-		EncodingAesKey: encodingAesKey,
-	}
 }
 
 // Number2BytesInNetworkOrder 将一个数字转换成生成4个字节的网络字节序bytes数组
@@ -130,10 +74,30 @@ type WxCrypto struct {
 	EncodingAesKey string
 }
 
+// WxNewCrypto 注意,来自微信的AesKey需要增加一个"="符号,推荐使用WxNewCrypto2处理
+func WxNewCrypto(appid, token, encodingAesKey string) *WxCrypto {
+	// 必须使用RFC2045标准执行解密
+	aesKey, err := Base64DecodeString(encodingAesKey)
+	if err != nil {
+		panic(err)
+	}
+	return &WxCrypto{
+		AesKey:         aesKey,
+		Token:          token,
+		AppID:          appid,
+		EncodingAesKey: encodingAesKey,
+	}
+}
+
+// WxNewCrypto2 new
+func WxNewCrypto2(appid, token, encodingAesKey string) *WxCrypto {
+	return WxNewCrypto(appid, token, encodingAesKey+"=")
+}
+
 // Encrypt 对明文进行加密
 // @param plainText 需要加密的明文
 // @return 加密后base64编码的字符串
-func (a WxCrypto) Encrypt(plainText string) (string, error) {
+func (a *WxCrypto) Encrypt(plainText string) (string, error) {
 	randomStr := UUID2(16)
 
 	randomStringBytes := []byte(randomStr)
@@ -141,28 +105,29 @@ func (a WxCrypto) Encrypt(plainText string) (string, error) {
 	bytesOfSizeInNetworkOrder := Number2BytesInNetworkOrder(len(plainTextBytes))
 	appIDBytes := []byte(a.AppID)
 
-	byteCollector := WxByteGroup{}
+	var byteCollector bytes.Buffer
 
 	// randomStr + networkBytesOrder + text + appid
-	byteCollector.AddBytes(randomStringBytes)
-	byteCollector.AddBytes(plainTextBytes)
-	byteCollector.AddBytes(bytesOfSizeInNetworkOrder)
-	byteCollector.AddBytes(appIDBytes)
+	byteCollector.Write(randomStringBytes)
+	byteCollector.Write(bytesOfSizeInNetworkOrder)
+	byteCollector.Write(plainTextBytes)
+	byteCollector.Write(appIDBytes)
 
 	// ... + pad: 使用自定义的填充方式对明文进行补位填充
-	padBytes := WxPKCS7Encode(byteCollector.Size())
-	byteCollector.AddBytes(padBytes)
+	padBytes := WxPKCS7Encode(byteCollector.Len())
+	byteCollector.Write(padBytes)
 
 	// 获得最终的字节流, 未加密
-	unencrypted := byteCollector.ToBytes()
+	unencrypted := byteCollector.Bytes()
 
 	//create aes
 	cip, err := aes.NewCipher(a.AesKey)
 	if err != nil {
 		return "", err
 	}
+	//log.Println(cip.BlockSize())
 	//encrypt string
-	cbc := cipher.NewCBCEncrypter(cip, a.AesKey)
+	cbc := cipher.NewCBCEncrypter(cip, a.AesKey[:cip.BlockSize()])
 	encrypted := make([]byte, len(unencrypted))
 	cbc.CryptBlocks(encrypted, unencrypted)
 
@@ -172,9 +137,19 @@ func (a WxCrypto) Encrypt(plainText string) (string, error) {
 
 // Decrypt 对密文进行解密.
 // @param cipherText 需要解密的密文
+// @return 解密得到的明文
+func (a *WxCrypto) Decrypt(cipherText string) (string, error) {
+	return a.DecryptCheckAppID(cipherText, nil)
+}
+
+// DecryptCheckAppID 对密文进行解密.
+// @param cipherText 需要解密的密文
 // @param appidOrCorpid 获取解密内容回调，如果为空，会强制判断该内容是否和加密器中的ID相同
 // @return 解密得到的明文
-func (a WxCrypto) Decrypt(cipherText string, appIDCheck func(string) error) (string, error) {
+func (a *WxCrypto) DecryptCheckAppID(cipherText string, appIDCheck func(string) error) (string, error) {
+	if cipherText == "" {
+		return "", nil
+	}
 	cip, err := aes.NewCipher(a.AesKey)
 	if err != nil {
 		return "", err
@@ -188,14 +163,14 @@ func (a WxCrypto) Decrypt(cipherText string, appIDCheck func(string) error) (str
 		return "", errors.New("cipherText is not a multiple of the block size")
 	}
 	//encrypt string
-	cbc := cipher.NewCBCDecrypter(cip, a.AesKey)
+	cbc := cipher.NewCBCDecrypter(cip, a.AesKey[:cip.BlockSize()])
 	unencrypted := make([]byte, len(encrypted))
 	cbc.CryptBlocks(unencrypted, encrypted)
 
 	// 去除补位字符
 	content := WxPKCS7Decode(unencrypted)
 	// 分离16位随机字符串,网络字节序和AppId
-	networkOrder := content[16:24]
+	networkOrder := content[16:20]
 	plainTextLen := BytesNetworkOrder2Number(networkOrder)
 
 	appIDBytes := content[20+plainTextLen:]
@@ -275,4 +250,35 @@ func WxGenMD5(datas map[string]string, sign string) string {
 
 	// return builder.String()
 	return SHA1Hash(builder.Bytes())
+}
+
+// WxSignature signature
+type WxSignature struct {
+	Signature string `query:"signature"`
+	Timestamp string `query:"timestamp"`
+	Nonce     string `query:"nonce"`
+	Echostr   string `query:"echostr"`
+}
+
+// WxEncryptSignature jsapi signature
+type WxEncryptSignature struct {
+	WxSignature
+	MsgSignature string `query:"msg_signature"`
+	EncryptType  string `query:"encrypt_type"`
+}
+
+// WxEncryptMessage 加密文件存储
+type WxEncryptMessage struct {
+	ToUserName   string `json:",omitempty"` // ToUserName为公众号AppId或者企业号的CorpID
+	AgentID      string `json:",omitempty"` // 为接收的应用id，可在应用的设置页面获取 只有企业号，该字段才有值
+	Encrypt      string `json:",omitempty"` // 密文 encrypt为经过加密的密文（消息明文格式参见 接收普通消息，事件明文格式参见 接收事件）
+	MsgSignature string `json:",omitempty"` // 密文签名
+	TimeStamp    string `json:",omitempty"` // 密文时间戳
+	Nonce        string `json:",omitempty"` // 密文随机码
+}
+
+// WxAccessToken access token
+type WxAccessToken struct {
+	AccessToken string `json:"access_token"`
+	ExpiresIn   string `json:"expires_in"`
 }

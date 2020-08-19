@@ -1,6 +1,7 @@
 package crypto
 
 import (
+	"bytes"
 	"errors"
 	"strings"
 
@@ -83,4 +84,18 @@ func DecodeBaseX64(code string) (int64, error) {
 		}
 	}
 	return value, nil
+}
+
+// RandomBytes random
+func RandomBytes(length int) []byte {
+	var buffer bytes.Buffer
+	for i := 0; i < length; i++ {
+		buffer.WriteByte(byte(fastrand.Intn(255)))
+	}
+	return buffer.Bytes()
+}
+
+// RandomAes32 random aes 32
+func RandomAes32() string {
+	return Base64EncodeToString(RandomBytes(32))
 }

@@ -28,15 +28,15 @@ func Base64EncodeToStringURL(src []byte) string {
 
 // Base64DecodeStringMIME returns the bytes represented by the base64 string s.
 // RFC 2045
-func Base64DecodeStringMIME(s string) ([]byte, error) {
-	// var buf bytes.Buffer
-	// var buf = bytes.NewBuffer(make([]byte, len(s)*4))
-	// for _, b := range s {
-	// 	buf.WriteRune(b)
-	// }
-	// enc := base64.StdEncoding
-	// dbuf := make([]byte, enc.DecodedLen(len(s)))
-	// n, err := enc.Decode(dbuf, []byte(s))
-	// return dbuf[:n], err
-	return base64.StdEncoding.DecodeString(s)
-}
+// func Base64DecodeStringMIME(s string) ([]byte, error) {
+// 	// var buf bytes.Buffer
+// 	// var buf = bytes.NewBuffer(make([]byte, len(s)*4))
+// 	// for _, b := range s {
+// 	// 	buf.WriteRune(b)
+// 	// }
+// 	// enc := base64.StdEncoding
+// 	// dbuf := make([]byte, enc.DecodedLen(len(s)))
+// 	// n, err := enc.Decode(dbuf, []byte(s))
+// 	// return dbuf[:n], err
+// 	return base64.StdEncoding.DecodeString(s)
+// }

@@ -38,6 +38,7 @@ type Options struct {
 	Auther   auth.Auther            // 令牌控制
 
 	// 接口注入
+	Demo   *Demo
 	Auth   *Auth
 	Signin *Signin
 	User   *User
@@ -79,6 +80,7 @@ func InitEndpoints(o *Options) *Endpoints {
 	o.Auth.Register(r)
 	o.Signin.Register(r)
 	o.User.Register(r)
+	o.Demo.Register(o.Engine)
 
 	return &Endpoints{}
 }
