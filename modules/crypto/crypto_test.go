@@ -43,7 +43,7 @@ func TestBase64(t *testing.T) {
 	log.Println(len(s3))
 	log.Println(s3)
 
-	s4, _ := Base64DecodeStringMIME(s0 + "=")
+	s4, _ := Base64DecodeString(s0 + "=")
 	log.Println(s4)
 
 	assert.True(t, true)
@@ -57,4 +57,25 @@ func TestAes32(t *testing.T) {
 	log.Println(s2)
 
 	assert.True(t, true)
+}
+
+func TestWxCrypto(t *testing.T) {
+	aesKey0 := RandomAes32()
+	log.Println(aesKey0)
+
+	aesKey1, _ := Base64DecodeString(aesKey0)
+
+	s0 := "kdixkdiskdiDiskc"
+
+	s1, err1 := AesEncrypt(s0, aesKey1)
+	assert.Nil(t, err1)
+
+	log.Println(s1)
+
+	s2, err2 := AesDecrypt(s1, aesKey1)
+	assert.Nil(t, err2)
+
+	log.Println(s2)
+
+	assert.Equal(t, s0, s2)
 }

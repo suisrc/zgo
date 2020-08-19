@@ -69,13 +69,19 @@ func FixSufStrLen(pstr string, plen int) string {
 // PKCS7Padding 使用PKCS7进行填充
 func PKCS7Padding(cipherText []byte, blockSize int) []byte {
 	padding := blockSize - len(cipherText)%blockSize
+	if padding == 0 {
+		padding = blockSize
+	}
 	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
 	return append(cipherText, padtext...)
 }
 
 // PKCS7UnPadding 删除PKCS7填充
-func PKCS7UnPadding(origData []byte) []byte {
+func PKCS7UnPadding(origData []byte, blockSize int) []byte {
 	length := len(origData)
 	unpadding := int(origData[length-1])
+	if unpadding < 1 || unpadding > blockSize {
+		unpadding = 0
+	}
 	return origData[:(length - unpadding)]
 }
