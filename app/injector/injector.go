@@ -11,12 +11,8 @@ import (
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middlewire"
 	"github.com/suisrc/zgo/modules/auth"
-	"github.com/suisrc/zgo/modules/auth/jwt"
-	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
 	casbinzgo "github.com/suisrc/zgo/modules/casbin"
 	casbinmem "github.com/suisrc/zgo/modules/casbin/watcher/mem"
-	"github.com/suisrc/zgo/modules/config"
-	"github.com/suisrc/zgo/modules/logger"
 	"golang.org/x/text/language"
 )
 
@@ -72,23 +68,4 @@ func NewBundle() *i18n.Bundle {
 	bundle.LoadMessageFile("locales/active.zh-CN.toml")
 	bundle.LoadMessageFile("locales/active.en-US.toml")
 	return bundle
-}
-
-// NewAuther of auth.Auther
-// 授权认证使用的auther内容
-func NewAuther() auth.Auther {
-	store, err := buntdb.NewStore(":memory:") // 使用内存缓存
-	if err != nil {
-		panic(err)
-	}
-	secret := config.C.JWTAuth.SigningSecret
-	if secret == "" {
-		secret = auth.UUID(128)
-		logger.Infof(nil, "jwt secret: %s", secret)
-	}
-	auther := jwt.New(store,
-		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
-	)
-
-	return auther
 }

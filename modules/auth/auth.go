@@ -64,6 +64,9 @@ type Auther interface {
 
 	// DestroyToken 销毁令牌
 	DestroyToken(c context.Context, u UserInfo) error
+
+	// UpdateAuther 更新
+	UpdateAuther(c context.Context) error
 }
 
 // UUID uuid

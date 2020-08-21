@@ -67,6 +67,7 @@ func (a *Demo) wx(c *gin.Context) {
 	em.MsgSignature = crypto.WxGenSHA1(wc.Token, em.TimeStamp, em.Nonce, em.Encrypt)
 
 	c.JSON(200, em)
+}
 
 //
 //  // @Tags demo

@@ -14,13 +14,15 @@ import (
 )
 
 type options struct {
-	tokenType     string                                                                // 令牌类型,传递给TokenInfo
-	expired       int                                                                   // 过期间隔
-	signingMethod jwt.SigningMethod                                                     // 签名方法
-	signingSecret interface{}                                                           // 签名密钥
-	keyFunc       func(*jwt.Token, jwt.SigningMethod, interface{}) (interface{}, error) // JWT中获取密钥, 该内容可以忽略默认的signingMethod和signingSecret
-	claimsFunc    func(jwt.Claims, jwt.SigningMethod) (*jwt.Token, error)               // JWT构建令牌, 该内容可以忽略默认的signingMethod
-	tokenFunc     func(context.Context) (string, error)                                 // 获取令牌
+	tokenType     string                                                                                             // 令牌类型,传递给TokenInfo
+	expired       int                                                                                                // 过期间隔
+	signingMethod jwt.SigningMethod                                                                                  // 签名方法
+	signingSecret interface{}                                                                                        // 签名密钥
+	keyFunc       func(*jwt.Token, jwt.SigningMethod, interface{}) (interface{}, error)                              // JWT中获取密钥, 该内容可以忽略默认的signingMethod和signingSecret
+	parseFunc     func(context.Context, string) (*UserClaims, error)                                                 // 解析令牌
+	claimsFunc    func(context.Context, jwt.Claims, jwt.SigningMethod, interface{}) (*jwt.Token, interface{}, error) // JWT构建令牌, 该内容可以忽略默认的signingMethod
+	tokenFunc     func(context.Context) (string, error)                                                              // 获取令牌
+	updateFunc    func(context.Context) error                                                                        // 更新Auther
 }
 
 // Option 定义参数项
@@ -55,7 +57,7 @@ func SetKeyFunc(f func(*jwt.Token, jwt.SigningMethod, interface{}) (interface{},
 }
 
 // SetNewClaims 设定声明内容
-func SetNewClaims(f func(jwt.Claims, jwt.SigningMethod) (*jwt.Token, error)) Option {
+func SetNewClaims(f func(context.Context, jwt.Claims, jwt.SigningMethod, interface{}) (*jwt.Token, interface{}, error)) Option {
 	return func(o *options) {
 		o.claimsFunc = f
 	}
@@ -65,6 +67,20 @@ func SetNewClaims(f func(jwt.Claims, jwt.SigningMethod) (*jwt.Token, error)) Opt
 func SetTokenFunc(f func(context.Context) (string, error)) Option {
 	return func(o *options) {
 		o.tokenFunc = f
+	}
+}
+
+// SetParseFunc 设定刷新者
+func SetParseFunc(f func(context.Context, string) (*UserClaims, error)) Option {
+	return func(o *options) {
+		o.parseFunc = f
+	}
+}
+
+// SetUpdateFunc 设定刷新者
+func SetUpdateFunc(f func(context.Context) error) Option {
+	return func(o *options) {
+		o.updateFunc = f
 	}
 }
 
@@ -81,6 +97,8 @@ func New(store Storer, opts ...Option) *Auther {
 		keyFunc:       KeyFuncCallback,
 		claimsFunc:    NewWithClaims,
 		tokenFunc:     GetBearerToken,
+		updateFunc:    nil,
+		parseFunc:     nil,
 	}
 	for _, opt := range opts {
 		opt(&o)
@@ -122,7 +140,12 @@ func (a *Auther) GetUserInfo(c context.Context) (auth.UserInfo, error) {
 		return nil, err
 	}
 
-	claims, err := a.parseToken(tokenString)
+	claims := new(UserClaims)
+	if a.opts.parseFunc != nil {
+		claims, err = a.opts.parseFunc(c, tokenString)
+	} else {
+		claims, err = a.parseToken(tokenString)
+	}
 	if err != nil {
 		var e *jwt.ValidationError
 		if errors.As(err, &e) {
@@ -158,12 +181,12 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 	claims.NotBefore = issuedAt
 	claims.ExpiresAt = expiresAt
 
-	token, err := a.opts.claimsFunc(claims, a.opts.signingMethod)
+	token, secret, err := a.opts.claimsFunc(c, claims, a.opts.signingMethod, a.opts.signingSecret)
 	if err != nil {
 		return nil, err
 	}
 
-	tokenString, err := token.SignedString(a.opts.signingSecret)
+	tokenString, err := token.SignedString(secret)
 	if err != nil {
 		return nil, err
 	}
@@ -191,6 +214,14 @@ func (a *Auther) DestroyToken(c context.Context, user auth.UserInfo) error {
 	})
 }
 
+// UpdateAuther 更新
+func (a *Auther) UpdateAuther(c context.Context) error {
+	if a.opts.updateFunc != nil {
+		return a.opts.updateFunc(c)
+	}
+	return nil
+}
+
 //===================================================
 // 分割线
 //===================================================
@@ -209,6 +240,9 @@ func (a *Auther) parseToken(tokenString string) (*UserClaims, error) {
 
 // 获取密钥
 func (a *Auther) keyFunc(t *jwt.Token) (interface{}, error) {
+	if a.opts.keyFunc == nil {
+		return a.opts.signingSecret, nil
+	}
 	return a.opts.keyFunc(t, a.opts.signingMethod, a.opts.signingSecret)
 }
 
@@ -240,7 +274,7 @@ func KeyFuncCallback(token *jwt.Token, method jwt.SigningMethod, secret interfac
 
 // NewWithClaims new claims
 // jwt.NewWithClaims
-func NewWithClaims(claims jwt.Claims, method jwt.SigningMethod) (*jwt.Token, error) {
+func NewWithClaims(c context.Context, claims jwt.Claims, method jwt.SigningMethod, secret interface{}) (*jwt.Token, interface{}, error) {
 	return &jwt.Token{
 		Header: map[string]interface{}{
 			"typ": "JWT",
@@ -249,7 +283,7 @@ func NewWithClaims(claims jwt.Claims, method jwt.SigningMethod) (*jwt.Token, err
 		},
 		Claims: claims,
 		Method: method,
-	}, nil
+	}, secret, nil
 }
 
 // NewRandomID new ID

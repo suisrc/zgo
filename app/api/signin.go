@@ -19,13 +19,16 @@ type Signin struct {
 // Register 注册路由,认证接口特殊,需要独立注册
 func (a *Signin) Register(r gin.IRouter) {
 	// sign 开头的路由会被全局casbin放行
-	r.POST("signin", a.signin) // 登陆必须是POST请求
+	r.POST("signin", a.signin)         // 登陆必须是POST请求
+	r.POST("signin/{:kid}", a.signin2) // 登陆必须是POST请求
 
 	// ua := middleware.UserAuthMiddleware(a.Auther)
 	// r.GET("signout", ua, a.signout)
 	r.GET("signout", a.signout)
-	r.GET("/signin/refresh", a.refresh)
-	r.POST("/signup", a.signup)
+	r.GET("signin/refresh", a.refresh)
+
+	r.POST("signup", a.signup)         // 注册
+	r.POST("signup/{:kid}", a.signup2) // 注册
 }
 
 // Signin godoc
@@ -70,6 +73,9 @@ func (a *Signin) signin(c *gin.Context) {
 	}
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
+}
+func (a *Signin) signin2(c *gin.Context) {
+	helper.ResSuccess(c, "ok")
 }
 
 // Signout godoc
@@ -153,4 +159,7 @@ func (a *Signin) refresh(c *gin.Context) {
 // @Router /signup [post]
 func (a *Signin) signup(c *gin.Context) {
 	helper.ResSuccess(c, "功能为开放")
+}
+func (a *Signin) signup2(c *gin.Context) {
+	helper.ResSuccess(c, "ok")
 }
