@@ -68,8 +68,6 @@ func (a *Demo) wx(c *gin.Context) {
 
 	c.JSON(200, em)
 
-}
-
 //
 //  // @Tags demo
 //  // @Summary Hello

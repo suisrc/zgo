@@ -8,18 +8,20 @@ INDEX index_name (title(length))
 UNIQUE index_name (title(length))
 ```
 primary: 主键  
+
 udx_xxx: 唯一索引  
 idx_xxx: 索引  
 
 fk_xxxx: 外键  
 fk_account_user->user.id  
+
 ```sql model
 ARG table_prefix=
 
 includes=
 excludes=
 ```
-
+"| -" 标识注释,该行的内容会被忽略
 ## 账户实体(`account`)
 
 管理用户登陆控制,oauth2_token令牌为用户令牌, 与服务器令牌需要区别
@@ -35,34 +37,32 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | pid           | 上级账户       | 字符串   | 当前账户验证密码的方式为PID时候,使用上级账户验证    | int(11)                                              |
 | account       | 账户           | 字符串   | 账户和账户类型和账户归属平台构成唯一标识            | varchar(255), udx_account                            |
-| account_type  | 账户类型       | 字符串   | 1:user 2:mobile 3:email 4:openid 5:unionid 6:token  | tinyint(4) DEFAULT '1', udx_account                  |
-| platform_id   | 账户归属平台   | 字符串   |                                                     | int(11), udx_account,fk_platform_id->oauth2_platform.id |
-| verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2 4:PID                       | tinyint(4) DEFAULT '1'                               |
+| account_typ   | 账户类型       | 字符串   | 1:name 2:mobile 3:email 4:openid 5:unionid 6:token  | tinyint(4) DEFAULT '1', udx_account                  |
+| account_kid   | 账户归属平台   | 字符串   | 被授权平台, NULL标识不归属任何平台                  | varchar(64), udx_account,fk_account_kid->oauth2_platform.kid |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | password      | 登录密码       | 字符串   | 1.密码, 2:签名密钥 3:密钥 4:密钥                    | varchar(255)                                         |
-| password_salt | 密码盐值       | 字符串   |                                                     | varchar(255)                                         |
-| password_type | 校验方式       | 字符串   | 1:(明文) 2:MD5 3:SHA1 4: BCR 5: BCR2 6: BCR3        | varchar(16)                                          |
+| password_salt | 密码盐值       | 字符串   | 加密规则加固, 防止暴力破解                          | varchar(255)                                         |
+| password_type | 密码方式       | 字符串   | 1:(明文) 2:MD5 3:SHA1 4: BCR 5: BCR2 6: BCR3        | varchar(16)                                          |
+| verify_secret | 校验密钥       | 字符串   | SMS 和 OAUTH2 验证时候,对状态进行签名               | varchar(255)                                         |
+| verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2 0:PID(多账户统一验证)       | tinyint(4) DEFAULT '1'                               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | user_id       | 用户标识       | 数值     |                                                     | int(11) NOT NULL, fk_account_user->user.id           |
-| role_id       | 角色标识       | 数值     | 如果不为空,表示账户和角色绑定                       | int(11), fk_account_role->role.id                    |
+| role_id       | 角色标识       | 数值     | 如果不为空,表示账户和角色已绑定                     | int(11), fk_account_role->role.id                    |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
 | description   | 账户描述       | 字符串   |                                                     | varchar(255)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| oa2_token     | oauth2令牌     | 字符串   | 服务器间通信令牌有二种, 用户 VS 服务器              | varchar(1024)                                        |
-| oa2_expired   | oauth2过期时间 | 时间格式 | 令牌过期时间                                        | timestamp                                            |
-| token_fake    | 伪造令牌       | 字符串   | 特殊永生令牌, 备用                                  | varchar(1024)                                        |
+| oa2_token     | oauth2令牌     | 字符串   | 服务器间通信令牌有二种, 用户(用户) VS 服务器        | varchar(1024)                                        |
+| oa2_expired   | oauth2过期时间 | 时间格式 | 令牌过期时间, expired                               | int(11)                                              |
+| oa2_fake      | 伪造令牌       | 字符串   | 特殊永生令牌, 备用                                  | varchar(1024)                                        |
+| oa2_client    | 客户端上次     | 数值     | oauth2_account                                       | int(11), idx_account_client                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
-| updated_at    | 更新时间       | 时间格式 | 等同于上次登陆时间                                  | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_2      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_3      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 第三方登陆实体(`oauth2_platform`)
@@ -72,21 +72,29 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| platform      | 平台           | 字符串   | 1:WX 2:TB 3:JD 4:GITEA 5:...                        | varchar(32) NOT NULL                                 |
-| agent_id      | 代理商标识     | 字符串   |                                                     | varchar(255)                                         |
-| suite_id      | 套件标识       | 字符串   |                                                     | varchar(255)                                         |
+| kid           | 三方标识       | 字符串   |                                                     | varchar(64)  NOT NULL, udx_oauth2_platform_kid       |
+| platform      | 平台标识       | 字符串   | 1:WX 2:TB 3:JD 4:GITEA 5: WXQ 6...                  | varchar(32) NOT NULL                                 |
 | app_id        | 应用标识       | 字符串   |                                                     | varchar(255)                                         |
 | app_secret    | 应用密钥       | 字符串   |                                                     | varchar(1024)                                        |
+| avatar        | 平台头像       | 字符串   |                                                     | varchar(255)                                         |
+| description   | 平台描述       | 字符串   |                                                     | varchar(255)                                         |
+| status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
+| signin        | 可登陆         | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 0                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| authorize_url | 认证地址       | 字符串   |                                                     | varchar(2048)                                        |
-| token_url     | 令牌地址       | 字符串   |                                                     | varchar(2048)                                        |
-| profile_url   | 个人资料地址   | 字符串   |                                                     | varchar(2048)                                        |
+| agent_id      | 代理商标识     | 字符串   |                                                     | varchar(255)                                         |
+| agent_secret  | 代理商密钥     | 字符串   |                                                     | varchar(1024)                                        |
+| suite_id      | 套件标识       | 字符串   |                                                     | varchar(255)                                         |
+| suite_secret  | 套件密钥       | 字符串   |                                                     | varchar(1024)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| domain_def    | 默认域名       | 字符串   | 必须以http或者https开头                             | varchar(128)                                         |
-| domain_check  | 域名认证       | 字符串   | 格式:[file]:[context]                               | varchar(255)                                         |
+| authorize_url | 认证地址       | 字符串   |                                                     | varchar(1024)                                        |
+| token_url     | 令牌地址       | 字符串   |                                                     | varchar(1024)                                        |
+| profile_url   | 个人资料地址   | 字符串   |                                                     | varchar(1024)                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | js_secret     | javascript密钥 | 字符串   | 需要js签名认证时候,进行认证的key                    | varchar(255)                                         |
 | state_secret  | 回调state密钥  | 字符串   | 缓存处理state,用密钥计算state具有更好的分布式       | varchar(255)                                         |
 | callback      | 是否支持回调   | 数值     |                                                     | tinyint(4) DEFAULT 0                                 |
+| cb_domain     | 默认域名       | 字符串   |                                                     | varchar(128)                                         |
+| cb_scheme     | 默认协议       | 字符串   |                                                     | varchar(16) DEFAULT 'https'                          |
 | cb_encrypt    | 回调是否加密   | 数值     |                                                     | tinyint(4) DEFAULT 0                                 |
 | cb_token      | 加密令牌       | 字符串   |                                                     | varchar(255)                                         |
 | cb_encoding   | 加密编码       | 字符串   |                                                     | varchar(255)                                         |
@@ -97,16 +105,12 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_2      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_3      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
-## 第三方登陆实体(`oauth2_token`)
+## 第三方通信实体(`oauth2_token`)
 
-与第三方系统通信时候,使用的令牌
+与第三方系统通信时候,使用的令牌,为我服务器使用令牌与其他服务器通信的记录,也可用于集群中应用对第三方服务器访问的信息共享
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
@@ -114,9 +118,11 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | oauth2_id     | 平台           | 字符串   |                                                     | int(11), fk_oa2_token_id->oauth2_platform.id         |
 | access_token  | 代理商标识     | 字符串   |                                                     | varchar(1024)                                        |
 | expires_in    | 有限期间隔     | 字符串   |                                                     | int(11) DEFAULT 7200                                 |
-| create_time   | 凭据创建时间   | 字符串   | 凭据是由远程服务器创建成功,和created_at不同         | timestamp                                            |
+| expires_time  | 凭据过期时间   | 字符串   |                                                     | int(11), idx_oa2_exp_time                            |
 | sync_lock     | 同步锁         | 数值     | 同步锁,表示有人在更新令牌                           | tinyint(4) DEFAULT 0                                 |
-| call_count    | 调用次数       | 数值     | 令牌被使用的次数                                    | int(11) DEFAULT 0                                    |
+| sync_time     | 同步锁时间     | 数值     | 用于同步操作时候,其他应用的刷新间隔, 单位秒, 1~127  | tinyint(4) DEFAULT 1                                 |
+| call_count    | 调用次数       | 数值     | 令牌被使用的次数, 注意开发时需要降低更新频次        | int(11) DEFAULT 0                                    |
+| token_type    | 令牌类型       | 字符串   | 标记令牌的类型, 备用字段                            | varchar(32)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
@@ -124,11 +130,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_2      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_3      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 第三方授权实体(`oauth2_client`)
@@ -139,17 +141,18 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| client_key    | 客户端标识     | 字符串   | 未指定,会通过audience进行匹配                       | varchar(255)                                         |
-| audience      | 账户接受平台   | 字符串   |                                                     | varchar(1024)                                        |
-| issuer        | 账户签发平台   | 字符串   |                                                     | varchar(1024)                                        |
+| kid           | 客户端标识     | 字符串   | jwt的header[kid], 请求未指定看audience              | varchar(64)  NOT NULL, udx_oauth2_client_kid         |
+| audience      | 令牌接受平台   | 字符串   |                                                     | varchar(255)                                         |
+| issuer        | 令牌签发平台   | 字符串   |                                                     | varchar(255)                                         |
 | expired       | 令牌有效期     | 数值     | 7200                                                | int(11)                                              |
 | token_type    | 令牌类型       | 数值     | JWT                                                 | varchar(32)                                          |
-| s_method      | 令牌方法       | 字符串   | HS512                                               | varchar(32)                                          |
-| s_secret      | 令牌密钥       | 字符串   | signing secret                                      | varchar(1024)                                        |
+| token_method  | 令牌方法       | 字符串   | HS512                                               | varchar(32)                                          |
+| token_secret  | 令牌密钥       | 字符串   | signing secret                                      | varchar(255)                                         |
 | token_getter  | 令牌获取方法   | 字符串   | 1.header(Authorization) 2.query(token)              | varchar(32)                                          |
 | -             |                |          | 3.cookie(authorization)                             |                                                      |
 | signin_url    | 登陆地址       | 字符串   | 未指定redirect时候,默认的跳转地址                   | varchar(2048)                                        |
 | signin_force  | 强制跳转登陆   | 数值     | false                                               | tinyint(4) DEFAULT 0                                 |
+| signin_check  | 登陆确认       | 数值     | false, 登陆是否需要确认                             | tinyint(4) DEFAULT 0                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
@@ -157,36 +160,51 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_2      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_3      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 第三方授权实体(`oauth2_account`)
 
-第三方授权实体, 用于记录用户授权过的第三方登陆
+第三方授权实体, 用户完成授权后,需要处理令牌,选择授权系统
+已知: 
+A用户请求: [hostname]用户请求域, [kid]请求令牌
+B用户登陆: [Role.domain]用户角色域, [Role.tag]用户标签
+C系统限定: [Client.kid]客户端令牌, [Client.audience]客户端接收者, [Client.tag]客户端标签
+约束:
+1.A的[kid]不为空, 使用[kid]对应的[Client]进行处理,同时需要验证B的[Role.domain]和A的[hostname], 如果B的[Role.domain]为空,不进行处理验证
+2.A的[kid]为空, 使用B的[Role.domain]确认[Client], 同时需要验证B的[Role.domain]和A的[hostname]
+3.A的[kid]和B的[Role.domain]都为空,使用A的[Role.tag]确认[Client]
+
+当在一个系统[Client]中登陆,需要向另外一个系统跳转,得到另外一个系统的角色,通过角色完成授权,但是不需要验证[Role.domain]和[hostname]
+角色约束:
+1.如果当前账户的角色可以授权,直接授权
+2.如果该用户具有单角色,登陆的子系统没有角色,则放弃授权
+3.如果具有多角色,优先使用上次登陆的角色登陆系统, 如果上次的角色被剥夺或者第一次登陆的情况使用第四条规则
+4.给出可用角色列表,选择授权
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| account_id    | 账户标识       | 数值     |                                                     | int(11), fk_oa2_acc_id->account.id                   | 
-| client_id     | 客户端标识     | 数值     |                                                     | int(11), fk_oa2_client_id->oauth2_client.id          |
-| secret        | 密钥           | 字符串   |                                                     | varchar(1024)                                        |
-| expired       | 授权有效期     | 时间格式 | 备用字段, 默认授权后永久有效                        | timestamp                                            |
+| kid           | 唯一标识       | 字符串   |                                                     | varchar(64) NOT NULL, udx_oauth2_account_kid         |
+| account_id    | 账户标识       | 数值     |                                                     | int(11), idx_oauth2_account_account_id               |
+| user_kid      | 用户标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_user_kid             |
+| role_kid      | 角色标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_role_kid             |
+| client_id     | 客户端标识     | 数值     |                                                     | int(11), idx_oauth2_account_client_id                |
+| expired       | 授权有效期     | 数值     | NULL 表示永久有效                                   | int(11)                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| last_ip       | 上次登陆IP     | 字符串   |                                                     | varchar(64)                                          |
+| last_at       | 上次登陆时间   | 时间格式 |                                                     | timestamp                                            |
+| limit_exp     | 限制登陆       | 时间格式 | 限制登陆的接受时间(限定单位秒)                      | timestamp                                            |
+| limit_key     | 限制登陆       | 字符串   | 解除限制登陆的方式,null表述限制无法解除             | varchar(255)                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| mode          | 方式           | 字符串   | 1:signin 2:refresh 3:oauth2                         | varchar(16) DEFAULT 'signin'                         |
+| secret        | 密钥           | 字符串   | 最后一次密钥(二次密钥小于300秒, 直接返回)           | varchar(2048)                                        |
+| status        | 状态           | 数值     | 1:启用 0:禁用 (备用)                                | tinyint(4) DEFAULT 1                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_2      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_3      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 用户实体(`user`)
@@ -198,56 +216,13 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), udx_user_uid                            |
-| name          | 用户名         | 字符串   |                                                     | varchar(64), udx_user_name                           |
+| kid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), udx_user_kid                            |
+| name          | 用户名         | 字符串   |                                                     | varchar(64), idx_user_name                           |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
-
----
-## 用户详情实体(`user_detail`)
-
-用户详情
-该内容未完,可进行扩展处理
-
-| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
-| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_user_detail->user.id    |
-| nickname      | 昵称           | 字符串   |                                                     | varchar(64)                                          |
-| avatar        | 头像           | 字符串   |                                                     | varchar(512)                                         |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
-| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
-| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
-| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| delete        | 删除标识       | 数值     | 1:删除 0:正常  (用户是否被销户)                     | tinyint(4) DEFAULT 0                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_2      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
-| string_3      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
-| number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
-
----
-## 用户消息实体(`user_message`)
-
-主要用户系统通知
-
-| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
-| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| uid           | 索引           | 字符串   |                                                     | varchar(64), udx_user_message_uid                    |
-| avatar        | 头像           | 字符串   |                                                     | varchar(512)                                         |
-| title         | 标题           | 字符串   |                                                     | varchar(255)                                         |
-| datetime      | 日期           | 字符串   |                                                     | timestamp                                            |
-| type          | 类型           | 字符串   |                                                     | varchar(16)                                          |
-| read          | 已读           | 数值     |                                                     | tinyint(4)                                           |
-| description   | 描述           | 字符串   |                                                     | TEXT                                                 |
-| clickClose    | 关闭           | 数值     |                                                     | tinyint(4)                                           |
-| status        | 状态           | 数值     |                                                     | tinyint(4)                                           |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
-| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
-| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
-| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
 ---
 ## 角色实体(`role`)
@@ -258,16 +233,19 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| uid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), udx_role_uid                            |
+| kid           | 唯一标识       | 字符串   | 主要注意屏蔽系统中的id                              | varchar(64), udx_role_kid                            |
 | name          | 角色名         | 字符串   |                                                     | varchar(64), udx_role_name                           |
 | description   | 角色描述       | 字符串   |                                                     | varchar(128)                                         |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
-| domain        | 域             | 字符串   | 角色有域, 多系统账户来说,角色应该是跨域的           | varchar(255)                                         |
+| domain        | 域             | 字符串   | 角色域, 多系统账户来说,角色应该是跨域的             | varchar(255)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 角色角色实体(`role_role`)
@@ -320,6 +298,9 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 资源角色实体(`resource_role`)
@@ -360,7 +341,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| uid           | 唯一标识       | 字符串   |                                                     | varchar(32), udx_menu_uid                            |
+| kid           | 唯一标识       | 字符串   |                                                     | varchar(32), udx_menu_kid                            |
 | name          | 菜单名称       | 字符串   |                                                     | varchar(64)                                          |
 | local         | 菜单名称       | 字符串   | 可以直接抽取前端i18n对应的内容                      | varchar(128)                                         |
 | sequence      | 排序值         | 数值     |                                                     | tinyint(4) DEFAULT 64                                |
@@ -376,6 +357,9 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 角色自定义菜单实体(`menu_role`)
@@ -389,12 +373,12 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | pid           | 父节点         | 数值     |                                                     | int(11), idx_parent_id                               |
-| uid           | 唯一标识       | 字符串   |                                                     | varchar(32), udx_menu_role_uid                       |
+| kid           | 唯一标识       | 字符串   |                                                     | varchar(32), udx_menu_role_kid                       |
 | name          | 菜单名称       | 字符串   | 父节点不能为空,子节点为空,使用menu_id替换           | varchar(64)                                          |
 | local         | 菜单名称       | 字符串   |                                                     | varchar(128)                                         |
 | sequence      | 排序值         | 数值     |                                                     | tinyint(4) DEFAULT 64                                |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_role_role_id->role.id               |
-| role_uid      | 角色 UID       | 字符串   | 与role_id效果相同                                   | varchar(64), idx_role_uid                            |
+| role_kid      | 角色 UID       | 字符串   | 与role_id效果相同                                   | varchar(64), idx_role_kid                            |
 | menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_role_menu_id->menu.id               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -412,10 +396,10 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_user_role_id->role.id               |
-| role_uid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_uid                            |
+| role_kid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_kid                            |
 | user_id       | 用户 ID        | 数值     |                                                     | int(11), fk_menu_user_user_id->user.id               |
-| user_uid      | 用户 UID       | 字符串   |                                                     | varchar(64), idx_user_uid                            |
-| menu_ids      | 菜单 ID        | 字符串   | menu uid list                                       | varchar(4096)                                        |
+| user_kid      | 用户 UID       | 字符串   |                                                     | varchar(64), idx_user_kid                            |
+| menu_ids      | 菜单 ID        | 字符串   | menu kid list                                       | varchar(4096)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
@@ -434,7 +418,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | menu_id       | 菜单 ID        | 数值     |                                                     | int(11), fk_menu_action_menu_id->menu.id             |
 | role_id       | 角色 ID        | 数值     |                                                     | int(11), fk_menu_action_role_id->role.id             |
-| role_uid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_uid                            |
+| role_kid      | 角色 UID       | 字符串   |                                                     | varchar(64), idx_role_kid                            |
 | code          | 动作编号       | 字符串   |                                                     | varchar(64), idx_menu_action_code                    |
 | name          | 动作名称       | 字符串   |                                                     | varchar(64), idx_menu_action_name                    |
 | disable       | 状态           | 数值     | 0:启用 1:禁用                                       | tinyint(4) DEFAULT 0                                 |
@@ -445,14 +429,65 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
 ---
-## 通用标签实体(`tag_common`)
+## 系统标签实体(`tag_system`)
+
+系统标签属于一种共享标签, 属于协助系统运行,标签只有管理员定义
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| owner_id      | 归属id         | 数值     |                                                     | int(11), udx_tag_common_uid                          |
-| type          | 标签类型       | 数值     | 1:用户 2:角色 3:资源                                | tinyint(4), udx_tag_common_uid                       |
-| name          | 标签           | 字符串   |                                                     | varchar(64), idx_tag_common_name                     | 
+| name          | 标签           | 字符串   |                                                     | varchar(64), idx_tag_system_name                     | 
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+
+---
+## 系统标签实体(`tag_system_owner`)
+
+系统标签可直接被删除
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| type          | 标签类型       | 数值     | 1:用户 2:角色 3:资源 4:平台 5:客户端                | tinyint(4)                                           |
+| owner_id      | 归属id         | 数值     |                                                     | int(11), idx_tag_system_owner_id                     |
+| tag_id        | 标签           | 字符串   |                                                     | int(11), fk_tag_system_owner_id->tag_system.id       | 
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+
+---
+## 通用标签实体(`tag_custom`)
+
+自定义标签属于一种共享标签
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| type          | 标签类型       | 字符串   | 0: 系统 1:用户 2:角色 3:资源 4:平台 5:客户端        | tinyint(4) DEFAULT 0                                 |
+| name          | 标签           | 字符串   |                                                     | varchar(64), idx_tag_custom_name                     | 
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+
+---
+## 通用标签实体(`tag_custom_owner`)
+
+不可直接删除,但是可以通过逻辑删除标识删除,自定义标签为一种随意标签,本身不会影响系统运行,但是可以提供筛选条件,用于分析用户等行为
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| type          | 标签类型       | 数值     | 1:用户 2:角色 3:资源 4:平台 5:客户端                | tinyint(4)                                           |
+| owner_id      | 归属id         | 数值     |                                                     | int(11), idx_tag_custom_owner_id                     |
+| tag_id        | 标签           | 字符串   |                                                     | int(11), fk_tag_custom_owner_id->tag_custom.id       | 
+| deleted       | 删除标识       | 字符串   | false                                               | tinyint(4) DEFAULT 0                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
@@ -482,5 +517,121 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+
+---
+## 用户详情实体(`user_detail`)
+
+用户详情
+该内容未完,可进行扩展处理
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_user_detail->user.id    |
+| nickname      | 昵称           | 字符串   |                                                     | varchar(64)                                          |
+| avatar        | 头像           | 字符串   |                                                     | varchar(255)                                         |
+| mfa_secret    | MFA密钥        | 字符串   |                                                     | varchar(1024)                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
+
+---
+## 员工详情实体(`user_employee`)
+
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_user_employee->user.id  |
+| nickname      | 昵称           | 字符串   |                                                     | varchar(64)                                          |
+| avatar        | 头像           | 字符串   |                                                     | varchar(255)                                         |
+| mfa_secret    | MFA密钥        | 字符串   |                                                     | varchar(1024)                                        |
+| deleted       | 逻辑删除       | 数值     | 用户不能删除,但是员工可以逻辑删除                   | tinyint(4) DEFAULT 0                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
+
+---
+## 顾客详情实体(`user_customer`)
+
+
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_user_customer->user.id  |
+| nickname      | 昵称           | 字符串   |                                                     | varchar(64)                                          |
+| avatar        | 头像           | 字符串   |                                                     | varchar(255)                                         |
+| mfa_secret    | MFA密钥        | 字符串   |                                                     | varchar(1024)                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
+
+---
+## 用户消息实体(`user_message`)
+
+主要用户系统通知
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| from_id       | 发送消息       | 字符串   |                                                     | int(64), fk_u_msg_from_id->user.id                   |
+| to_id         | 发送消息       | 字符串   |                                                     | int(64), fk_u_msg_to_id->user.id                     |
+| kid           | 索引           | 字符串   |                                                     | varchar(64), udx_user_message_kid                    |
+| avatar        | 头像           | 字符串   |                                                     | varchar(255)                                         |
+| title         | 标题           | 字符串   |                                                     | varchar(255)                                         |
+| datetime      | 日期           | 字符串   |                                                     | timestamp                                            |
+| type          | 类型           | 字符串   |                                                     | varchar(16)                                          |
+| read          | 已读           | 数值     |                                                     | tinyint(4)                                           |
+| description   | 描述           | 字符串   |                                                     | TEXT                                                 |
+| clickClose    | 关闭           | 数值     |                                                     | tinyint(4)                                           |
+| status        | 状态           | 数值     |                                                     | tinyint(4)                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
+
+---
+## 第三方消息实体(`oauth2_message`)
+
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
+
+---
+## 第三方消息实体(`oauth2_message_forward`)
+
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
