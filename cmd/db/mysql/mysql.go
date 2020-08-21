@@ -210,11 +210,22 @@ func (a *model) init() error {
 }
 
 func (a *model) build() (string, error) {
+	fixStr := func(key, str string) string {
+		if key == "table" {
+			return a.args["tbl"] + str
+		}
+		return str
+		// res := str
+		// for k, v := range a.args {
+		// 	res = strings.ReplaceAll(res, "{{"+k+"}}", v)
+		// }
+		// return res
+	}
 	content := "-- -------------------------------------------------------\n"
 	content += "-- build by cmd/db/mysql/mysql.go\n-- time: " + time.Now().Format("2006-01-02 15:04:05 CST") + "\n"
 	content += "-- -------------------------------------------------------\n-- 表结构"
 	for _, ct1 := range a.entitys {
-		sql, err := ct1.build()
+		sql, err := ct1.build(fixStr)
 		if err != nil {
 			log.Println("构建结构发生异常:" + ct1.name)
 			continue
@@ -227,7 +238,7 @@ func (a *model) build() (string, error) {
 	content += "\n-- -------------------------------------------------------\n-- 表外键"
 	content += "\n-- -------------------------------------------------------"
 	for _, ct1 := range a.entitys {
-		sql, err := ct1.foreign()
+		sql, err := ct1.foreign(fixStr)
 		if err != nil {
 			log.Println("构建外键发生异常:" + ct1.name)
 			continue
@@ -242,7 +253,7 @@ func (a *model) build() (string, error) {
 	content += "\n-- -------------------------------------------------------\n-- insert into "
 	content += "\n-- -------------------------------------------------------\n"
 	for _, ct1 := range a.entitys {
-		sql, err := ct1.insertsql()
+		sql, err := ct1.insertsql(fixStr)
 		if err != nil {
 			log.Println("构建插入发生异常:" + ct1.name)
 			continue
@@ -257,7 +268,7 @@ func (a *model) build() (string, error) {
 	content += "\n-- -------------------------------------------------------\n-- drop table "
 	content += "\n-- -------------------------------------------------------\n"
 	for _, ct1 := range a.entitys {
-		sql, err := ct1.dropforeign()
+		sql, err := ct1.dropforeign(fixStr)
 		if err != nil {
 			log.Println("构建删除发生异常:" + ct1.name)
 			continue
@@ -270,7 +281,7 @@ func (a *model) build() (string, error) {
 	}
 	content += "-- \n"
 	for _, ct1 := range a.entitys {
-		sql, err := ct1.dropsql()
+		sql, err := ct1.dropsql(fixStr)
 		if err != nil {
 			log.Println("构建删除发生异常:" + ct1.name)
 			continue
@@ -285,9 +296,9 @@ func (a *model) build() (string, error) {
 	return content, nil
 }
 
-func (a *entity) build() (string, error) {
+func (a *entity) build(fixStr func(string, string) string) (string, error) {
 	content := "-- " + a.desc + "\n"
-	content += "CREATE TABLE `" + a.name + "` (\n"
+	content += "CREATE TABLE `" + fixStr("table", a.name) + "` (\n"
 	for _, f := range a.fields {
 		content += "  `" + f.name + "` " + f.sql
 		if f.desc != "" {
@@ -330,7 +341,7 @@ func (a *entity) build() (string, error) {
 	//		}
 	//	}
 	//	content += "),\n"
-	//	content += "  REFERENCES " + val[0].table + "("
+	//	content += "  REFERENCES " + fixStr("table", val[0].table) + "("
 	//	for i, p := range val {
 	//		if i == 0 {
 	//			content += "`" + p.column2 + "`"
@@ -355,11 +366,11 @@ func (a *entity) build() (string, error) {
 	return content, nil
 }
 
-func (a *entity) foreign() (string, error) {
+func (a *entity) foreign(fixStr func(string, string) string) (string, error) {
 	if len(a.fkmap) == 0 {
 		return "", nil
 	}
-	content := "ALTER TABLE `" + a.name + "`\n"
+	content := "ALTER TABLE `" + fixStr("table", a.name) + "`\n"
 
 	for key, val := range a.fkmap {
 		content += "ADD CONSTRAINT `" + key + "` FOREIGN KEY ("
@@ -370,7 +381,7 @@ func (a *entity) foreign() (string, error) {
 				content += ",`" + p.column1 + "`"
 			}
 		}
-		content += ")  REFERENCES `" + val[0].table + "` ("
+		content += ")  REFERENCES `" + fixStr("table", val[0].table) + "` ("
 		for i, p := range val {
 			if i == 0 {
 				content += "`" + p.column2 + "`"
@@ -385,8 +396,8 @@ func (a *entity) foreign() (string, error) {
 	return content, nil
 }
 
-func (a *entity) insertsql() (string, error) {
-	content := "INSERT INTO `" + a.name + "`("
+func (a *entity) insertsql(fixStr func(string, string) string) (string, error) {
+	content := "INSERT INTO `" + fixStr("table", a.name) + "`("
 	for _, f := range a.fields {
 		content += "`" + f.name + "`, "
 	}
@@ -394,16 +405,16 @@ func (a *entity) insertsql() (string, error) {
 	return content, nil
 }
 
-func (a *entity) dropsql() (string, error) {
-	content := "DROP TABLE IF EXISTS `" + a.name + "`"
+func (a *entity) dropsql(fixStr func(string, string) string) (string, error) {
+	content := "DROP TABLE IF EXISTS `" + fixStr("table", a.name) + "`"
 	return content, nil
 }
 
-func (a *entity) dropforeign() (string, error) {
+func (a *entity) dropforeign(fixStr func(string, string) string) (string, error) {
 	if len(a.fkmap) == 0 {
 		return "", nil
 	}
-	content := "ALTER TABLE `" + a.name + "`\n"
+	content := "ALTER TABLE `" + fixStr("table", a.name) + "`\n"
 
 	for key := range a.fkmap {
 		content += "DROP FOREIGN KEY `" + key + "`,\n"
