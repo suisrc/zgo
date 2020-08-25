@@ -41,7 +41,7 @@ func (a *Signin) Register(r gin.IRouter) {
 // @Success 200 {object} helper.Success
 // @Router /signin [post]
 func (a *Signin) signin(c *gin.Context) {
-
+	// 解析参数
 	body := schema.SigninBody{}
 	if err := helper.ParseJSON(c, &body); err != nil {
 		helper.FixResponse406Error(c, err, func() {
@@ -49,7 +49,7 @@ func (a *Signin) signin(c *gin.Context) {
 		})
 		return
 	}
-
+	// 执行登录
 	user, err := a.SigninService.Signin(c, &body)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
@@ -160,6 +160,13 @@ func (a *Signin) refresh(c *gin.Context) {
 func (a *Signin) signup(c *gin.Context) {
 	helper.ResSuccess(c, "功能为开放")
 }
+
+// 注册
 func (a *Signin) signup2(c *gin.Context) {
+	helper.ResSuccess(c, "ok")
+}
+
+// 绑定
+func (a *Signin) signbind(c *gin.Context) {
 	helper.ResSuccess(c, "ok")
 }

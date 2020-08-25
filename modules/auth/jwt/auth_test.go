@@ -63,13 +63,13 @@ type TokenRef struct {
 
 // UserInfo 用户信息声明
 type UserInfo struct {
-	UserName string
-	UserID   string
-	RoleID   string
-	TokenID  string
-	Issuer   string
-	Audience string
-	SIID     string
+	UserName  string
+	UserID    string
+	RoleID    string
+	TokenID   string
+	Issuer    string
+	Audience  string
+	AccountID string
 }
 
 // GetUserName name
@@ -99,9 +99,9 @@ func (u *UserInfo) GetTokenID() string {
 	return u.TokenID
 }
 
-// GetSignInID token
-func (u *UserInfo) GetSignInID() string {
-	return u.SIID
+// GetAccountID token
+func (u *UserInfo) GetAccountID() string {
+	return u.AccountID
 }
 
 // GetIssuer issuer

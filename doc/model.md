@@ -145,15 +145,16 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | kid           | 客户端标识     | 字符串   | jwt的header[kid], 请求未指定看audience              | varchar(64)  NOT NULL, udx_oauth2_client_kid         |
 | audience      | 令牌接受平台   | 字符串   |                                                     | varchar(255)                                         |
 | issuer        | 令牌签发平台   | 字符串   |                                                     | varchar(255)                                         |
-| expired       | 令牌有效期     | 数值     | 7200                                                | int(11)                                              |
-| token_type    | 令牌类型       | 数值     | JWT                                                 | varchar(32)                                          |
-| token_method  | 令牌方法       | 字符串   | HS512                                               | varchar(32)                                          |
-| token_secret  | 令牌密钥       | 字符串   | signing secret                                      | varchar(255)                                         |
+| expired       | 令牌有效期     | 数值     | 7200                                                | int(11) DEFAULT 7200                                 |
+| token_type    | 令牌类型       | 数值     | JWT 不可修改                                        | varchar(32) DEFAULT 'JWT'                            |
+| token_method  | 令牌方法       | 字符串   | HS512 不可修改                                      | varchar(32) DEFAULT 'HS512'                          |
+| token_secret  | 令牌密钥       | 字符串   | signing secret                                      | varchar(255) NOT NULL                                |
 | token_getter  | 令牌获取方法   | 字符串   | 1.header(Authorization) 2.query(token)              | varchar(32)                                          |
-| -             |                |          | 3.cookie(authorization)                             |                                                      |
+| -             |                |          | 3.cookie(authorization) (备用字段)                  |                                                      |
 | signin_url    | 登陆地址       | 字符串   | 未指定redirect时候,默认的跳转地址                   | varchar(2048)                                        |
 | signin_force  | 强制跳转登陆   | 数值     | false                                               | tinyint(4) DEFAULT 0                                 |
 | signin_check  | 登陆确认       | 数值     | false, 登陆是否需要确认                             | tinyint(4) DEFAULT 0                                 |
+| status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |

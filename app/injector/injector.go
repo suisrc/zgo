@@ -18,8 +18,9 @@ import (
 
 // InjectorSet 注入Injector
 var InjectorSet = wire.NewSet(
-	NewBundle, // 国际化注册
-	NewAuther, // Auther注册
+	NewBundle,                         // 国际化注册
+	wire.Struct(new(AuthOpts), "GPA"), // Auther注册
+	NewAuther,                         // Auther注册
 
 	//casbinjson.CasbinAdapterSet, // Casbin依赖
 	service.CasbinAdapterSet, // Casbin依赖

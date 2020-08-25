@@ -1,6 +1,7 @@
 package helper
 
 import (
+	"context"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -9,11 +10,16 @@ import (
 
 // 定义上下文中的键
 const (
-	Prefix      = "zgo"
-	UserInfoKey = Prefix + "/user-info"
-	TraceIDKey  = Prefix + "/tract-id"
-	ReqBodyKey  = Prefix + "/req-body"
-	ResBodyKey  = Prefix + "/res-body"
+	Prefix       = "zgo"
+	UserInfoKey  = Prefix + "/user-info"
+	TraceIDKey   = Prefix + "/tract-id"
+	ReqBodyKey   = Prefix + "/req-body"
+	ResBodyKey   = Prefix + "/res-body"
+	ResJwtKey    = Prefix + "/res-jwt-kid"
+	ResJwtOptKey = Prefix + "/res-jwt-opt"
+
+	XReqUserKey = "X-Request-User-KID"
+	XReqRoleKey = "X-Request-Role-KID"
 )
 
 // UserInfo 用户信息
@@ -27,7 +33,7 @@ type UserInfo interface {
 	GetIssuer() string
 	GetAudience() string
 
-	GetSignInID() string
+	GetAccountID() string
 	SetRoleID(string) string
 }
 
@@ -102,4 +108,21 @@ func GetAcceptLanguage(c *gin.Context) string {
 		return v
 	}
 	return ""
+}
+
+// GetJwtKid 获取令牌加密方式
+func GetJwtKid(ctx context.Context) (interface{}, bool) {
+	if c, ok := ctx.(*gin.Context); ok {
+		return c.Get(ResJwtKey)
+	}
+	return "", false
+}
+
+// SetJwtKid 配置令牌加密方式
+func SetJwtKid(ctx context.Context, kid interface{}) bool {
+	if c, ok := ctx.(*gin.Context); ok {
+		c.Set(ResJwtKey, kid)
+		return true
+	}
+	return false
 }

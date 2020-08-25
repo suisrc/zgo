@@ -45,7 +45,13 @@ func BuildInjector() (*Injector, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	auther := NewAuther()
+	authOpts := &AuthOpts{
+		GPA: gpa,
+	}
+	auther := NewAuther(authOpts)
+	demo := &api.Demo{
+		GPA: gpa,
+	}
 	auth := &api.Auth{
 		Enforcer: syncedEnforcer,
 		Auther:   auther,
@@ -67,6 +73,7 @@ func BuildInjector() (*Injector, func(), error) {
 		Router:   router,
 		Enforcer: syncedEnforcer,
 		Auther:   auther,
+		Demo:     demo,
 		Auth:     auth,
 		Signin:   apiSignin,
 		User:     user,

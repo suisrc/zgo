@@ -67,8 +67,8 @@ func (s *SigninUser) GetTokenID() string {
 	return s.TokenID
 }
 
-// GetSignInID token
-func (s *SigninUser) GetSignInID() string {
+// GetAccountID token
+func (s *SigninUser) GetAccountID() string {
 	return s.SIID
 }
 

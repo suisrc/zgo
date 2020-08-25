@@ -3,8 +3,6 @@ package auth
 import (
 	"context"
 	"errors"
-
-	"github.com/NebulousLabs/fastrand"
 )
 
 // 定义错误
@@ -40,8 +38,8 @@ type UserInfo interface {
 	GetRoleID() string
 	// GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
 	GetTokenID() string
-	// GetSignInID 登陆ID, 本身不具备任何意义,只是标记登陆方式
-	GetSignInID() string
+	// GetAccountID 登陆ID, 本身不具备任何意义,只是标记登陆方式
+	GetAccountID() string
 
 	// 赋予用户临时角色,用户替换,返回之前的角色
 	SetRoleID(string) string
@@ -67,19 +65,4 @@ type Auther interface {
 
 	// UpdateAuther 更新
 	UpdateAuther(c context.Context) error
-}
-
-// UUID uuid
-func UUID(length int64) string {
-	ele := []string{"0", "1", "2", "3", "4", "5", "6", "7", "8", "9",
-		"a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n",
-		"o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z"}
-
-	elen := len(ele)
-	uuid := ""
-	var i int64
-	for i = 0; i < length; i++ {
-		uuid += ele[fastrand.Intn(elen)]
-	}
-	return uuid
 }

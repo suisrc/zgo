@@ -21,6 +21,7 @@ var EndpointSet = wire.NewSet(
 	InitEndpoints,                  // 初始化接口方法
 
 	// 接口注册
+	wire.Struct(new(Demo), "*"),
 	wire.Struct(new(Auth), "*"),
 	wire.Struct(new(Signin), "*"),
 	wire.Struct(new(User), "*"),

@@ -54,21 +54,6 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 	}
 	suser.UserName = user.Name
 	suser.UserID = user.UID
-	// 客户端
-	if b.Client != "" {
-		client := schema.SigninGpaClient{}
-		err := a.GPA.Sqlx.Get(&client, client.SQLByClientKey(), b.Client)
-		if err != nil || !client.Issuer.Valid || !client.Audience.Valid {
-			logger.Errorf(c, err.Error())
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-ERROR", Other: "客户端错误"})
-		}
-
-		suser.Issuer = client.Issuer.String
-		suser.Audience = client.Audience.String
-	} else {
-		suser.Issuer = c.Request.Host
-		suser.Audience = c.Request.Host
-	}
 
 	// 角色
 	if account.RoleID.Valid {
@@ -120,6 +105,8 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 		}
 	}
 
+	suser.Issuer = c.Request.Host
+	suser.Audience = c.Request.Host
 	return &suser, nil
 }
 
