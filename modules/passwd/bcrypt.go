@@ -8,8 +8,8 @@ import (
 
 // VerifyBcrypt bcrypt
 func VerifyBcrypt(ent IEntity) (bool, error) {
-	hashpass := ent.Salt() + ent.Right()
-	err := crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
+	hashpass := ent.Salt() + ent.Source()
+	err := crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Target()))
 	if err != nil {
 		return false, err
 	}
@@ -38,8 +38,8 @@ func VerifyBcrypt2(ent IEntity) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
-	hashpass := crypto.Reverse(string(salt)) + ent.Right()
-	err = crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
+	hashpass := crypto.Reverse(string(salt)) + ent.Source()
+	err = crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Target()))
 	if err != nil {
 		return false, err
 	}
@@ -69,10 +69,10 @@ func VerifyBcrypt3(ent IEntity) (bool, error) {
 	if err != nil {
 		return false, nil
 	}
-	sbyt := crypto.MaskDecrypt(salx, []byte(ent.Right()))
+	sbyt := crypto.MaskDecrypt(salx, []byte(ent.Source()))
 	salt := string(sbyt)
-	hashpass := salt + ent.Right()
-	err = crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Left()))
+	hashpass := salt + ent.Source()
+	err = crypto.CompareHashAndPassword([]byte(hashpass), []byte(ent.Target()))
 	if err != nil {
 		return false, err
 	}

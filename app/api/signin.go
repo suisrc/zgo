@@ -12,6 +12,7 @@ import (
 
 // Signin signin
 type Signin struct {
+	service.GPA
 	Auther        auth.Auther
 	SigninService service.Signin
 }
@@ -50,7 +51,7 @@ func (a *Signin) signin(c *gin.Context) {
 		return
 	}
 	// 执行登录
-	user, err := a.SigninService.Signin(c, &body)
+	user, err := a.SigninService.SigninByPasswd(c, &body)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, err.Error())
@@ -71,6 +72,8 @@ func (a *Signin) signin(c *gin.Context) {
 		Expired: token.GetExpiresAt(),
 		//Expired: token.GetExpiresAt() - time.Now().Unix(),
 	}
+
+	// 记录登陆
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
 }

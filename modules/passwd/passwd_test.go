@@ -84,7 +84,7 @@ type PasswdX struct {
 	PasswordX string
 }
 
-func (a *PasswdX) Left() string {
+func (a *PasswdX) Target() string {
 	return a.PasswordX
 }
 

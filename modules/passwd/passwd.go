@@ -15,19 +15,19 @@ type Validator struct {
 
 // IEntity 需要验证的实体
 type IEntity interface {
-	Left() string  // 前端输入,待匹配的密码, 一般为原文
-	Right() string // 后端存储,加密后的密码, 一般为hash值
-	Salt() string  // 密码盐值, 用于胡乱密码的加密
-	Type() string  // 加密类型
+	Target() string // 前端输入,待匹配的密码, 一般为原文
+	Source() string // 后端存储,加密后的密码, 一般为hash值
+	Salt() string   // 密码盐值, 用于胡乱密码的加密
+	Type() string   // 加密类型
 }
 
 // Verify 验证密码是否通过
 func (a *Validator) Verify(ent IEntity) (bool, error) {
-	if ent == nil || ent.Left() == "" || ent.Right() == "" {
+	if ent == nil || ent.Target() == "" || ent.Source() == "" {
 		return false, nil
 	}
 	if ent.Type() == "" {
-		return ent.Left() == ent.Right(), nil
+		return ent.Target() == ent.Source(), nil
 	}
 	if ent.Type() == "BCR" {
 		return VerifyBcrypt(ent)
@@ -79,8 +79,8 @@ func (a *Validator) Generate(password string, ptype string) (*GeneratePasswd, er
 	return nil, errors.New("unknow password type")
 }
 
-// Right right
-func (a *GeneratePasswd) Right() string {
+// Source right
+func (a *GeneratePasswd) Source() string {
 	return a.Password
 }
 

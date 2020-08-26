@@ -6,12 +6,12 @@ import (
 
 // VerifyMD5 bcrypt
 func VerifyMD5(ent IEntity) (bool, error) {
-	epwd := crypto.MaskEncrypt([]byte(ent.Left()), []byte(ent.Salt()))
+	epwd := crypto.MaskEncrypt([]byte(ent.Target()), []byte(ent.Salt()))
 	pwds := crypto.MD5Hash(epwd)
 	for i := mCost; i > 0; i-- {
 		pwds = crypto.MD5HashString(pwds)
 	}
-	return ent.Right() == pwds, nil
+	return ent.Source() == pwds, nil
 }
 
 // GenerateMD5 bcrypt

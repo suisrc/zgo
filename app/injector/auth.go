@@ -22,7 +22,7 @@ import (
 // 认证需要频繁操作,所以这里需要使用内存缓存
 type AuthOpts struct {
 	service.GPA
-	jwts map[interface{}]*schema.JwtOpts
+	jwts map[interface{}]*schema.JwtGPAOpts
 }
 
 // NewAuther of auth.Auther
@@ -38,7 +38,7 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 		logger.Infof(nil, "jwt secret: %s", secret)
 	}
 
-	opts.jwts = map[interface{}]*schema.JwtOpts{}
+	opts.jwts = map[interface{}]*schema.JwtGPAOpts{}
 	auther := jwt.New(store,
 		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
 		jwt.SetKeyFunc(opts.keyFunc),
@@ -51,13 +51,25 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 	return auther
 }
 
+// 更新认证
 func (a *AuthOpts) updateFunc(c context.Context) error {
-	opts := map[interface{}]*schema.JwtOpts{}
-
+	opts := map[interface{}]*schema.JwtGPAOpts{}
+	jwtOpt := new(schema.JwtGPAOpts)
+	jwtOpts := []schema.JwtGPAOpts{}
+	err := a.Sqlx.Get(&jwtOpts, jwtOpt.SQLByAll())
+	if err != nil {
+		logger.Errorf(c, err.Error()) // 更新发生异常
+	} else {
+		for _, v := range jwtOpts {
+			opts[v.KID] = &v
+		}
+	}
 	a.jwts = opts
+
 	return nil
 }
 
+// 修正令牌
 func (a *AuthOpts) claimsFunc(c context.Context, claims *jwt.UserClaims) error {
 	if kid, ok := helper.GetJwtKid(c); ok {
 		opt, ok := a.jwts[kid]
@@ -102,6 +114,7 @@ func (a *AuthOpts) signingFunc(c context.Context, claims jwtgo.Claims, method jw
 			token := &jwtgo.Token{
 				Header: map[string]interface{}{
 					"typ": "JWT",
+					"alg": method.Alg(),
 					"kid": kid,
 				},
 				Claims: claims,

@@ -4,12 +4,12 @@ import "github.com/suisrc/zgo/modules/crypto"
 
 // VerifySHA1 bcrypt
 func VerifySHA1(ent IEntity) (bool, error) {
-	epwd := crypto.MaskEncrypt([]byte(ent.Left()), []byte(ent.Salt()))
+	epwd := crypto.MaskEncrypt([]byte(ent.Target()), []byte(ent.Salt()))
 	pwds := crypto.SHA1Hash(epwd)
 	for i := mCost; i > 0; i-- {
 		pwds = crypto.SHA1HashString(pwds)
 	}
-	return ent.Right() == pwds, nil
+	return ent.Source() == pwds, nil
 }
 
 // GenerateSHA1 bcrypt

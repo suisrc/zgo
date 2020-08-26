@@ -2,7 +2,9 @@ package schema
 
 import (
 	"database/sql"
+	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/suisrc/zgo/modules/auth"
 )
 
@@ -10,11 +12,11 @@ import (
 type SigninBody struct {
 	Username string `json:"username" binding:"required"` // 账户
 	Password string `json:"password" binding:"required"` // 密码
+	KID      string `json:"kid"`                         // 授权平台
+	Client   string `json:"client"`                      // 子应用ID
 	Captcha  string `json:"captcha"`                     // 验证码
 	Code     string `json:"code"`                        // 标识码
 	Role     string `json:"role"`                        // 角色
-	Attach   string `json:"attach"`                      // reset:重置登入 refresh:刷新令牌
-	Client   string `json:"client"`                      // 应用, 默认为主应用, 为空
 }
 
 // SigninResult 登陆返回值
@@ -31,13 +33,13 @@ var _ auth.UserInfo = &SigninUser{}
 
 // SigninUser 登陆用户信息
 type SigninUser struct {
-	UserName string
-	UserID   string
-	RoleID   string
-	TokenID  string
-	Issuer   string
-	Audience string
-	SIID     string
+	UserName  string
+	UserID    string
+	RoleID    string
+	TokenID   string
+	Issuer    string
+	Audience  string
+	AccountID string
 }
 
 // GetUserName 用户名
@@ -69,7 +71,7 @@ func (s *SigninUser) GetTokenID() string {
 
 // GetAccountID token
 func (s *SigninUser) GetAccountID() string {
-	return s.SIID
+	return s.AccountID
 }
 
 // GetProps 获取私有属性,该内容会被加密, 注意:内容敏感,不要存储太多的内容
@@ -92,41 +94,41 @@ func (s *SigninUser) GetAudience() string {
 // SigninGpaUser user
 type SigninGpaUser struct {
 	ID     int    `db:"id" json:"-"`
-	UID    string `db:"uid" json:"id"`
+	KID    string `db:"kid" json:"id"`
 	Name   string `db:"name" json:"name"`
 	Status bool   `db:"status" json:"-"`
 }
 
 // SQLByID sql select
 func (*SigninGpaUser) SQLByID() string {
-	return "select id, uid, name, status from user where id=?"
+	return "select id, kid, name, status from user where id=?"
 }
 
 // SigninGpaRole role
 type SigninGpaRole struct {
 	ID   int    `db:"id" json:"-"`
-	UID  string `db:"uid" json:"id"`
+	KID  string `db:"kid" json:"id"`
 	Name string `db:"name" json:"name"`
 }
 
 // SQLByID sql select
 func (*SigninGpaRole) SQLByID() string {
-	return "select id, uid, name from  role where id=? and status=1"
+	return "select id, kid, name from  role where id=? and status=1"
 }
 
-// SQLByUID sql select
-func (*SigninGpaRole) SQLByUID() string {
-	return "select id, uid, name from role where uid=? and status=1"
+// SQLByKID sql select
+func (*SigninGpaRole) SQLByKID() string {
+	return "select id, kid, name from role where kid=? and status=1"
 }
 
 // SQLByName sql select
 func (*SigninGpaRole) SQLByName() string {
-	return "select id, uid, name from role where name=? and status=1"
+	return "select id, kid, name from role where name=? and status=1"
 }
 
 // SQLByUserID sql select
 func (*SigninGpaRole) SQLByUserID() string {
-	return "select r.id, r.uid, r.name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
+	return "select r.id, r.kid, r.name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
 }
 
 // SigninGpaClient client
@@ -144,19 +146,57 @@ func (*SigninGpaClient) SQLByClientKey() string {
 // SigninGpaAccount account
 type SigninGpaAccount struct {
 	ID           int            `db:"id"`
-	VerifyType   sql.NullString `db:"verify_type"`
+	PID          sql.NullInt32  `db:"pid"`
+	Account      string         `db:"account"`
+	AccountType  int            `db:"account_typ"`
+	AccountKind  sql.NullInt32  `db:"account_kid"`
 	Password     sql.NullString `db:"password"`
 	PasswordSalt sql.NullString `db:"password_salt"`
 	PasswordType sql.NullString `db:"password_type"`
+	VerifyType   sql.NullString `db:"verify_type"`
+	VerifySecret sql.NullString `db:"verify_secret"`
 	UserID       int            `db:"user_id"`
 	RoleID       sql.NullInt64  `db:"role_id"`
-	OAuth2ID     sql.NullInt64  `db:"oauth2_id"`
 
 	// SQLX1 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
 	// SQLX2 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
 }
 
-// SQLByAccount sql select
-func (*SigninGpaAccount) SQLByAccount() string {
-	return "select id, verify_type, password, password_salt, password_type, user_id, role_id, oauth2_id from account where account=? and account_type='user' and platform='ZGO' and status=1"
+// QueryByAccount sql select
+func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, kid string) error {
+	SQL := strings.Builder{}
+	SQL.WriteString("select id")
+	SQL.WriteString(", pid")
+	SQL.WriteString(", account")
+	SQL.WriteString(", account_typ")
+	SQL.WriteString(", account_kid")
+	SQL.WriteString(", password")
+	SQL.WriteString(", password_salt")
+	SQL.WriteString(", password_type")
+	SQL.WriteString(", verify_type")
+	SQL.WriteString(", verify_secret")
+	SQL.WriteString(", user_id")
+	SQL.WriteString(", role_id")
+	SQL.WriteString(" from account")
+	SQL.WriteString(" where account=? and account_typ=?")
+
+	params := []interface{}{acc, typ}
+	if kid != "" {
+		SQL.WriteString(" and account_kid=?")
+		params = append(params, kid)
+	} else {
+		SQL.WriteString(" and account_kid is null")
+	}
+	SQL.WriteString(" and status=1")
+	return sqlx.Get(a, SQL.String(), params...)
+}
+
+// SigninGPAOAuth2Account account
+type SigninGPAOAuth2Account struct {
+	KID string `db:"kid"`
+}
+
+// SQLByKID kid
+func (*SigninGPAOAuth2Account) SQLByKID() string {
+	return "select kid where account_id=? and client_id=? and user_kid=? and role_kid=?"
 }

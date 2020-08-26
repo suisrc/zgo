@@ -20,15 +20,13 @@ type Signin struct {
 	Passwd passwd.Validator // 密码验证其
 }
 
-// Signin 登入
 //============================================================================================
-func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUser, error) {
 
+// SigninByPasswd 密码登陆
+func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody) (*schema.SigninUser, error) {
 	// 查询账户信息
 	account := schema.SigninGpaAccount{}
-	err := a.GPA.Sqlx.Get(&account, account.SQLByAccount(), b.Username)
-	if err != nil {
-		// logger.Errorf(c, err.Error()) // 未找对应的用户
+	if err := account.QueryByAccount(a.Sqlx, b.Username, 1, b.KID); err != nil {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
 	// 验证密码
@@ -38,62 +36,57 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 	} else if !b {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
+	// 获取用户信息
+	return a.GetSignUserBySelectRole(c, &account, b)
+}
 
+// GetSignUserBySelectRole 通过角色选择获取用户信息
+func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninGpaAccount, b *schema.SigninBody) (*schema.SigninUser, error) {
+	// 登陆用户
 	suser := schema.SigninUser{}
 	if account.ID > 0 {
-		suser.SIID = strconv.Itoa(account.ID)
+		suser.AccountID = strconv.Itoa(account.ID)
 	}
 	// 用户
 	user := schema.SigninGpaUser{}
-	err = a.GPA.Sqlx.Get(&user, user.SQLByID(), account.UserID)
-	if err != nil {
+	if err := a.Sqlx.Get(&user, user.SQLByID(), account.UserID); err != nil {
 		logger.Errorf(c, err.Error()) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
 	} else if !user.Status {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
 	}
 	suser.UserName = user.Name
-	suser.UserID = user.UID
+	suser.UserID = user.KID
 
 	// 角色
 	if account.RoleID.Valid {
 		role := schema.SigninGpaRole{}
-		err = a.GPA.Sqlx.Get(&role, role.SQLByID(), account.RoleID)
-		if err != nil {
+		if err := a.Sqlx.Get(&role, role.SQLByID(), account.RoleID); err != nil {
 			logger.Errorf(c, err.Error())
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色[ID]"})
 		}
-		suser.RoleID = role.UID
+		suser.RoleID = role.KID
 	} else if b.Role != "" {
 		role := schema.SigninGpaRole{}
-		err = a.GPA.Sqlx.Get(&role, role.SQLByUID(), b.Role)
-		if err != nil {
+		if err := a.Sqlx.Get(&role, role.SQLByKID(), b.Role); err != nil {
 			logger.Errorf(c, err.Error())
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色[KID]"})
 		}
-		suser.RoleID = role.UID
+		suser.RoleID = role.KID
 	} else {
 		// 多角色问题
 		role := schema.SigninGpaRole{}
 		roles := []schema.SigninGpaRole{}
-		err = a.GPA.Sqlx.Select(&roles, role.SQLByUserID(), account.UserID)
-		if err != nil {
+		if err := a.Sqlx.Select(&roles, role.SQLByUserID(), account.UserID); err != nil {
 			logger.Errorf(c, err.Error())
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色[MUL]"})
 		}
 		switch len(roles) {
 		case 0:
 			// 没有角色,赋值默认角色
 			// do nothings, 目前默认角色问题已经迁移到[norole]问题中处理
-			// role := schema.SigninGpaRole{}
-			// err = a.GPA.Sqlx.Get(&role, role.SQLByName(), "default")
-			// if err != nil {
-			// 	logger.Errorf(c, err.Error())
-			// 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
-			// }
-			// suser.RoleID = role.UID
 		case 1:
-			suser.RoleID = roles[0].UID
+			suser.RoleID = roles[0].KID
 		default:
 			// 用户有多角色
 			// return nil, helper.NewError(c, helper.ShowWarn, "WARN-SIGNIN-ROLE-MULTI-ERROR", "多角色")
@@ -112,7 +105,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody) (*schema.SigninUse
 
 // 验证密码
 //============================================================================================
-func (a *Signin) verifyPassword(pwd string, acc *schema.SigninGpaAccount) (bool, error) {
+func (a *Signin) VerifyPassword(pwd string, acc *schema.SigninGpaAccount) (bool, error) {
 	ok, _ := a.Passwd.Verify(&PasswdCheck{
 		Account:  acc,
 		Password: pwd,

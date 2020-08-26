@@ -36,7 +36,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | ------------- | -------------- | -------- | --------------------------------------------------- | ---------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | pid           | 上级账户       | 字符串   | 当前账户验证密码的方式为PID时候,使用上级账户验证    | int(11)                                              |
-| account       | 账户           | 字符串   | 账户和账户类型和账户归属平台构成唯一标识            | varchar(255), udx_account                            |
+| account       | 账户           | 字符串   | 账户和账户类型和账户归属平台构成唯一标识            | varchar(255) NOT NULL, udx_account                   |
 | account_typ   | 账户类型       | 字符串   | 1:name 2:mobile 3:email 4:openid 5:unionid 6:token  | tinyint(4) DEFAULT '1', udx_account                  |
 | account_kid   | 账户归属平台   | 字符串   | 被授权平台, NULL标识不归属任何平台                  | varchar(64), udx_account,fk_account_kid->oauth2_platform.kid |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -62,7 +62,11 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| string_2      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| string_3      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
+| number_2      | 备用字段       | 数值     |                                                     | int(11)                                              |
+| number_3      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 第三方登陆实体(`oauth2_platform`)
@@ -169,13 +173,13 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 
 第三方授权实体, 用户完成授权后,需要处理令牌,选择授权系统
 已知: 
-A用户请求: [hostname]用户请求域, [kid]请求令牌
+A用户请求: [hostname]用户请求域, [kid]平台ID, [client]子应用
 B用户登陆: [Role.domain]用户角色域, [Role.tag]用户标签
 C系统限定: [Client.kid]客户端令牌, [Client.audience]客户端接收者, [Client.tag]客户端标签
 约束:
-1.A的[kid]不为空, 使用[kid]对应的[Client]进行处理,同时需要验证B的[Role.domain]和A的[hostname], 如果B的[Role.domain]为空,不进行处理验证
-2.A的[kid]为空, 使用B的[Role.domain]确认[Client], 同时需要验证B的[Role.domain]和A的[hostname]
-3.A的[kid]和B的[Role.domain]都为空,使用A的[Role.tag]确认[Client]
+1.A的[client]不为空, 使用[client]对应的[Client]进行处理,同时需要验证B的[Role.domain]和A的[hostname], 如果B的[Role.domain]为空,不进行处理验证
+2.A的[client]为空, 使用B的[Role.domain]确认[Client], 同时需要验证B的[Role.domain]和A的[hostname], 如果B的[Role.domain]为空,不进行处理验证
+3.A的[client]和B的[Role.domain]都为空,使用A的[Role.tag]确认[Client]
 
 当在一个系统[Client]中登陆,需要向另外一个系统跳转,得到另外一个系统的角色,通过角色完成授权,但是不需要验证[Role.domain]和[hostname]
 角色约束:
@@ -188,10 +192,10 @@ C系统限定: [Client.kid]客户端令牌, [Client.audience]客户端接收者,
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | kid           | 唯一标识       | 字符串   |                                                     | varchar(64) NOT NULL, udx_oauth2_account_kid         |
-| account_id    | 账户标识       | 数值     |                                                     | int(11), idx_oauth2_account_account_id               |
-| user_kid      | 用户标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_user_kid             |
-| role_kid      | 角色标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_role_kid             |
-| client_id     | 客户端标识     | 数值     |                                                     | int(11), idx_oauth2_account_client_id                |
+| account_id    | 账户标识       | 数值     |                                                     | int(11), udx_oauth2_account_account_id               |
+| client_id     | 客户端标识     | 数值     |                                                     | int(11), udx_oauth2_account_client_id                |
+| user_kid      | 用户标识       | 数值     |                                                     | varchar(64), udx_oauth2_account_user_kid             |
+| role_kid      | 角色标识       | 数值     |                                                     | varchar(64), udx_oauth2_account_role_kid             |
 | expired       | 授权有效期     | 数值     | NULL 表示永久有效                                   | int(11)                                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | last_ip       | 上次登陆IP     | 字符串   |                                                     | varchar(64)                                          |
