@@ -1,9 +1,13 @@
 package schema
 
-import "database/sql"
+import (
+	"database/sql"
 
-// JwtGPAOpts jwt配置信息
-type JwtGPAOpts struct {
+	"github.com/jmoiron/sqlx"
+)
+
+// JwtGpaOpts jwt配置信息
+type JwtGpaOpts struct {
 	ID          string         `db:"id"`
 	KID         string         `db:"kid"`
 	Expired     int            `db:"expired"`
@@ -15,7 +19,8 @@ type JwtGPAOpts struct {
 	SigninCheck sql.NullBool   `db:"signin_check"`
 }
 
-// SQLByAll sql select
-func (*JwtGPAOpts) SQLByAll() string {
-	return "select id, kid, expired, audience, issuer, token_secret, signin_url, signin_force, signin_check from user where status=1"
+// QueryAll sql select
+func (*JwtGpaOpts) QueryAll(sqlx *sqlx.DB, dest []JwtGpaOpts) error {
+	SQL := "select id, kid, expired, audience, issuer, token_secret, signin_url, signin_force, signin_check from user where status=1"
+	return sqlx.Select(dest, SQL)
 }

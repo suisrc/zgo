@@ -99,9 +99,10 @@ type SigninGpaUser struct {
 	Status bool   `db:"status" json:"-"`
 }
 
-// SQLByID sql select
-func (*SigninGpaUser) SQLByID() string {
-	return "select id, kid, name, status from user where id=?"
+// QueryByID sql select
+func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int) error {
+	SQL := "select id, kid, name, status from user where id=?"
+	return sqlx.Get(a, SQL, id)
 }
 
 // SigninGpaRole role
@@ -111,36 +112,28 @@ type SigninGpaRole struct {
 	Name string `db:"name" json:"name"`
 }
 
-// SQLByID sql select
-func (*SigninGpaRole) SQLByID() string {
-	return "select id, kid, name from  role where id=? and status=1"
+// QueryByID sql select
+func (a *SigninGpaRole) QueryByID(sqlx *sqlx.DB, id int) error {
+	SQL := "select id, kid, name from  role where id=? and status=1"
+	return sqlx.Get(a, SQL, id)
 }
 
-// SQLByKID sql select
-func (*SigninGpaRole) SQLByKID() string {
-	return "select id, kid, name from role where kid=? and status=1"
+// QueryByKID sql select
+func (a *SigninGpaRole) QueryByKID(sqlx *sqlx.DB, kid string) error {
+	SQL := "select id, kid, name from role where kid=? and status=1"
+	return sqlx.Get(a, SQL, kid)
 }
 
-// SQLByName sql select
-func (*SigninGpaRole) SQLByName() string {
-	return "select id, kid, name from role where name=? and status=1"
+// QueryByName sql select
+func (a *SigninGpaRole) QueryByName(sqlx *sqlx.DB, name string) error {
+	SQL := "select id, kid, name from role where name=? and status=1"
+	return sqlx.Get(a, SQL, name)
 }
 
-// SQLByUserID sql select
-func (*SigninGpaRole) SQLByUserID() string {
-	return "select r.id, r.kid, r.name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
-}
-
-// SigninGpaClient client
-type SigninGpaClient struct {
-	ID       int            `db:"id"`
-	Issuer   sql.NullString `db:"issuer"`
-	Audience sql.NullString `db:"audience"`
-}
-
-// SQLByClientKey sql select
-func (*SigninGpaClient) SQLByClientKey() string {
-	return "select id, issuer, audience from user where client_key=?"
+// QueryByUserID sql select
+func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, userid string) error {
+	SQL := "select r.id, r.kid, r.name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
+	return sqlx.Get(a, SQL, userid)
 }
 
 // SigninGpaAccount account

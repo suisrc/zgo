@@ -14,40 +14,6 @@ type Tx struct {
 	config
 	// Account is the client for interacting with the Account builders.
 	Account *AccountClient
-	// Menu is the client for interacting with the Menu builders.
-	Menu *MenuClient
-	// MenuAction is the client for interacting with the MenuAction builders.
-	MenuAction *MenuActionClient
-	// MenuRole is the client for interacting with the MenuRole builders.
-	MenuRole *MenuRoleClient
-	// Oauth2Account is the client for interacting with the Oauth2Account builders.
-	Oauth2Account *Oauth2AccountClient
-	// Oauth2Client is the client for interacting with the Oauth2Client builders.
-	Oauth2Client *Oauth2ClientClient
-	// Oauth2Third is the client for interacting with the Oauth2Third builders.
-	Oauth2Third *Oauth2ThirdClient
-	// Oauth2Token is the client for interacting with the Oauth2Token builders.
-	Oauth2Token *Oauth2TokenClient
-	// Resource is the client for interacting with the Resource builders.
-	Resource *ResourceClient
-	// ResourceRole is the client for interacting with the ResourceRole builders.
-	ResourceRole *ResourceRoleClient
-	// ResourceUser is the client for interacting with the ResourceUser builders.
-	ResourceUser *ResourceUserClient
-	// Role is the client for interacting with the Role builders.
-	Role *RoleClient
-	// RoleRole is the client for interacting with the RoleRole builders.
-	RoleRole *RoleRoleClient
-	// TagCommon is the client for interacting with the TagCommon builders.
-	TagCommon *TagCommonClient
-	// User is the client for interacting with the User builders.
-	User *UserClient
-	// UserDetail is the client for interacting with the UserDetail builders.
-	UserDetail *UserDetailClient
-	// UserMessage is the client for interacting with the UserMessage builders.
-	UserMessage *UserMessageClient
-	// UserRole is the client for interacting with the UserRole builders.
-	UserRole *UserRoleClient
 
 	// lazily loaded.
 	client     *Client
@@ -184,23 +150,6 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Account = NewAccountClient(tx.config)
-	tx.Menu = NewMenuClient(tx.config)
-	tx.MenuAction = NewMenuActionClient(tx.config)
-	tx.MenuRole = NewMenuRoleClient(tx.config)
-	tx.Oauth2Account = NewOauth2AccountClient(tx.config)
-	tx.Oauth2Client = NewOauth2ClientClient(tx.config)
-	tx.Oauth2Third = NewOauth2ThirdClient(tx.config)
-	tx.Oauth2Token = NewOauth2TokenClient(tx.config)
-	tx.Resource = NewResourceClient(tx.config)
-	tx.ResourceRole = NewResourceRoleClient(tx.config)
-	tx.ResourceUser = NewResourceUserClient(tx.config)
-	tx.Role = NewRoleClient(tx.config)
-	tx.RoleRole = NewRoleRoleClient(tx.config)
-	tx.TagCommon = NewTagCommonClient(tx.config)
-	tx.User = NewUserClient(tx.config)
-	tx.UserDetail = NewUserDetailClient(tx.config)
-	tx.UserMessage = NewUserMessageClient(tx.config)
-	tx.UserRole = NewUserRoleClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

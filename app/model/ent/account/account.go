@@ -11,36 +11,40 @@ const (
 	Label = "account"
 	// FieldID holds the string denoting the id field in the database.
 	FieldID = "id"
+	// FieldPid holds the string denoting the pid field in the database.
+	FieldPid = "pid"
 	// FieldAccount holds the string denoting the account field in the database.
 	FieldAccount = "account"
-	// FieldAccountType holds the string denoting the account_type field in the database.
-	FieldAccountType = "account_type"
-	// FieldPlatform holds the string denoting the platform field in the database.
-	FieldPlatform = "platform"
-	// FieldVerifyType holds the string denoting the verify_type field in the database.
-	FieldVerifyType = "verify_type"
+	// FieldAccountTyp holds the string denoting the account_typ field in the database.
+	FieldAccountTyp = "account_typ"
+	// FieldAccountKid holds the string denoting the account_kid field in the database.
+	FieldAccountKid = "account_kid"
 	// FieldPassword holds the string denoting the password field in the database.
 	FieldPassword = "password"
 	// FieldPasswordSalt holds the string denoting the password_salt field in the database.
 	FieldPasswordSalt = "password_salt"
 	// FieldPasswordType holds the string denoting the password_type field in the database.
 	FieldPasswordType = "password_type"
+	// FieldVerifySecret holds the string denoting the verify_secret field in the database.
+	FieldVerifySecret = "verify_secret"
+	// FieldVerifyType holds the string denoting the verify_type field in the database.
+	FieldVerifyType = "verify_type"
 	// FieldUserID holds the string denoting the user_id field in the database.
 	FieldUserID = "user_id"
 	// FieldRoleID holds the string denoting the role_id field in the database.
 	FieldRoleID = "role_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
-	// FieldDesc holds the string denoting the desc field in the database.
-	FieldDesc = "desc"
-	// FieldOauth2ID holds the string denoting the oauth2_id field in the database.
-	FieldOauth2ID = "oauth2_id"
-	// FieldOauth2Token holds the string denoting the oauth2_token field in the database.
-	FieldOauth2Token = "oauth2_token"
-	// FieldOauth2Time holds the string denoting the oauth2_time field in the database.
-	FieldOauth2Time = "oauth2_time"
-	// FieldTokenFake holds the string denoting the token_fake field in the database.
-	FieldTokenFake = "token_fake"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
+	// FieldOa2Token holds the string denoting the oa2_token field in the database.
+	FieldOa2Token = "oa2_token"
+	// FieldOa2Expired holds the string denoting the oa2_expired field in the database.
+	FieldOa2Expired = "oa2_expired"
+	// FieldOa2Fake holds the string denoting the oa2_fake field in the database.
+	FieldOa2Fake = "oa2_fake"
+	// FieldOa2Client holds the string denoting the oa2_client field in the database.
+	FieldOa2Client = "oa2_client"
 	// FieldCreator holds the string denoting the creator field in the database.
 	FieldCreator = "creator"
 	// FieldCreatedAt holds the string denoting the created_at field in the database.
@@ -69,21 +73,23 @@ const (
 // Columns holds all SQL columns for account fields.
 var Columns = []string{
 	FieldID,
+	FieldPid,
 	FieldAccount,
-	FieldAccountType,
-	FieldPlatform,
-	FieldVerifyType,
+	FieldAccountTyp,
+	FieldAccountKid,
 	FieldPassword,
 	FieldPasswordSalt,
 	FieldPasswordType,
+	FieldVerifySecret,
+	FieldVerifyType,
 	FieldUserID,
 	FieldRoleID,
 	FieldStatus,
-	FieldDesc,
-	FieldOauth2ID,
-	FieldOauth2Token,
-	FieldOauth2Time,
-	FieldTokenFake,
+	FieldDescription,
+	FieldOa2Token,
+	FieldOa2Expired,
+	FieldOa2Fake,
+	FieldOa2Client,
 	FieldCreator,
 	FieldCreatedAt,
 	FieldUpdatedAt,

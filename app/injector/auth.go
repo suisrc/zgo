@@ -22,7 +22,7 @@ import (
 // 认证需要频繁操作,所以这里需要使用内存缓存
 type AuthOpts struct {
 	service.GPA
-	jwts map[interface{}]*schema.JwtGPAOpts
+	jwts map[interface{}]*schema.JwtGpaOpts
 }
 
 // NewAuther of auth.Auther
@@ -38,7 +38,7 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 		logger.Infof(nil, "jwt secret: %s", secret)
 	}
 
-	opts.jwts = map[interface{}]*schema.JwtGPAOpts{}
+	opts.jwts = map[interface{}]*schema.JwtGpaOpts{}
 	auther := jwt.New(store,
 		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
 		jwt.SetKeyFunc(opts.keyFunc),
@@ -53,11 +53,10 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 
 // 更新认证
 func (a *AuthOpts) updateFunc(c context.Context) error {
-	opts := map[interface{}]*schema.JwtGPAOpts{}
-	jwtOpt := new(schema.JwtGPAOpts)
-	jwtOpts := []schema.JwtGPAOpts{}
-	err := a.Sqlx.Get(&jwtOpts, jwtOpt.SQLByAll())
-	if err != nil {
+	opts := map[interface{}]*schema.JwtGpaOpts{}
+	jwtOpt := new(schema.JwtGpaOpts)
+	jwtOpts := []schema.JwtGpaOpts{}
+	if err := jwtOpt.QueryAll(a.Sqlx, jwtOpts); err != nil {
 		logger.Errorf(c, err.Error()) // 更新发生异常
 	} else {
 		for _, v := range jwtOpts {

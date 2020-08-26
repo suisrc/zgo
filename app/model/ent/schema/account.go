@@ -34,21 +34,23 @@ func (Account) Hooks() []ent.Hook {
 // Fields of the Account.
 func (Account) Fields() []ent.Field {
 	return []ent.Field{
+		field.String("pid"),                        // 上级账户
 		field.String("account"),                    // 账户
-		field.String("account_type"),               // 账户类型
-		field.String("platform"),                   // 账户归属平台
-		field.String("verify_type"),                // 校验方式
+		field.String("account_typ"),                // 账户类型
+		field.String("account_kid"),                // 账户归属平台
 		field.String("password"),                   // 登录密码
 		field.String("password_salt"),              // 密码盐值
-		field.String("password_type"),              // 校验方式
+		field.String("password_type"),              // 密码方式
+		field.String("verify_secret"),              // 校验密钥
+		field.String("verify_type"),                // 校验方式
 		field.Int("user_id"),                       // 用户标识
 		field.Int("role_id"),                       // 角色标识
 		field.Int("status"),                        // 状态
-		field.String("desc"),                       // 账户描述
-		field.Int("oauth2_id"),                     // oauth2认证
-		field.String("oauth2_token"),               // oauth2令牌
-		field.Time("oauth2_time"),                  // oauth2创建时间
-		field.String("token_fake"),                 // oauth2令牌
+		field.String("description"),                // 账户描述
+		field.String("oa2_token"),                  // oauth2令牌
+		field.Time("oa2_expired"),                  // oauth2过期时间
+		field.String("oa2_fake"),                   // 伪造令牌
+		field.Int("oa2_client"),                    // 客户端上次
 		field.String("creator"),                    // 创建人
 		field.Time("created_at").Default(time.Now), // 创建时间
 		field.Time("updated_at").Default(time.Now), // 更新时间

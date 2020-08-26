@@ -92,6 +92,13 @@ func IDLTE(id int) predicate.Account {
 	})
 }
 
+// Pid applies equality check predicate on the "pid" field. It's identical to PidEQ.
+func Pid(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldPid), v))
+	})
+}
+
 // Account applies equality check predicate on the "account" field. It's identical to AccountEQ.
 func Account(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
@@ -99,24 +106,17 @@ func Account(v string) predicate.Account {
 	})
 }
 
-// AccountType applies equality check predicate on the "account_type" field. It's identical to AccountTypeEQ.
-func AccountType(v string) predicate.Account {
+// AccountTyp applies equality check predicate on the "account_typ" field. It's identical to AccountTypEQ.
+func AccountTyp(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldAccountType), v))
+		s.Where(sql.EQ(s.C(FieldAccountTyp), v))
 	})
 }
 
-// Platform applies equality check predicate on the "platform" field. It's identical to PlatformEQ.
-func Platform(v string) predicate.Account {
+// AccountKid applies equality check predicate on the "account_kid" field. It's identical to AccountKidEQ.
+func AccountKid(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldPlatform), v))
-	})
-}
-
-// VerifyType applies equality check predicate on the "verify_type" field. It's identical to VerifyTypeEQ.
-func VerifyType(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldVerifyType), v))
+		s.Where(sql.EQ(s.C(FieldAccountKid), v))
 	})
 }
 
@@ -141,6 +141,20 @@ func PasswordType(v string) predicate.Account {
 	})
 }
 
+// VerifySecret applies equality check predicate on the "verify_secret" field. It's identical to VerifySecretEQ.
+func VerifySecret(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifyType applies equality check predicate on the "verify_type" field. It's identical to VerifyTypeEQ.
+func VerifyType(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldVerifyType), v))
+	})
+}
+
 // UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
 func UserID(v int) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
@@ -162,38 +176,38 @@ func Status(v int) predicate.Account {
 	})
 }
 
-// Desc applies equality check predicate on the "desc" field. It's identical to DescEQ.
-func Desc(v string) predicate.Account {
+// Description applies equality check predicate on the "description" field. It's identical to DescriptionEQ.
+func Description(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDesc), v))
+		s.Where(sql.EQ(s.C(FieldDescription), v))
 	})
 }
 
-// Oauth2ID applies equality check predicate on the "oauth2_id" field. It's identical to Oauth2IDEQ.
-func Oauth2ID(v int) predicate.Account {
+// Oa2Token applies equality check predicate on the "oa2_token" field. It's identical to Oa2TokenEQ.
+func Oa2Token(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldOauth2ID), v))
+		s.Where(sql.EQ(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2Token applies equality check predicate on the "oauth2_token" field. It's identical to Oauth2TokenEQ.
-func Oauth2Token(v string) predicate.Account {
+// Oa2Expired applies equality check predicate on the "oa2_expired" field. It's identical to Oa2ExpiredEQ.
+func Oa2Expired(v time.Time) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldOauth2Token), v))
+		s.Where(sql.EQ(s.C(FieldOa2Expired), v))
 	})
 }
 
-// Oauth2Time applies equality check predicate on the "oauth2_time" field. It's identical to Oauth2TimeEQ.
-func Oauth2Time(v time.Time) predicate.Account {
+// Oa2Fake applies equality check predicate on the "oa2_fake" field. It's identical to Oa2FakeEQ.
+func Oa2Fake(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldOauth2Time), v))
+		s.Where(sql.EQ(s.C(FieldOa2Fake), v))
 	})
 }
 
-// TokenFake applies equality check predicate on the "token_fake" field. It's identical to TokenFakeEQ.
-func TokenFake(v string) predicate.Account {
+// Oa2Client applies equality check predicate on the "oa2_client" field. It's identical to Oa2ClientEQ.
+func Oa2Client(v int) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTokenFake), v))
+		s.Where(sql.EQ(s.C(FieldOa2Client), v))
 	})
 }
 
@@ -264,6 +278,117 @@ func Number2(v int) predicate.Account {
 func Number3(v int) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
 		s.Where(sql.EQ(s.C(FieldNumber3), v))
+	})
+}
+
+// PidEQ applies the EQ predicate on the "pid" field.
+func PidEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldPid), v))
+	})
+}
+
+// PidNEQ applies the NEQ predicate on the "pid" field.
+func PidNEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldPid), v))
+	})
+}
+
+// PidIn applies the In predicate on the "pid" field.
+func PidIn(vs ...string) predicate.Account {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldPid), v...))
+	})
+}
+
+// PidNotIn applies the NotIn predicate on the "pid" field.
+func PidNotIn(vs ...string) predicate.Account {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldPid), v...))
+	})
+}
+
+// PidGT applies the GT predicate on the "pid" field.
+func PidGT(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldPid), v))
+	})
+}
+
+// PidGTE applies the GTE predicate on the "pid" field.
+func PidGTE(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldPid), v))
+	})
+}
+
+// PidLT applies the LT predicate on the "pid" field.
+func PidLT(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldPid), v))
+	})
+}
+
+// PidLTE applies the LTE predicate on the "pid" field.
+func PidLTE(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldPid), v))
+	})
+}
+
+// PidContains applies the Contains predicate on the "pid" field.
+func PidContains(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldPid), v))
+	})
+}
+
+// PidHasPrefix applies the HasPrefix predicate on the "pid" field.
+func PidHasPrefix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldPid), v))
+	})
+}
+
+// PidHasSuffix applies the HasSuffix predicate on the "pid" field.
+func PidHasSuffix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldPid), v))
+	})
+}
+
+// PidEqualFold applies the EqualFold predicate on the "pid" field.
+func PidEqualFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldPid), v))
+	})
+}
+
+// PidContainsFold applies the ContainsFold predicate on the "pid" field.
+func PidContainsFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldPid), v))
 	})
 }
 
@@ -378,22 +503,22 @@ func AccountContainsFold(v string) predicate.Account {
 	})
 }
 
-// AccountTypeEQ applies the EQ predicate on the "account_type" field.
-func AccountTypeEQ(v string) predicate.Account {
+// AccountTypEQ applies the EQ predicate on the "account_typ" field.
+func AccountTypEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldAccountType), v))
+		s.Where(sql.EQ(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeNEQ applies the NEQ predicate on the "account_type" field.
-func AccountTypeNEQ(v string) predicate.Account {
+// AccountTypNEQ applies the NEQ predicate on the "account_typ" field.
+func AccountTypNEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldAccountType), v))
+		s.Where(sql.NEQ(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeIn applies the In predicate on the "account_type" field.
-func AccountTypeIn(vs ...string) predicate.Account {
+// AccountTypIn applies the In predicate on the "account_typ" field.
+func AccountTypIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -405,12 +530,12 @@ func AccountTypeIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldAccountType), v...))
+		s.Where(sql.In(s.C(FieldAccountTyp), v...))
 	})
 }
 
-// AccountTypeNotIn applies the NotIn predicate on the "account_type" field.
-func AccountTypeNotIn(vs ...string) predicate.Account {
+// AccountTypNotIn applies the NotIn predicate on the "account_typ" field.
+func AccountTypNotIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -422,89 +547,89 @@ func AccountTypeNotIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldAccountType), v...))
+		s.Where(sql.NotIn(s.C(FieldAccountTyp), v...))
 	})
 }
 
-// AccountTypeGT applies the GT predicate on the "account_type" field.
-func AccountTypeGT(v string) predicate.Account {
+// AccountTypGT applies the GT predicate on the "account_typ" field.
+func AccountTypGT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldAccountType), v))
+		s.Where(sql.GT(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeGTE applies the GTE predicate on the "account_type" field.
-func AccountTypeGTE(v string) predicate.Account {
+// AccountTypGTE applies the GTE predicate on the "account_typ" field.
+func AccountTypGTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldAccountType), v))
+		s.Where(sql.GTE(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeLT applies the LT predicate on the "account_type" field.
-func AccountTypeLT(v string) predicate.Account {
+// AccountTypLT applies the LT predicate on the "account_typ" field.
+func AccountTypLT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldAccountType), v))
+		s.Where(sql.LT(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeLTE applies the LTE predicate on the "account_type" field.
-func AccountTypeLTE(v string) predicate.Account {
+// AccountTypLTE applies the LTE predicate on the "account_typ" field.
+func AccountTypLTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldAccountType), v))
+		s.Where(sql.LTE(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeContains applies the Contains predicate on the "account_type" field.
-func AccountTypeContains(v string) predicate.Account {
+// AccountTypContains applies the Contains predicate on the "account_typ" field.
+func AccountTypContains(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldAccountType), v))
+		s.Where(sql.Contains(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeHasPrefix applies the HasPrefix predicate on the "account_type" field.
-func AccountTypeHasPrefix(v string) predicate.Account {
+// AccountTypHasPrefix applies the HasPrefix predicate on the "account_typ" field.
+func AccountTypHasPrefix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldAccountType), v))
+		s.Where(sql.HasPrefix(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeHasSuffix applies the HasSuffix predicate on the "account_type" field.
-func AccountTypeHasSuffix(v string) predicate.Account {
+// AccountTypHasSuffix applies the HasSuffix predicate on the "account_typ" field.
+func AccountTypHasSuffix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldAccountType), v))
+		s.Where(sql.HasSuffix(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeEqualFold applies the EqualFold predicate on the "account_type" field.
-func AccountTypeEqualFold(v string) predicate.Account {
+// AccountTypEqualFold applies the EqualFold predicate on the "account_typ" field.
+func AccountTypEqualFold(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldAccountType), v))
+		s.Where(sql.EqualFold(s.C(FieldAccountTyp), v))
 	})
 }
 
-// AccountTypeContainsFold applies the ContainsFold predicate on the "account_type" field.
-func AccountTypeContainsFold(v string) predicate.Account {
+// AccountTypContainsFold applies the ContainsFold predicate on the "account_typ" field.
+func AccountTypContainsFold(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldAccountType), v))
+		s.Where(sql.ContainsFold(s.C(FieldAccountTyp), v))
 	})
 }
 
-// PlatformEQ applies the EQ predicate on the "platform" field.
-func PlatformEQ(v string) predicate.Account {
+// AccountKidEQ applies the EQ predicate on the "account_kid" field.
+func AccountKidEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldPlatform), v))
+		s.Where(sql.EQ(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformNEQ applies the NEQ predicate on the "platform" field.
-func PlatformNEQ(v string) predicate.Account {
+// AccountKidNEQ applies the NEQ predicate on the "account_kid" field.
+func AccountKidNEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldPlatform), v))
+		s.Where(sql.NEQ(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformIn applies the In predicate on the "platform" field.
-func PlatformIn(vs ...string) predicate.Account {
+// AccountKidIn applies the In predicate on the "account_kid" field.
+func AccountKidIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -516,12 +641,12 @@ func PlatformIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldPlatform), v...))
+		s.Where(sql.In(s.C(FieldAccountKid), v...))
 	})
 }
 
-// PlatformNotIn applies the NotIn predicate on the "platform" field.
-func PlatformNotIn(vs ...string) predicate.Account {
+// AccountKidNotIn applies the NotIn predicate on the "account_kid" field.
+func AccountKidNotIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -533,181 +658,70 @@ func PlatformNotIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldPlatform), v...))
+		s.Where(sql.NotIn(s.C(FieldAccountKid), v...))
 	})
 }
 
-// PlatformGT applies the GT predicate on the "platform" field.
-func PlatformGT(v string) predicate.Account {
+// AccountKidGT applies the GT predicate on the "account_kid" field.
+func AccountKidGT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldPlatform), v))
+		s.Where(sql.GT(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformGTE applies the GTE predicate on the "platform" field.
-func PlatformGTE(v string) predicate.Account {
+// AccountKidGTE applies the GTE predicate on the "account_kid" field.
+func AccountKidGTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldPlatform), v))
+		s.Where(sql.GTE(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformLT applies the LT predicate on the "platform" field.
-func PlatformLT(v string) predicate.Account {
+// AccountKidLT applies the LT predicate on the "account_kid" field.
+func AccountKidLT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldPlatform), v))
+		s.Where(sql.LT(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformLTE applies the LTE predicate on the "platform" field.
-func PlatformLTE(v string) predicate.Account {
+// AccountKidLTE applies the LTE predicate on the "account_kid" field.
+func AccountKidLTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldPlatform), v))
+		s.Where(sql.LTE(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformContains applies the Contains predicate on the "platform" field.
-func PlatformContains(v string) predicate.Account {
+// AccountKidContains applies the Contains predicate on the "account_kid" field.
+func AccountKidContains(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldPlatform), v))
+		s.Where(sql.Contains(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformHasPrefix applies the HasPrefix predicate on the "platform" field.
-func PlatformHasPrefix(v string) predicate.Account {
+// AccountKidHasPrefix applies the HasPrefix predicate on the "account_kid" field.
+func AccountKidHasPrefix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldPlatform), v))
+		s.Where(sql.HasPrefix(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformHasSuffix applies the HasSuffix predicate on the "platform" field.
-func PlatformHasSuffix(v string) predicate.Account {
+// AccountKidHasSuffix applies the HasSuffix predicate on the "account_kid" field.
+func AccountKidHasSuffix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldPlatform), v))
+		s.Where(sql.HasSuffix(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformEqualFold applies the EqualFold predicate on the "platform" field.
-func PlatformEqualFold(v string) predicate.Account {
+// AccountKidEqualFold applies the EqualFold predicate on the "account_kid" field.
+func AccountKidEqualFold(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldPlatform), v))
+		s.Where(sql.EqualFold(s.C(FieldAccountKid), v))
 	})
 }
 
-// PlatformContainsFold applies the ContainsFold predicate on the "platform" field.
-func PlatformContainsFold(v string) predicate.Account {
+// AccountKidContainsFold applies the ContainsFold predicate on the "account_kid" field.
+func AccountKidContainsFold(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldPlatform), v))
-	})
-}
-
-// VerifyTypeEQ applies the EQ predicate on the "verify_type" field.
-func VerifyTypeEQ(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeNEQ applies the NEQ predicate on the "verify_type" field.
-func VerifyTypeNEQ(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeIn applies the In predicate on the "verify_type" field.
-func VerifyTypeIn(vs ...string) predicate.Account {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Account(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.In(s.C(FieldVerifyType), v...))
-	})
-}
-
-// VerifyTypeNotIn applies the NotIn predicate on the "verify_type" field.
-func VerifyTypeNotIn(vs ...string) predicate.Account {
-	v := make([]interface{}, len(vs))
-	for i := range v {
-		v[i] = vs[i]
-	}
-	return predicate.Account(func(s *sql.Selector) {
-		// if not arguments were provided, append the FALSE constants,
-		// since we can't apply "IN ()". This will make this predicate falsy.
-		if len(v) == 0 {
-			s.Where(sql.False())
-			return
-		}
-		s.Where(sql.NotIn(s.C(FieldVerifyType), v...))
-	})
-}
-
-// VerifyTypeGT applies the GT predicate on the "verify_type" field.
-func VerifyTypeGT(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeGTE applies the GTE predicate on the "verify_type" field.
-func VerifyTypeGTE(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeLT applies the LT predicate on the "verify_type" field.
-func VerifyTypeLT(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeLTE applies the LTE predicate on the "verify_type" field.
-func VerifyTypeLTE(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeContains applies the Contains predicate on the "verify_type" field.
-func VerifyTypeContains(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeHasPrefix applies the HasPrefix predicate on the "verify_type" field.
-func VerifyTypeHasPrefix(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeHasSuffix applies the HasSuffix predicate on the "verify_type" field.
-func VerifyTypeHasSuffix(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeEqualFold applies the EqualFold predicate on the "verify_type" field.
-func VerifyTypeEqualFold(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldVerifyType), v))
-	})
-}
-
-// VerifyTypeContainsFold applies the ContainsFold predicate on the "verify_type" field.
-func VerifyTypeContainsFold(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldVerifyType), v))
+		s.Where(sql.ContainsFold(s.C(FieldAccountKid), v))
 	})
 }
 
@@ -1044,6 +1058,228 @@ func PasswordTypeContainsFold(v string) predicate.Account {
 	})
 }
 
+// VerifySecretEQ applies the EQ predicate on the "verify_secret" field.
+func VerifySecretEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretNEQ applies the NEQ predicate on the "verify_secret" field.
+func VerifySecretNEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretIn applies the In predicate on the "verify_secret" field.
+func VerifySecretIn(vs ...string) predicate.Account {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldVerifySecret), v...))
+	})
+}
+
+// VerifySecretNotIn applies the NotIn predicate on the "verify_secret" field.
+func VerifySecretNotIn(vs ...string) predicate.Account {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldVerifySecret), v...))
+	})
+}
+
+// VerifySecretGT applies the GT predicate on the "verify_secret" field.
+func VerifySecretGT(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretGTE applies the GTE predicate on the "verify_secret" field.
+func VerifySecretGTE(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretLT applies the LT predicate on the "verify_secret" field.
+func VerifySecretLT(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretLTE applies the LTE predicate on the "verify_secret" field.
+func VerifySecretLTE(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretContains applies the Contains predicate on the "verify_secret" field.
+func VerifySecretContains(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretHasPrefix applies the HasPrefix predicate on the "verify_secret" field.
+func VerifySecretHasPrefix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretHasSuffix applies the HasSuffix predicate on the "verify_secret" field.
+func VerifySecretHasSuffix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretEqualFold applies the EqualFold predicate on the "verify_secret" field.
+func VerifySecretEqualFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifySecretContainsFold applies the ContainsFold predicate on the "verify_secret" field.
+func VerifySecretContainsFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldVerifySecret), v))
+	})
+}
+
+// VerifyTypeEQ applies the EQ predicate on the "verify_type" field.
+func VerifyTypeEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeNEQ applies the NEQ predicate on the "verify_type" field.
+func VerifyTypeNEQ(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeIn applies the In predicate on the "verify_type" field.
+func VerifyTypeIn(vs ...string) predicate.Account {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.In(s.C(FieldVerifyType), v...))
+	})
+}
+
+// VerifyTypeNotIn applies the NotIn predicate on the "verify_type" field.
+func VerifyTypeNotIn(vs ...string) predicate.Account {
+	v := make([]interface{}, len(vs))
+	for i := range v {
+		v[i] = vs[i]
+	}
+	return predicate.Account(func(s *sql.Selector) {
+		// if not arguments were provided, append the FALSE constants,
+		// since we can't apply "IN ()". This will make this predicate falsy.
+		if len(v) == 0 {
+			s.Where(sql.False())
+			return
+		}
+		s.Where(sql.NotIn(s.C(FieldVerifyType), v...))
+	})
+}
+
+// VerifyTypeGT applies the GT predicate on the "verify_type" field.
+func VerifyTypeGT(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.GT(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeGTE applies the GTE predicate on the "verify_type" field.
+func VerifyTypeGTE(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.GTE(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeLT applies the LT predicate on the "verify_type" field.
+func VerifyTypeLT(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.LT(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeLTE applies the LTE predicate on the "verify_type" field.
+func VerifyTypeLTE(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.LTE(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeContains applies the Contains predicate on the "verify_type" field.
+func VerifyTypeContains(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.Contains(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeHasPrefix applies the HasPrefix predicate on the "verify_type" field.
+func VerifyTypeHasPrefix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasPrefix(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeHasSuffix applies the HasSuffix predicate on the "verify_type" field.
+func VerifyTypeHasSuffix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeEqualFold applies the EqualFold predicate on the "verify_type" field.
+func VerifyTypeEqualFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldVerifyType), v))
+	})
+}
+
+// VerifyTypeContainsFold applies the ContainsFold predicate on the "verify_type" field.
+func VerifyTypeContainsFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldVerifyType), v))
+	})
+}
+
 // UserIDEQ applies the EQ predicate on the "user_id" field.
 func UserIDEQ(v int) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
@@ -1272,22 +1508,22 @@ func StatusLTE(v int) predicate.Account {
 	})
 }
 
-// DescEQ applies the EQ predicate on the "desc" field.
-func DescEQ(v string) predicate.Account {
+// DescriptionEQ applies the EQ predicate on the "description" field.
+func DescriptionEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldDesc), v))
+		s.Where(sql.EQ(s.C(FieldDescription), v))
 	})
 }
 
-// DescNEQ applies the NEQ predicate on the "desc" field.
-func DescNEQ(v string) predicate.Account {
+// DescriptionNEQ applies the NEQ predicate on the "description" field.
+func DescriptionNEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldDesc), v))
+		s.Where(sql.NEQ(s.C(FieldDescription), v))
 	})
 }
 
-// DescIn applies the In predicate on the "desc" field.
-func DescIn(vs ...string) predicate.Account {
+// DescriptionIn applies the In predicate on the "description" field.
+func DescriptionIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1299,12 +1535,12 @@ func DescIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldDesc), v...))
+		s.Where(sql.In(s.C(FieldDescription), v...))
 	})
 }
 
-// DescNotIn applies the NotIn predicate on the "desc" field.
-func DescNotIn(vs ...string) predicate.Account {
+// DescriptionNotIn applies the NotIn predicate on the "description" field.
+func DescriptionNotIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1316,89 +1552,89 @@ func DescNotIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldDesc), v...))
+		s.Where(sql.NotIn(s.C(FieldDescription), v...))
 	})
 }
 
-// DescGT applies the GT predicate on the "desc" field.
-func DescGT(v string) predicate.Account {
+// DescriptionGT applies the GT predicate on the "description" field.
+func DescriptionGT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldDesc), v))
+		s.Where(sql.GT(s.C(FieldDescription), v))
 	})
 }
 
-// DescGTE applies the GTE predicate on the "desc" field.
-func DescGTE(v string) predicate.Account {
+// DescriptionGTE applies the GTE predicate on the "description" field.
+func DescriptionGTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldDesc), v))
+		s.Where(sql.GTE(s.C(FieldDescription), v))
 	})
 }
 
-// DescLT applies the LT predicate on the "desc" field.
-func DescLT(v string) predicate.Account {
+// DescriptionLT applies the LT predicate on the "description" field.
+func DescriptionLT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldDesc), v))
+		s.Where(sql.LT(s.C(FieldDescription), v))
 	})
 }
 
-// DescLTE applies the LTE predicate on the "desc" field.
-func DescLTE(v string) predicate.Account {
+// DescriptionLTE applies the LTE predicate on the "description" field.
+func DescriptionLTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldDesc), v))
+		s.Where(sql.LTE(s.C(FieldDescription), v))
 	})
 }
 
-// DescContains applies the Contains predicate on the "desc" field.
-func DescContains(v string) predicate.Account {
+// DescriptionContains applies the Contains predicate on the "description" field.
+func DescriptionContains(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldDesc), v))
+		s.Where(sql.Contains(s.C(FieldDescription), v))
 	})
 }
 
-// DescHasPrefix applies the HasPrefix predicate on the "desc" field.
-func DescHasPrefix(v string) predicate.Account {
+// DescriptionHasPrefix applies the HasPrefix predicate on the "description" field.
+func DescriptionHasPrefix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldDesc), v))
+		s.Where(sql.HasPrefix(s.C(FieldDescription), v))
 	})
 }
 
-// DescHasSuffix applies the HasSuffix predicate on the "desc" field.
-func DescHasSuffix(v string) predicate.Account {
+// DescriptionHasSuffix applies the HasSuffix predicate on the "description" field.
+func DescriptionHasSuffix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldDesc), v))
+		s.Where(sql.HasSuffix(s.C(FieldDescription), v))
 	})
 }
 
-// DescEqualFold applies the EqualFold predicate on the "desc" field.
-func DescEqualFold(v string) predicate.Account {
+// DescriptionEqualFold applies the EqualFold predicate on the "description" field.
+func DescriptionEqualFold(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldDesc), v))
+		s.Where(sql.EqualFold(s.C(FieldDescription), v))
 	})
 }
 
-// DescContainsFold applies the ContainsFold predicate on the "desc" field.
-func DescContainsFold(v string) predicate.Account {
+// DescriptionContainsFold applies the ContainsFold predicate on the "description" field.
+func DescriptionContainsFold(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldDesc), v))
+		s.Where(sql.ContainsFold(s.C(FieldDescription), v))
 	})
 }
 
-// Oauth2IDEQ applies the EQ predicate on the "oauth2_id" field.
-func Oauth2IDEQ(v int) predicate.Account {
+// Oa2TokenEQ applies the EQ predicate on the "oa2_token" field.
+func Oa2TokenEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldOauth2ID), v))
+		s.Where(sql.EQ(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2IDNEQ applies the NEQ predicate on the "oauth2_id" field.
-func Oauth2IDNEQ(v int) predicate.Account {
+// Oa2TokenNEQ applies the NEQ predicate on the "oa2_token" field.
+func Oa2TokenNEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldOauth2ID), v))
+		s.Where(sql.NEQ(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2IDIn applies the In predicate on the "oauth2_id" field.
-func Oauth2IDIn(vs ...int) predicate.Account {
+// Oa2TokenIn applies the In predicate on the "oa2_token" field.
+func Oa2TokenIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1410,12 +1646,12 @@ func Oauth2IDIn(vs ...int) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldOauth2ID), v...))
+		s.Where(sql.In(s.C(FieldOa2Token), v...))
 	})
 }
 
-// Oauth2IDNotIn applies the NotIn predicate on the "oauth2_id" field.
-func Oauth2IDNotIn(vs ...int) predicate.Account {
+// Oa2TokenNotIn applies the NotIn predicate on the "oa2_token" field.
+func Oa2TokenNotIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1427,54 +1663,89 @@ func Oauth2IDNotIn(vs ...int) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldOauth2ID), v...))
+		s.Where(sql.NotIn(s.C(FieldOa2Token), v...))
 	})
 }
 
-// Oauth2IDGT applies the GT predicate on the "oauth2_id" field.
-func Oauth2IDGT(v int) predicate.Account {
+// Oa2TokenGT applies the GT predicate on the "oa2_token" field.
+func Oa2TokenGT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldOauth2ID), v))
+		s.Where(sql.GT(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2IDGTE applies the GTE predicate on the "oauth2_id" field.
-func Oauth2IDGTE(v int) predicate.Account {
+// Oa2TokenGTE applies the GTE predicate on the "oa2_token" field.
+func Oa2TokenGTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldOauth2ID), v))
+		s.Where(sql.GTE(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2IDLT applies the LT predicate on the "oauth2_id" field.
-func Oauth2IDLT(v int) predicate.Account {
+// Oa2TokenLT applies the LT predicate on the "oa2_token" field.
+func Oa2TokenLT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldOauth2ID), v))
+		s.Where(sql.LT(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2IDLTE applies the LTE predicate on the "oauth2_id" field.
-func Oauth2IDLTE(v int) predicate.Account {
+// Oa2TokenLTE applies the LTE predicate on the "oa2_token" field.
+func Oa2TokenLTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldOauth2ID), v))
+		s.Where(sql.LTE(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2TokenEQ applies the EQ predicate on the "oauth2_token" field.
-func Oauth2TokenEQ(v string) predicate.Account {
+// Oa2TokenContains applies the Contains predicate on the "oa2_token" field.
+func Oa2TokenContains(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldOauth2Token), v))
+		s.Where(sql.Contains(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2TokenNEQ applies the NEQ predicate on the "oauth2_token" field.
-func Oauth2TokenNEQ(v string) predicate.Account {
+// Oa2TokenHasPrefix applies the HasPrefix predicate on the "oa2_token" field.
+func Oa2TokenHasPrefix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldOauth2Token), v))
+		s.Where(sql.HasPrefix(s.C(FieldOa2Token), v))
 	})
 }
 
-// Oauth2TokenIn applies the In predicate on the "oauth2_token" field.
-func Oauth2TokenIn(vs ...string) predicate.Account {
+// Oa2TokenHasSuffix applies the HasSuffix predicate on the "oa2_token" field.
+func Oa2TokenHasSuffix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldOa2Token), v))
+	})
+}
+
+// Oa2TokenEqualFold applies the EqualFold predicate on the "oa2_token" field.
+func Oa2TokenEqualFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldOa2Token), v))
+	})
+}
+
+// Oa2TokenContainsFold applies the ContainsFold predicate on the "oa2_token" field.
+func Oa2TokenContainsFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldOa2Token), v))
+	})
+}
+
+// Oa2ExpiredEQ applies the EQ predicate on the "oa2_expired" field.
+func Oa2ExpiredEQ(v time.Time) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldOa2Expired), v))
+	})
+}
+
+// Oa2ExpiredNEQ applies the NEQ predicate on the "oa2_expired" field.
+func Oa2ExpiredNEQ(v time.Time) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldOa2Expired), v))
+	})
+}
+
+// Oa2ExpiredIn applies the In predicate on the "oa2_expired" field.
+func Oa2ExpiredIn(vs ...time.Time) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1486,12 +1757,12 @@ func Oauth2TokenIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldOauth2Token), v...))
+		s.Where(sql.In(s.C(FieldOa2Expired), v...))
 	})
 }
 
-// Oauth2TokenNotIn applies the NotIn predicate on the "oauth2_token" field.
-func Oauth2TokenNotIn(vs ...string) predicate.Account {
+// Oa2ExpiredNotIn applies the NotIn predicate on the "oa2_expired" field.
+func Oa2ExpiredNotIn(vs ...time.Time) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1503,89 +1774,54 @@ func Oauth2TokenNotIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldOauth2Token), v...))
+		s.Where(sql.NotIn(s.C(FieldOa2Expired), v...))
 	})
 }
 
-// Oauth2TokenGT applies the GT predicate on the "oauth2_token" field.
-func Oauth2TokenGT(v string) predicate.Account {
+// Oa2ExpiredGT applies the GT predicate on the "oa2_expired" field.
+func Oa2ExpiredGT(v time.Time) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldOauth2Token), v))
+		s.Where(sql.GT(s.C(FieldOa2Expired), v))
 	})
 }
 
-// Oauth2TokenGTE applies the GTE predicate on the "oauth2_token" field.
-func Oauth2TokenGTE(v string) predicate.Account {
+// Oa2ExpiredGTE applies the GTE predicate on the "oa2_expired" field.
+func Oa2ExpiredGTE(v time.Time) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldOauth2Token), v))
+		s.Where(sql.GTE(s.C(FieldOa2Expired), v))
 	})
 }
 
-// Oauth2TokenLT applies the LT predicate on the "oauth2_token" field.
-func Oauth2TokenLT(v string) predicate.Account {
+// Oa2ExpiredLT applies the LT predicate on the "oa2_expired" field.
+func Oa2ExpiredLT(v time.Time) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldOauth2Token), v))
+		s.Where(sql.LT(s.C(FieldOa2Expired), v))
 	})
 }
 
-// Oauth2TokenLTE applies the LTE predicate on the "oauth2_token" field.
-func Oauth2TokenLTE(v string) predicate.Account {
+// Oa2ExpiredLTE applies the LTE predicate on the "oa2_expired" field.
+func Oa2ExpiredLTE(v time.Time) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldOauth2Token), v))
+		s.Where(sql.LTE(s.C(FieldOa2Expired), v))
 	})
 }
 
-// Oauth2TokenContains applies the Contains predicate on the "oauth2_token" field.
-func Oauth2TokenContains(v string) predicate.Account {
+// Oa2FakeEQ applies the EQ predicate on the "oa2_fake" field.
+func Oa2FakeEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldOauth2Token), v))
+		s.Where(sql.EQ(s.C(FieldOa2Fake), v))
 	})
 }
 
-// Oauth2TokenHasPrefix applies the HasPrefix predicate on the "oauth2_token" field.
-func Oauth2TokenHasPrefix(v string) predicate.Account {
+// Oa2FakeNEQ applies the NEQ predicate on the "oa2_fake" field.
+func Oa2FakeNEQ(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldOauth2Token), v))
+		s.Where(sql.NEQ(s.C(FieldOa2Fake), v))
 	})
 }
 
-// Oauth2TokenHasSuffix applies the HasSuffix predicate on the "oauth2_token" field.
-func Oauth2TokenHasSuffix(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldOauth2Token), v))
-	})
-}
-
-// Oauth2TokenEqualFold applies the EqualFold predicate on the "oauth2_token" field.
-func Oauth2TokenEqualFold(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldOauth2Token), v))
-	})
-}
-
-// Oauth2TokenContainsFold applies the ContainsFold predicate on the "oauth2_token" field.
-func Oauth2TokenContainsFold(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldOauth2Token), v))
-	})
-}
-
-// Oauth2TimeEQ applies the EQ predicate on the "oauth2_time" field.
-func Oauth2TimeEQ(v time.Time) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldOauth2Time), v))
-	})
-}
-
-// Oauth2TimeNEQ applies the NEQ predicate on the "oauth2_time" field.
-func Oauth2TimeNEQ(v time.Time) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldOauth2Time), v))
-	})
-}
-
-// Oauth2TimeIn applies the In predicate on the "oauth2_time" field.
-func Oauth2TimeIn(vs ...time.Time) predicate.Account {
+// Oa2FakeIn applies the In predicate on the "oa2_fake" field.
+func Oa2FakeIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1597,12 +1833,12 @@ func Oauth2TimeIn(vs ...time.Time) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldOauth2Time), v...))
+		s.Where(sql.In(s.C(FieldOa2Fake), v...))
 	})
 }
 
-// Oauth2TimeNotIn applies the NotIn predicate on the "oauth2_time" field.
-func Oauth2TimeNotIn(vs ...time.Time) predicate.Account {
+// Oa2FakeNotIn applies the NotIn predicate on the "oa2_fake" field.
+func Oa2FakeNotIn(vs ...string) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1614,54 +1850,89 @@ func Oauth2TimeNotIn(vs ...time.Time) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldOauth2Time), v...))
+		s.Where(sql.NotIn(s.C(FieldOa2Fake), v...))
 	})
 }
 
-// Oauth2TimeGT applies the GT predicate on the "oauth2_time" field.
-func Oauth2TimeGT(v time.Time) predicate.Account {
+// Oa2FakeGT applies the GT predicate on the "oa2_fake" field.
+func Oa2FakeGT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldOauth2Time), v))
+		s.Where(sql.GT(s.C(FieldOa2Fake), v))
 	})
 }
 
-// Oauth2TimeGTE applies the GTE predicate on the "oauth2_time" field.
-func Oauth2TimeGTE(v time.Time) predicate.Account {
+// Oa2FakeGTE applies the GTE predicate on the "oa2_fake" field.
+func Oa2FakeGTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldOauth2Time), v))
+		s.Where(sql.GTE(s.C(FieldOa2Fake), v))
 	})
 }
 
-// Oauth2TimeLT applies the LT predicate on the "oauth2_time" field.
-func Oauth2TimeLT(v time.Time) predicate.Account {
+// Oa2FakeLT applies the LT predicate on the "oa2_fake" field.
+func Oa2FakeLT(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldOauth2Time), v))
+		s.Where(sql.LT(s.C(FieldOa2Fake), v))
 	})
 }
 
-// Oauth2TimeLTE applies the LTE predicate on the "oauth2_time" field.
-func Oauth2TimeLTE(v time.Time) predicate.Account {
+// Oa2FakeLTE applies the LTE predicate on the "oa2_fake" field.
+func Oa2FakeLTE(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldOauth2Time), v))
+		s.Where(sql.LTE(s.C(FieldOa2Fake), v))
 	})
 }
 
-// TokenFakeEQ applies the EQ predicate on the "token_fake" field.
-func TokenFakeEQ(v string) predicate.Account {
+// Oa2FakeContains applies the Contains predicate on the "oa2_fake" field.
+func Oa2FakeContains(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EQ(s.C(FieldTokenFake), v))
+		s.Where(sql.Contains(s.C(FieldOa2Fake), v))
 	})
 }
 
-// TokenFakeNEQ applies the NEQ predicate on the "token_fake" field.
-func TokenFakeNEQ(v string) predicate.Account {
+// Oa2FakeHasPrefix applies the HasPrefix predicate on the "oa2_fake" field.
+func Oa2FakeHasPrefix(v string) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.NEQ(s.C(FieldTokenFake), v))
+		s.Where(sql.HasPrefix(s.C(FieldOa2Fake), v))
 	})
 }
 
-// TokenFakeIn applies the In predicate on the "token_fake" field.
-func TokenFakeIn(vs ...string) predicate.Account {
+// Oa2FakeHasSuffix applies the HasSuffix predicate on the "oa2_fake" field.
+func Oa2FakeHasSuffix(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.HasSuffix(s.C(FieldOa2Fake), v))
+	})
+}
+
+// Oa2FakeEqualFold applies the EqualFold predicate on the "oa2_fake" field.
+func Oa2FakeEqualFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EqualFold(s.C(FieldOa2Fake), v))
+	})
+}
+
+// Oa2FakeContainsFold applies the ContainsFold predicate on the "oa2_fake" field.
+func Oa2FakeContainsFold(v string) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.ContainsFold(s.C(FieldOa2Fake), v))
+	})
+}
+
+// Oa2ClientEQ applies the EQ predicate on the "oa2_client" field.
+func Oa2ClientEQ(v int) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.EQ(s.C(FieldOa2Client), v))
+	})
+}
+
+// Oa2ClientNEQ applies the NEQ predicate on the "oa2_client" field.
+func Oa2ClientNEQ(v int) predicate.Account {
+	return predicate.Account(func(s *sql.Selector) {
+		s.Where(sql.NEQ(s.C(FieldOa2Client), v))
+	})
+}
+
+// Oa2ClientIn applies the In predicate on the "oa2_client" field.
+func Oa2ClientIn(vs ...int) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1673,12 +1944,12 @@ func TokenFakeIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.In(s.C(FieldTokenFake), v...))
+		s.Where(sql.In(s.C(FieldOa2Client), v...))
 	})
 }
 
-// TokenFakeNotIn applies the NotIn predicate on the "token_fake" field.
-func TokenFakeNotIn(vs ...string) predicate.Account {
+// Oa2ClientNotIn applies the NotIn predicate on the "oa2_client" field.
+func Oa2ClientNotIn(vs ...int) predicate.Account {
 	v := make([]interface{}, len(vs))
 	for i := range v {
 		v[i] = vs[i]
@@ -1690,70 +1961,35 @@ func TokenFakeNotIn(vs ...string) predicate.Account {
 			s.Where(sql.False())
 			return
 		}
-		s.Where(sql.NotIn(s.C(FieldTokenFake), v...))
+		s.Where(sql.NotIn(s.C(FieldOa2Client), v...))
 	})
 }
 
-// TokenFakeGT applies the GT predicate on the "token_fake" field.
-func TokenFakeGT(v string) predicate.Account {
+// Oa2ClientGT applies the GT predicate on the "oa2_client" field.
+func Oa2ClientGT(v int) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GT(s.C(FieldTokenFake), v))
+		s.Where(sql.GT(s.C(FieldOa2Client), v))
 	})
 }
 
-// TokenFakeGTE applies the GTE predicate on the "token_fake" field.
-func TokenFakeGTE(v string) predicate.Account {
+// Oa2ClientGTE applies the GTE predicate on the "oa2_client" field.
+func Oa2ClientGTE(v int) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.GTE(s.C(FieldTokenFake), v))
+		s.Where(sql.GTE(s.C(FieldOa2Client), v))
 	})
 }
 
-// TokenFakeLT applies the LT predicate on the "token_fake" field.
-func TokenFakeLT(v string) predicate.Account {
+// Oa2ClientLT applies the LT predicate on the "oa2_client" field.
+func Oa2ClientLT(v int) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LT(s.C(FieldTokenFake), v))
+		s.Where(sql.LT(s.C(FieldOa2Client), v))
 	})
 }
 
-// TokenFakeLTE applies the LTE predicate on the "token_fake" field.
-func TokenFakeLTE(v string) predicate.Account {
+// Oa2ClientLTE applies the LTE predicate on the "oa2_client" field.
+func Oa2ClientLTE(v int) predicate.Account {
 	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.LTE(s.C(FieldTokenFake), v))
-	})
-}
-
-// TokenFakeContains applies the Contains predicate on the "token_fake" field.
-func TokenFakeContains(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.Contains(s.C(FieldTokenFake), v))
-	})
-}
-
-// TokenFakeHasPrefix applies the HasPrefix predicate on the "token_fake" field.
-func TokenFakeHasPrefix(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasPrefix(s.C(FieldTokenFake), v))
-	})
-}
-
-// TokenFakeHasSuffix applies the HasSuffix predicate on the "token_fake" field.
-func TokenFakeHasSuffix(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.HasSuffix(s.C(FieldTokenFake), v))
-	})
-}
-
-// TokenFakeEqualFold applies the EqualFold predicate on the "token_fake" field.
-func TokenFakeEqualFold(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.EqualFold(s.C(FieldTokenFake), v))
-	})
-}
-
-// TokenFakeContainsFold applies the ContainsFold predicate on the "token_fake" field.
-func TokenFakeContainsFold(v string) predicate.Account {
-	return predicate.Account(func(s *sql.Selector) {
-		s.Where(sql.ContainsFold(s.C(FieldTokenFake), v))
+		s.Where(sql.LTE(s.C(FieldOa2Client), v))
 	})
 }
 

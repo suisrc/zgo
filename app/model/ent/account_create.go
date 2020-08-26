@@ -20,27 +20,27 @@ type AccountCreate struct {
 	hooks    []Hook
 }
 
+// SetPid sets the pid field.
+func (ac *AccountCreate) SetPid(s string) *AccountCreate {
+	ac.mutation.SetPid(s)
+	return ac
+}
+
 // SetAccount sets the account field.
 func (ac *AccountCreate) SetAccount(s string) *AccountCreate {
 	ac.mutation.SetAccount(s)
 	return ac
 }
 
-// SetAccountType sets the account_type field.
-func (ac *AccountCreate) SetAccountType(s string) *AccountCreate {
-	ac.mutation.SetAccountType(s)
+// SetAccountTyp sets the account_typ field.
+func (ac *AccountCreate) SetAccountTyp(s string) *AccountCreate {
+	ac.mutation.SetAccountTyp(s)
 	return ac
 }
 
-// SetPlatform sets the platform field.
-func (ac *AccountCreate) SetPlatform(s string) *AccountCreate {
-	ac.mutation.SetPlatform(s)
-	return ac
-}
-
-// SetVerifyType sets the verify_type field.
-func (ac *AccountCreate) SetVerifyType(s string) *AccountCreate {
-	ac.mutation.SetVerifyType(s)
+// SetAccountKid sets the account_kid field.
+func (ac *AccountCreate) SetAccountKid(s string) *AccountCreate {
+	ac.mutation.SetAccountKid(s)
 	return ac
 }
 
@@ -62,6 +62,18 @@ func (ac *AccountCreate) SetPasswordType(s string) *AccountCreate {
 	return ac
 }
 
+// SetVerifySecret sets the verify_secret field.
+func (ac *AccountCreate) SetVerifySecret(s string) *AccountCreate {
+	ac.mutation.SetVerifySecret(s)
+	return ac
+}
+
+// SetVerifyType sets the verify_type field.
+func (ac *AccountCreate) SetVerifyType(s string) *AccountCreate {
+	ac.mutation.SetVerifyType(s)
+	return ac
+}
+
 // SetUserID sets the user_id field.
 func (ac *AccountCreate) SetUserID(i int) *AccountCreate {
 	ac.mutation.SetUserID(i)
@@ -80,33 +92,33 @@ func (ac *AccountCreate) SetStatus(i int) *AccountCreate {
 	return ac
 }
 
-// SetDesc sets the desc field.
-func (ac *AccountCreate) SetDesc(s string) *AccountCreate {
-	ac.mutation.SetDesc(s)
+// SetDescription sets the description field.
+func (ac *AccountCreate) SetDescription(s string) *AccountCreate {
+	ac.mutation.SetDescription(s)
 	return ac
 }
 
-// SetOauth2ID sets the oauth2_id field.
-func (ac *AccountCreate) SetOauth2ID(i int) *AccountCreate {
-	ac.mutation.SetOauth2ID(i)
+// SetOa2Token sets the oa2_token field.
+func (ac *AccountCreate) SetOa2Token(s string) *AccountCreate {
+	ac.mutation.SetOa2Token(s)
 	return ac
 }
 
-// SetOauth2Token sets the oauth2_token field.
-func (ac *AccountCreate) SetOauth2Token(s string) *AccountCreate {
-	ac.mutation.SetOauth2Token(s)
+// SetOa2Expired sets the oa2_expired field.
+func (ac *AccountCreate) SetOa2Expired(t time.Time) *AccountCreate {
+	ac.mutation.SetOa2Expired(t)
 	return ac
 }
 
-// SetOauth2Time sets the oauth2_time field.
-func (ac *AccountCreate) SetOauth2Time(t time.Time) *AccountCreate {
-	ac.mutation.SetOauth2Time(t)
+// SetOa2Fake sets the oa2_fake field.
+func (ac *AccountCreate) SetOa2Fake(s string) *AccountCreate {
+	ac.mutation.SetOa2Fake(s)
 	return ac
 }
 
-// SetTokenFake sets the token_fake field.
-func (ac *AccountCreate) SetTokenFake(s string) *AccountCreate {
-	ac.mutation.SetTokenFake(s)
+// SetOa2Client sets the oa2_client field.
+func (ac *AccountCreate) SetOa2Client(i int) *AccountCreate {
+	ac.mutation.SetOa2Client(i)
 	return ac
 }
 
@@ -201,17 +213,17 @@ func (ac *AccountCreate) Mutation() *AccountMutation {
 
 // Save creates the Account in the database.
 func (ac *AccountCreate) Save(ctx context.Context) (*Account, error) {
+	if _, ok := ac.mutation.Pid(); !ok {
+		return nil, &ValidationError{Name: "pid", err: errors.New("ent: missing required field \"pid\"")}
+	}
 	if _, ok := ac.mutation.Account(); !ok {
 		return nil, &ValidationError{Name: "account", err: errors.New("ent: missing required field \"account\"")}
 	}
-	if _, ok := ac.mutation.AccountType(); !ok {
-		return nil, &ValidationError{Name: "account_type", err: errors.New("ent: missing required field \"account_type\"")}
+	if _, ok := ac.mutation.AccountTyp(); !ok {
+		return nil, &ValidationError{Name: "account_typ", err: errors.New("ent: missing required field \"account_typ\"")}
 	}
-	if _, ok := ac.mutation.Platform(); !ok {
-		return nil, &ValidationError{Name: "platform", err: errors.New("ent: missing required field \"platform\"")}
-	}
-	if _, ok := ac.mutation.VerifyType(); !ok {
-		return nil, &ValidationError{Name: "verify_type", err: errors.New("ent: missing required field \"verify_type\"")}
+	if _, ok := ac.mutation.AccountKid(); !ok {
+		return nil, &ValidationError{Name: "account_kid", err: errors.New("ent: missing required field \"account_kid\"")}
 	}
 	if _, ok := ac.mutation.Password(); !ok {
 		return nil, &ValidationError{Name: "password", err: errors.New("ent: missing required field \"password\"")}
@@ -222,6 +234,12 @@ func (ac *AccountCreate) Save(ctx context.Context) (*Account, error) {
 	if _, ok := ac.mutation.PasswordType(); !ok {
 		return nil, &ValidationError{Name: "password_type", err: errors.New("ent: missing required field \"password_type\"")}
 	}
+	if _, ok := ac.mutation.VerifySecret(); !ok {
+		return nil, &ValidationError{Name: "verify_secret", err: errors.New("ent: missing required field \"verify_secret\"")}
+	}
+	if _, ok := ac.mutation.VerifyType(); !ok {
+		return nil, &ValidationError{Name: "verify_type", err: errors.New("ent: missing required field \"verify_type\"")}
+	}
 	if _, ok := ac.mutation.UserID(); !ok {
 		return nil, &ValidationError{Name: "user_id", err: errors.New("ent: missing required field \"user_id\"")}
 	}
@@ -231,20 +249,20 @@ func (ac *AccountCreate) Save(ctx context.Context) (*Account, error) {
 	if _, ok := ac.mutation.Status(); !ok {
 		return nil, &ValidationError{Name: "status", err: errors.New("ent: missing required field \"status\"")}
 	}
-	if _, ok := ac.mutation.Desc(); !ok {
-		return nil, &ValidationError{Name: "desc", err: errors.New("ent: missing required field \"desc\"")}
+	if _, ok := ac.mutation.Description(); !ok {
+		return nil, &ValidationError{Name: "description", err: errors.New("ent: missing required field \"description\"")}
 	}
-	if _, ok := ac.mutation.Oauth2ID(); !ok {
-		return nil, &ValidationError{Name: "oauth2_id", err: errors.New("ent: missing required field \"oauth2_id\"")}
+	if _, ok := ac.mutation.Oa2Token(); !ok {
+		return nil, &ValidationError{Name: "oa2_token", err: errors.New("ent: missing required field \"oa2_token\"")}
 	}
-	if _, ok := ac.mutation.Oauth2Token(); !ok {
-		return nil, &ValidationError{Name: "oauth2_token", err: errors.New("ent: missing required field \"oauth2_token\"")}
+	if _, ok := ac.mutation.Oa2Expired(); !ok {
+		return nil, &ValidationError{Name: "oa2_expired", err: errors.New("ent: missing required field \"oa2_expired\"")}
 	}
-	if _, ok := ac.mutation.Oauth2Time(); !ok {
-		return nil, &ValidationError{Name: "oauth2_time", err: errors.New("ent: missing required field \"oauth2_time\"")}
+	if _, ok := ac.mutation.Oa2Fake(); !ok {
+		return nil, &ValidationError{Name: "oa2_fake", err: errors.New("ent: missing required field \"oa2_fake\"")}
 	}
-	if _, ok := ac.mutation.TokenFake(); !ok {
-		return nil, &ValidationError{Name: "token_fake", err: errors.New("ent: missing required field \"token_fake\"")}
+	if _, ok := ac.mutation.Oa2Client(); !ok {
+		return nil, &ValidationError{Name: "oa2_client", err: errors.New("ent: missing required field \"oa2_client\"")}
 	}
 	if _, ok := ac.mutation.Creator(); !ok {
 		return nil, &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
@@ -339,6 +357,14 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			},
 		}
 	)
+	if value, ok := ac.mutation.Pid(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldPid,
+		})
+		a.Pid = value
+	}
 	if value, ok := ac.mutation.Account(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -347,29 +373,21 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		})
 		a.Account = value
 	}
-	if value, ok := ac.mutation.AccountType(); ok {
+	if value, ok := ac.mutation.AccountTyp(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldAccountType,
+			Column: account.FieldAccountTyp,
 		})
-		a.AccountType = value
+		a.AccountTyp = value
 	}
-	if value, ok := ac.mutation.Platform(); ok {
+	if value, ok := ac.mutation.AccountKid(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldPlatform,
+			Column: account.FieldAccountKid,
 		})
-		a.Platform = value
-	}
-	if value, ok := ac.mutation.VerifyType(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: account.FieldVerifyType,
-		})
-		a.VerifyType = value
+		a.AccountKid = value
 	}
 	if value, ok := ac.mutation.Password(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -395,6 +413,22 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		})
 		a.PasswordType = value
 	}
+	if value, ok := ac.mutation.VerifySecret(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldVerifySecret,
+		})
+		a.VerifySecret = value
+	}
+	if value, ok := ac.mutation.VerifyType(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldVerifyType,
+		})
+		a.VerifyType = value
+	}
 	if value, ok := ac.mutation.UserID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeInt,
@@ -419,45 +453,45 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 		})
 		a.Status = value
 	}
-	if value, ok := ac.mutation.Desc(); ok {
+	if value, ok := ac.mutation.Description(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldDesc,
+			Column: account.FieldDescription,
 		})
-		a.Desc = value
+		a.Description = value
 	}
-	if value, ok := ac.mutation.Oauth2ID(); ok {
-		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: account.FieldOauth2ID,
-		})
-		a.Oauth2ID = value
-	}
-	if value, ok := ac.mutation.Oauth2Token(); ok {
+	if value, ok := ac.mutation.Oa2Token(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldOauth2Token,
+			Column: account.FieldOa2Token,
 		})
-		a.Oauth2Token = value
+		a.Oa2Token = value
 	}
-	if value, ok := ac.mutation.Oauth2Time(); ok {
+	if value, ok := ac.mutation.Oa2Expired(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: account.FieldOauth2Time,
+			Column: account.FieldOa2Expired,
 		})
-		a.Oauth2Time = value
+		a.Oa2Expired = value
 	}
-	if value, ok := ac.mutation.TokenFake(); ok {
+	if value, ok := ac.mutation.Oa2Fake(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldTokenFake,
+			Column: account.FieldOa2Fake,
 		})
-		a.TokenFake = value
+		a.Oa2Fake = value
+	}
+	if value, ok := ac.mutation.Oa2Client(); ok {
+		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: account.FieldOa2Client,
+		})
+		a.Oa2Client = value
 	}
 	if value, ok := ac.mutation.Creator(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{

@@ -30,7 +30,7 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody) (*schema.S
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
 	// 验证密码
-	if b, err := a.verifyPassword(b.Password, &account); err != nil {
+	if b, err := a.VerifyPassword(b.Password, &account); err != nil {
 		logger.Errorf(c, err.Error()) // 密码验证发生异常
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	} else if !b {
@@ -49,7 +49,7 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 	}
 	// 用户
 	user := schema.SigninGpaUser{}
-	if err := a.Sqlx.Get(&user, user.SQLByID(), account.UserID); err != nil {
+	if err := user.QueryByID(a.Sqlx, account.UserID); err != nil {
 		logger.Errorf(c, err.Error()) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
 	} else if !user.Status {
@@ -60,6 +60,8 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 
 	// 角色
 	if account.RoleID.Valid {
+		// 账户已经绑定角色, 失败账户角色登陆
+		// 注意Role和User是通过UserRole关联,除此之外,可以通过直接配置账户,以使他具有固定的角色,该绑定关系脱离user_role管理
 		role := schema.SigninGpaRole{}
 		if err := a.Sqlx.Get(&role, role.SQLByID(), account.RoleID); err != nil {
 			logger.Errorf(c, err.Error())
@@ -103,7 +105,7 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 	return &suser, nil
 }
 
-// 验证密码
+// VerifyPassword 验证密码
 //============================================================================================
 func (a *Signin) VerifyPassword(pwd string, acc *schema.SigninGpaAccount) (bool, error) {
 	ok, _ := a.Passwd.Verify(&PasswdCheck{
@@ -121,13 +123,13 @@ type PasswdCheck struct {
 
 var _ passwd.IEntity = &PasswdCheck{}
 
-// Left 输入的密码
-func (a *PasswdCheck) Left() string {
+// Target 输入的密码
+func (a *PasswdCheck) Target() string {
 	return a.Password
 }
 
-// Right 保存的加密密码
-func (a *PasswdCheck) Right() string {
+// Source 保存的加密密码
+func (a *PasswdCheck) Source() string {
 	return a.Account.Password.String
 }
 

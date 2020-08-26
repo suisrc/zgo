@@ -28,27 +28,27 @@ func (au *AccountUpdate) Where(ps ...predicate.Account) *AccountUpdate {
 	return au
 }
 
+// SetPid sets the pid field.
+func (au *AccountUpdate) SetPid(s string) *AccountUpdate {
+	au.mutation.SetPid(s)
+	return au
+}
+
 // SetAccount sets the account field.
 func (au *AccountUpdate) SetAccount(s string) *AccountUpdate {
 	au.mutation.SetAccount(s)
 	return au
 }
 
-// SetAccountType sets the account_type field.
-func (au *AccountUpdate) SetAccountType(s string) *AccountUpdate {
-	au.mutation.SetAccountType(s)
+// SetAccountTyp sets the account_typ field.
+func (au *AccountUpdate) SetAccountTyp(s string) *AccountUpdate {
+	au.mutation.SetAccountTyp(s)
 	return au
 }
 
-// SetPlatform sets the platform field.
-func (au *AccountUpdate) SetPlatform(s string) *AccountUpdate {
-	au.mutation.SetPlatform(s)
-	return au
-}
-
-// SetVerifyType sets the verify_type field.
-func (au *AccountUpdate) SetVerifyType(s string) *AccountUpdate {
-	au.mutation.SetVerifyType(s)
+// SetAccountKid sets the account_kid field.
+func (au *AccountUpdate) SetAccountKid(s string) *AccountUpdate {
+	au.mutation.SetAccountKid(s)
 	return au
 }
 
@@ -67,6 +67,18 @@ func (au *AccountUpdate) SetPasswordSalt(s string) *AccountUpdate {
 // SetPasswordType sets the password_type field.
 func (au *AccountUpdate) SetPasswordType(s string) *AccountUpdate {
 	au.mutation.SetPasswordType(s)
+	return au
+}
+
+// SetVerifySecret sets the verify_secret field.
+func (au *AccountUpdate) SetVerifySecret(s string) *AccountUpdate {
+	au.mutation.SetVerifySecret(s)
+	return au
+}
+
+// SetVerifyType sets the verify_type field.
+func (au *AccountUpdate) SetVerifyType(s string) *AccountUpdate {
+	au.mutation.SetVerifyType(s)
 	return au
 }
 
@@ -109,40 +121,40 @@ func (au *AccountUpdate) AddStatus(i int) *AccountUpdate {
 	return au
 }
 
-// SetDesc sets the desc field.
-func (au *AccountUpdate) SetDesc(s string) *AccountUpdate {
-	au.mutation.SetDesc(s)
+// SetDescription sets the description field.
+func (au *AccountUpdate) SetDescription(s string) *AccountUpdate {
+	au.mutation.SetDescription(s)
 	return au
 }
 
-// SetOauth2ID sets the oauth2_id field.
-func (au *AccountUpdate) SetOauth2ID(i int) *AccountUpdate {
-	au.mutation.ResetOauth2ID()
-	au.mutation.SetOauth2ID(i)
+// SetOa2Token sets the oa2_token field.
+func (au *AccountUpdate) SetOa2Token(s string) *AccountUpdate {
+	au.mutation.SetOa2Token(s)
 	return au
 }
 
-// AddOauth2ID adds i to oauth2_id.
-func (au *AccountUpdate) AddOauth2ID(i int) *AccountUpdate {
-	au.mutation.AddOauth2ID(i)
+// SetOa2Expired sets the oa2_expired field.
+func (au *AccountUpdate) SetOa2Expired(t time.Time) *AccountUpdate {
+	au.mutation.SetOa2Expired(t)
 	return au
 }
 
-// SetOauth2Token sets the oauth2_token field.
-func (au *AccountUpdate) SetOauth2Token(s string) *AccountUpdate {
-	au.mutation.SetOauth2Token(s)
+// SetOa2Fake sets the oa2_fake field.
+func (au *AccountUpdate) SetOa2Fake(s string) *AccountUpdate {
+	au.mutation.SetOa2Fake(s)
 	return au
 }
 
-// SetOauth2Time sets the oauth2_time field.
-func (au *AccountUpdate) SetOauth2Time(t time.Time) *AccountUpdate {
-	au.mutation.SetOauth2Time(t)
+// SetOa2Client sets the oa2_client field.
+func (au *AccountUpdate) SetOa2Client(i int) *AccountUpdate {
+	au.mutation.ResetOa2Client()
+	au.mutation.SetOa2Client(i)
 	return au
 }
 
-// SetTokenFake sets the token_fake field.
-func (au *AccountUpdate) SetTokenFake(s string) *AccountUpdate {
-	au.mutation.SetTokenFake(s)
+// AddOa2Client adds i to oa2_client.
+func (au *AccountUpdate) AddOa2Client(i int) *AccountUpdate {
+	au.mutation.AddOa2Client(i)
 	return au
 }
 
@@ -332,6 +344,13 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			}
 		}
 	}
+	if value, ok := au.mutation.Pid(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldPid,
+		})
+	}
 	if value, ok := au.mutation.Account(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -339,25 +358,18 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: account.FieldAccount,
 		})
 	}
-	if value, ok := au.mutation.AccountType(); ok {
+	if value, ok := au.mutation.AccountTyp(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldAccountType,
+			Column: account.FieldAccountTyp,
 		})
 	}
-	if value, ok := au.mutation.Platform(); ok {
+	if value, ok := au.mutation.AccountKid(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldPlatform,
-		})
-	}
-	if value, ok := au.mutation.VerifyType(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: account.FieldVerifyType,
+			Column: account.FieldAccountKid,
 		})
 	}
 	if value, ok := au.mutation.Password(); ok {
@@ -379,6 +391,20 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Type:   field.TypeString,
 			Value:  value,
 			Column: account.FieldPasswordType,
+		})
+	}
+	if value, ok := au.mutation.VerifySecret(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldVerifySecret,
+		})
+	}
+	if value, ok := au.mutation.VerifyType(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldVerifyType,
 		})
 	}
 	if value, ok := au.mutation.UserID(); ok {
@@ -423,46 +449,46 @@ func (au *AccountUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Column: account.FieldStatus,
 		})
 	}
-	if value, ok := au.mutation.Desc(); ok {
+	if value, ok := au.mutation.Description(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldDesc,
+			Column: account.FieldDescription,
 		})
 	}
-	if value, ok := au.mutation.Oauth2ID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: account.FieldOauth2ID,
-		})
-	}
-	if value, ok := au.mutation.AddedOauth2ID(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: account.FieldOauth2ID,
-		})
-	}
-	if value, ok := au.mutation.Oauth2Token(); ok {
+	if value, ok := au.mutation.Oa2Token(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldOauth2Token,
+			Column: account.FieldOa2Token,
 		})
 	}
-	if value, ok := au.mutation.Oauth2Time(); ok {
+	if value, ok := au.mutation.Oa2Expired(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: account.FieldOauth2Time,
+			Column: account.FieldOa2Expired,
 		})
 	}
-	if value, ok := au.mutation.TokenFake(); ok {
+	if value, ok := au.mutation.Oa2Fake(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldTokenFake,
+			Column: account.FieldOa2Fake,
+		})
+	}
+	if value, ok := au.mutation.Oa2Client(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: account.FieldOa2Client,
+		})
+	}
+	if value, ok := au.mutation.AddedOa2Client(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: account.FieldOa2Client,
 		})
 	}
 	if value, ok := au.mutation.Creator(); ok {
@@ -581,27 +607,27 @@ type AccountUpdateOne struct {
 	mutation *AccountMutation
 }
 
+// SetPid sets the pid field.
+func (auo *AccountUpdateOne) SetPid(s string) *AccountUpdateOne {
+	auo.mutation.SetPid(s)
+	return auo
+}
+
 // SetAccount sets the account field.
 func (auo *AccountUpdateOne) SetAccount(s string) *AccountUpdateOne {
 	auo.mutation.SetAccount(s)
 	return auo
 }
 
-// SetAccountType sets the account_type field.
-func (auo *AccountUpdateOne) SetAccountType(s string) *AccountUpdateOne {
-	auo.mutation.SetAccountType(s)
+// SetAccountTyp sets the account_typ field.
+func (auo *AccountUpdateOne) SetAccountTyp(s string) *AccountUpdateOne {
+	auo.mutation.SetAccountTyp(s)
 	return auo
 }
 
-// SetPlatform sets the platform field.
-func (auo *AccountUpdateOne) SetPlatform(s string) *AccountUpdateOne {
-	auo.mutation.SetPlatform(s)
-	return auo
-}
-
-// SetVerifyType sets the verify_type field.
-func (auo *AccountUpdateOne) SetVerifyType(s string) *AccountUpdateOne {
-	auo.mutation.SetVerifyType(s)
+// SetAccountKid sets the account_kid field.
+func (auo *AccountUpdateOne) SetAccountKid(s string) *AccountUpdateOne {
+	auo.mutation.SetAccountKid(s)
 	return auo
 }
 
@@ -620,6 +646,18 @@ func (auo *AccountUpdateOne) SetPasswordSalt(s string) *AccountUpdateOne {
 // SetPasswordType sets the password_type field.
 func (auo *AccountUpdateOne) SetPasswordType(s string) *AccountUpdateOne {
 	auo.mutation.SetPasswordType(s)
+	return auo
+}
+
+// SetVerifySecret sets the verify_secret field.
+func (auo *AccountUpdateOne) SetVerifySecret(s string) *AccountUpdateOne {
+	auo.mutation.SetVerifySecret(s)
+	return auo
+}
+
+// SetVerifyType sets the verify_type field.
+func (auo *AccountUpdateOne) SetVerifyType(s string) *AccountUpdateOne {
+	auo.mutation.SetVerifyType(s)
 	return auo
 }
 
@@ -662,40 +700,40 @@ func (auo *AccountUpdateOne) AddStatus(i int) *AccountUpdateOne {
 	return auo
 }
 
-// SetDesc sets the desc field.
-func (auo *AccountUpdateOne) SetDesc(s string) *AccountUpdateOne {
-	auo.mutation.SetDesc(s)
+// SetDescription sets the description field.
+func (auo *AccountUpdateOne) SetDescription(s string) *AccountUpdateOne {
+	auo.mutation.SetDescription(s)
 	return auo
 }
 
-// SetOauth2ID sets the oauth2_id field.
-func (auo *AccountUpdateOne) SetOauth2ID(i int) *AccountUpdateOne {
-	auo.mutation.ResetOauth2ID()
-	auo.mutation.SetOauth2ID(i)
+// SetOa2Token sets the oa2_token field.
+func (auo *AccountUpdateOne) SetOa2Token(s string) *AccountUpdateOne {
+	auo.mutation.SetOa2Token(s)
 	return auo
 }
 
-// AddOauth2ID adds i to oauth2_id.
-func (auo *AccountUpdateOne) AddOauth2ID(i int) *AccountUpdateOne {
-	auo.mutation.AddOauth2ID(i)
+// SetOa2Expired sets the oa2_expired field.
+func (auo *AccountUpdateOne) SetOa2Expired(t time.Time) *AccountUpdateOne {
+	auo.mutation.SetOa2Expired(t)
 	return auo
 }
 
-// SetOauth2Token sets the oauth2_token field.
-func (auo *AccountUpdateOne) SetOauth2Token(s string) *AccountUpdateOne {
-	auo.mutation.SetOauth2Token(s)
+// SetOa2Fake sets the oa2_fake field.
+func (auo *AccountUpdateOne) SetOa2Fake(s string) *AccountUpdateOne {
+	auo.mutation.SetOa2Fake(s)
 	return auo
 }
 
-// SetOauth2Time sets the oauth2_time field.
-func (auo *AccountUpdateOne) SetOauth2Time(t time.Time) *AccountUpdateOne {
-	auo.mutation.SetOauth2Time(t)
+// SetOa2Client sets the oa2_client field.
+func (auo *AccountUpdateOne) SetOa2Client(i int) *AccountUpdateOne {
+	auo.mutation.ResetOa2Client()
+	auo.mutation.SetOa2Client(i)
 	return auo
 }
 
-// SetTokenFake sets the token_fake field.
-func (auo *AccountUpdateOne) SetTokenFake(s string) *AccountUpdateOne {
-	auo.mutation.SetTokenFake(s)
+// AddOa2Client adds i to oa2_client.
+func (auo *AccountUpdateOne) AddOa2Client(i int) *AccountUpdateOne {
+	auo.mutation.AddOa2Client(i)
 	return auo
 }
 
@@ -883,6 +921,13 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (a *Account, err error
 		return nil, &ValidationError{Name: "ID", err: fmt.Errorf("missing Account.ID for update")}
 	}
 	_spec.Node.ID.Value = id
+	if value, ok := auo.mutation.Pid(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldPid,
+		})
+	}
 	if value, ok := auo.mutation.Account(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
@@ -890,25 +935,18 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (a *Account, err error
 			Column: account.FieldAccount,
 		})
 	}
-	if value, ok := auo.mutation.AccountType(); ok {
+	if value, ok := auo.mutation.AccountTyp(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldAccountType,
+			Column: account.FieldAccountTyp,
 		})
 	}
-	if value, ok := auo.mutation.Platform(); ok {
+	if value, ok := auo.mutation.AccountKid(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldPlatform,
-		})
-	}
-	if value, ok := auo.mutation.VerifyType(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeString,
-			Value:  value,
-			Column: account.FieldVerifyType,
+			Column: account.FieldAccountKid,
 		})
 	}
 	if value, ok := auo.mutation.Password(); ok {
@@ -930,6 +968,20 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (a *Account, err error
 			Type:   field.TypeString,
 			Value:  value,
 			Column: account.FieldPasswordType,
+		})
+	}
+	if value, ok := auo.mutation.VerifySecret(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldVerifySecret,
+		})
+	}
+	if value, ok := auo.mutation.VerifyType(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeString,
+			Value:  value,
+			Column: account.FieldVerifyType,
 		})
 	}
 	if value, ok := auo.mutation.UserID(); ok {
@@ -974,46 +1026,46 @@ func (auo *AccountUpdateOne) sqlSave(ctx context.Context) (a *Account, err error
 			Column: account.FieldStatus,
 		})
 	}
-	if value, ok := auo.mutation.Desc(); ok {
+	if value, ok := auo.mutation.Description(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldDesc,
+			Column: account.FieldDescription,
 		})
 	}
-	if value, ok := auo.mutation.Oauth2ID(); ok {
-		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: account.FieldOauth2ID,
-		})
-	}
-	if value, ok := auo.mutation.AddedOauth2ID(); ok {
-		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
-			Type:   field.TypeInt,
-			Value:  value,
-			Column: account.FieldOauth2ID,
-		})
-	}
-	if value, ok := auo.mutation.Oauth2Token(); ok {
+	if value, ok := auo.mutation.Oa2Token(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldOauth2Token,
+			Column: account.FieldOa2Token,
 		})
 	}
-	if value, ok := auo.mutation.Oauth2Time(); ok {
+	if value, ok := auo.mutation.Oa2Expired(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeTime,
 			Value:  value,
-			Column: account.FieldOauth2Time,
+			Column: account.FieldOa2Expired,
 		})
 	}
-	if value, ok := auo.mutation.TokenFake(); ok {
+	if value, ok := auo.mutation.Oa2Fake(); ok {
 		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
 			Type:   field.TypeString,
 			Value:  value,
-			Column: account.FieldTokenFake,
+			Column: account.FieldOa2Fake,
+		})
+	}
+	if value, ok := auo.mutation.Oa2Client(); ok {
+		_spec.Fields.Set = append(_spec.Fields.Set, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: account.FieldOa2Client,
+		})
+	}
+	if value, ok := auo.mutation.AddedOa2Client(); ok {
+		_spec.Fields.Add = append(_spec.Fields.Add, &sqlgraph.FieldSpec{
+			Type:   field.TypeInt,
+			Value:  value,
+			Column: account.FieldOa2Client,
 		})
 	}
 	if value, ok := auo.mutation.Creator(); ok {
