@@ -56,10 +56,11 @@ func (a *AuthOpts) updateFunc(c context.Context) error {
 	opts := map[interface{}]*schema.JwtGpaOpts{}
 	jwtOpt := new(schema.JwtGpaOpts)
 	jwtOpts := []schema.JwtGpaOpts{}
-	if err := jwtOpt.QueryAll(a.Sqlx, jwtOpts); err != nil {
-		logger.Errorf(c, err.Error()) // 更新发生异常
+	if err := jwtOpt.QueryAll(a.Sqlx, &jwtOpts); err != nil {
+		logger.Errorf(c, logger.ErrorWW(err)) // 更新发生异常
 	} else {
 		for _, v := range jwtOpts {
+			v.SecretByte = []byte(v.Secret)
 			opts[v.KID] = &v
 		}
 	}
@@ -97,7 +98,7 @@ func (a *AuthOpts) keyFunc(c context.Context, token *jwtgo.Token, method jwtgo.S
 	if kid, ok := token.Header["kid"]; ok {
 		helper.SetJwtKid(c, kid)
 		if opt, ok := a.jwts[kid]; ok {
-			return opt.Secret, nil
+			return opt.SecretByte, nil
 		}
 		return nil, errors.New("parse jwt, kid error")
 	}
@@ -119,7 +120,7 @@ func (a *AuthOpts) signingFunc(c context.Context, claims jwtgo.Claims, method jw
 				Claims: claims,
 				Method: method,
 			}
-			return token.SignedString(opt.Secret)
+			return token.SignedString(opt.SecretByte)
 		}
 		return "", errors.New("signing jwt kid error")
 	}

@@ -62,6 +62,7 @@ func BuildInjector() (*Injector, func(), error) {
 		Passwd: validator,
 	}
 	apiSignin := &api.Signin{
+		GPA:           gpa,
 		Auther:        auther,
 		SigninService: signin,
 	}

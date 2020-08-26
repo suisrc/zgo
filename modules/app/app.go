@@ -49,7 +49,7 @@ func RunHTTPServer(ctx context.Context, handler http.Handler) func() {
 
 		srv.SetKeepAlivesEnabled(false)
 		if err := srv.Shutdown(ctx); err != nil {
-			logger.Errorf(ctx, err.Error())
+			logger.Errorf(ctx, logger.ErrorWW(err))
 		}
 	}
 }

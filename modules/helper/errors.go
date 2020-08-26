@@ -5,6 +5,7 @@ import (
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	gi18n "github.com/suisrc/gin-i18n"
+	"github.com/suisrc/zgo/modules/logger"
 
 	"github.com/gin-gonic/gin"
 )
@@ -84,6 +85,6 @@ func Wrap400Response(ctx *gin.Context, err error) *ErrorModel {
 		Status:       400,
 		ShowType:     ShowWarn,
 		ErrorMessage: &i18n.Message{ID: "ERR-BAD-REQUEST-X", Other: "解析请求参数发生错误 - {{.error}}"},
-		ErrorArgs:    map[string]interface{}{"error": err.Error()},
+		ErrorArgs:    map[string]interface{}{"error": logger.ErrorWW(err)},
 	}
 }

@@ -54,9 +54,8 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 	// resouces
 	resource0 := schema.CasbinGpaResource{}
 	resources := []schema.CasbinGpaResource{}
-	err := a.GPA.Sqlx.Select(&resources, resource0.SQLByALL())
-	if err != nil {
-		logger.Infof(nil, "loading casbin: none -> %s", err.Error())
+	if err := resource0.QueryAll(a.Sqlx, &resources); err != nil {
+		logger.Infof(nil, "loading casbin: none -> %s", logger.ErrorWW(err))
 		return nil
 	}
 	for _, r := range resources {
@@ -85,9 +84,8 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 	// user
 	user0 := schema.CasbinGpaResourceUser{}
 	users := []schema.CasbinGpaResourceUser{}
-	err = a.GPA.Sqlx.Select(&users, user0.SQLByALL())
-	if err != nil && !sqlxc.IsNotFound(err) {
-		logger.Infof(nil, "loading casbin: user -> %s", err.Error())
+	if err := user0.QueryAll(a.Sqlx, &users); err != nil && !sqlxc.IsNotFound(err) {
+		logger.Infof(nil, "loading casbin: user -> %s", logger.ErrorWW(err))
 	}
 	for _, r := range users {
 		if !r.User.Valid || !r.Resource.Valid {
@@ -110,10 +108,9 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 	// role
 	role0 := schema.CasbinGpaResourceRole{}
 	roles := []schema.CasbinGpaResourceRole{}
-	err = a.GPA.Sqlx.Select(&roles, role0.SQLByALL())
-	if err != nil {
+	if err := role0.QueryAll(a.Sqlx, &roles); err != nil {
 		if !sqlxc.IsNotFound(err) {
-			logger.Infof(nil, "loading casbin: role -> %s", err.Error())
+			logger.Infof(nil, "loading casbin: role -> %s", logger.ErrorWW(err))
 		}
 		return nil
 	}
@@ -130,10 +127,9 @@ func (a CasbinAdapter) LoadPolicy(model model.Model) error {
 	// role-role
 	rolerole0 := schema.CasbinGpaRoleRole{}
 	roleroles := []schema.CasbinGpaRoleRole{}
-	err = a.GPA.Sqlx.Select(&roleroles, rolerole0.SQLByALL())
-	if err != nil {
+	if err := rolerole0.QueryAll(a.Sqlx, &roleroles); err != nil {
 		if !sqlxc.IsNotFound(err) {
-			logger.Infof(nil, "loading casbin: role-role -> %s", err.Error())
+			logger.Infof(nil, "loading casbin: role-role -> %s", logger.ErrorWW(err))
 		}
 		return nil
 	}

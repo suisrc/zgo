@@ -56,6 +56,34 @@ var doc = `{
                 }
             }
         },
+        "/authz/signin": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "授权接口",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Authorize",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
         "/signin": {
             "post": {
                 "description": "登陆",
@@ -186,7 +214,7 @@ var doc = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "user current",
+                "summary": "查询当前用户信息",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -214,7 +242,7 @@ var doc = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "user current access",
+                "summary": "查询当前用户信息",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -242,7 +270,7 @@ var doc = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "user current notices",
+                "summary": "查询当前用户信息",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -279,20 +307,20 @@ var doc = `{
                 "username"
             ],
             "properties": {
-                "attach": {
-                    "description": "reset:重置登入 refresh:刷新令牌",
-                    "type": "string"
-                },
                 "captcha": {
                     "description": "验证码",
                     "type": "string"
                 },
                 "client": {
-                    "description": "应用, 默认为主应用, 为空",
+                    "description": "子应用ID",
                     "type": "string"
                 },
                 "code": {
                     "description": "标识码",
+                    "type": "string"
+                },
+                "kid": {
+                    "description": "授权平台",
                     "type": "string"
                 },
                 "password": {

@@ -2,7 +2,9 @@ package schema
 
 import (
 	"database/sql"
+	"strings"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 )
@@ -24,9 +26,11 @@ type I18nGpaMessage struct {
 	Other       sql.NullString `db:"other"`
 }
 
-// SQLByALL 查询所有内容
-func (a *I18nGpaMessage) SQLByALL() string {
-	return "select id, mid, lang, description, left_delim, right_delim, zero, one, few, many, other from i18n_language where status=1"
+// QueryAll 查询所有内容
+func (a *I18nGpaMessage) QueryAll(sqlx *sqlx.DB, dest *[]I18nGpaMessage) error {
+	SQL := "select id, mid, lang, description, left_delim, right_delim, zero, one, few, many, other from {{TP}}i18n_language where status=1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Select(dest, SQL)
 }
 
 // I18nMessage 转换对象

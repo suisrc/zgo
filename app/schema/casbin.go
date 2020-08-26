@@ -1,6 +1,11 @@
 package schema
 
-import "database/sql"
+import (
+	"database/sql"
+	"strings"
+
+	"github.com/jmoiron/sqlx"
+)
 
 // CasbinGpaResource policy => p
 type CasbinGpaResource struct {
@@ -15,9 +20,11 @@ type CasbinGpaResource struct {
 	// status      sql.NullBool   `db:"status"`
 }
 
-// SQLByALL sql select
-func (*CasbinGpaResource) SQLByALL() string {
-	return "select id, resource, methods, path, netmask, allow from resource where status=1"
+// QueryAll sql select
+func (*CasbinGpaResource) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaResource) error {
+	SQL := "select id, resource, methods, path, netmask, allow from {{TP}}resource where status=1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Select(dest, SQL)
 }
 
 // CasbinGpaResourceRole policy => g
@@ -27,9 +34,11 @@ type CasbinGpaResourceRole struct {
 	Resource sql.NullString `db:"resource"`
 }
 
-// SQLByALL sql select
-func (*CasbinGpaResourceRole) SQLByALL() string {
-	return "select rr.id, rr.resource, r.uid as role from resource_role rr inner join role r on r.id = rr.role_id where r.status=1"
+// QueryAll sql select
+func (*CasbinGpaResourceRole) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaResourceRole) error {
+	SQL := "select rr.id, rr.resource, r.kid as role from {{TP}}resource_role rr inner join {{TP}}role r on r.id = rr.role_id where r.status=1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Select(dest, SQL)
 }
 
 // CasbinGpaResourceUser policy => g
@@ -39,9 +48,11 @@ type CasbinGpaResourceUser struct {
 	Resource sql.NullString `db:"resource"`
 }
 
-// SQLByALL sql select
-func (*CasbinGpaResourceUser) SQLByALL() string {
-	return "select ru.id, ru.resource, r.uid as user from resource_user ru inner join role r on r.id = rr.role_id where r.status=1"
+// QueryAll sql select
+func (*CasbinGpaResourceUser) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaResourceUser) error {
+	SQL := "select ru.id, ru.resource, r.kid as user from {{TP}}resource_user ru inner join {{TP}}role r on r.id = rr.role_id where r.status=1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Select(dest, SQL)
 }
 
 // CasbinGpaRoleRole policy => g
@@ -51,11 +62,13 @@ type CasbinGpaRoleRole struct {
 	Child sql.NullString `db:"child"`
 }
 
-// SQLByALL sql select
-func (*CasbinGpaRoleRole) SQLByALL() string {
-	return `select rr.id, ro.uid as owner, rc.uid as child 
-			from role_role rr 
-			inner join role ro on ro.id = rr.owner_id 
-			inner join role rc on rc.id = rr.child_id 
+// QueryAll sql select
+func (*CasbinGpaRoleRole) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaRoleRole) error {
+	SQL := `select rr.id, ro.kid as owner, rc.kid as child 
+			from {{TP}}role_role rr 
+			inner join {{TP}}role ro on ro.id = rr.owner_id 
+			inner join {{TP}}role rc on rc.id = rr.child_id 
 			where ro.status=1 and rc.status=1`
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Select(dest, SQL)
 }

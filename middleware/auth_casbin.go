@@ -83,12 +83,12 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 			}
 			aud = user.GetAudience() // jwt授权方
 		}
-		dom := c.Request.URL.Host    // 请求域名
+		dom := c.Request.Host        // 请求域名
 		pat := c.Request.URL.Path    // 请求路径
 		cip := helper.GetClientIP(c) // 客户端IP
 		act := c.Request.Method      // 请求方法
 		if b, err := enforcer.Enforce(sub, usr, dom, aud, pat, cip, act); err != nil {
-			logger.Errorf(c, err.Error()) // 授权发生异常
+			logger.Errorf(c, logger.ErrorWW(err)) // 授权发生异常
 			helper.ResError(c, erm)
 			return
 		} else if !b {

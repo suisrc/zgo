@@ -17,8 +17,8 @@ const (
 )
 
 // WxPKCS7Encode 获得对明文进行补位填充的字节.
-// @param count 需要进行填充补位操作的明文字节个数
-// @return 补齐用的字节数组
+// param count 需要进行填充补位操作的明文字节个数
+// return 补齐用的字节数组
 func WxPKCS7Encode(count int) []byte {
 	// 计算需要填充的位数
 	amountToPad := blockSize - (count % blockSize)
@@ -36,8 +36,8 @@ func WxPKCS7Encode(count int) []byte {
 }
 
 // WxPKCS7Decode 删除解密后明文的补位字符
-// @param decrypted 解密后的明文
-// @return 删除补位字符后的明文
+// param decrypted 解密后的明文
+// return 删除补位字符后的明文
 func WxPKCS7Decode(decrypted []byte) []byte {
 	pad := decrypted[len(decrypted)-1]
 	if pad < 1 || pad > blockSize {
@@ -95,8 +95,8 @@ func WxNewCrypto2(appid, token, encodingAesKey string) *WxCrypto {
 }
 
 // Encrypt 对明文进行加密
-// @param plainText 需要加密的明文
-// @return 加密后base64编码的字符串
+// param plainText 需要加密的明文
+// return 加密后base64编码的字符串
 func (a *WxCrypto) Encrypt(plainText string) (string, error) {
 	randomStr := UUID2(16)
 
@@ -136,16 +136,16 @@ func (a *WxCrypto) Encrypt(plainText string) (string, error) {
 }
 
 // Decrypt 对密文进行解密.
-// @param cipherText 需要解密的密文
-// @return 解密得到的明文
+// param cipherText 需要解密的密文
+// return 解密得到的明文
 func (a *WxCrypto) Decrypt(cipherText string) (string, error) {
 	return a.DecryptCheckAppID(cipherText, nil)
 }
 
 // DecryptCheckAppID 对密文进行解密.
-// @param cipherText 需要解密的密文
-// @param appidOrCorpid 获取解密内容回调，如果为空，会强制判断该内容是否和加密器中的ID相同
-// @return 解密得到的明文
+// param cipherText 需要解密的密文
+// param appidOrCorpid 获取解密内容回调，如果为空，会强制判断该内容是否和加密器中的ID相同
+// return 解密得到的明文
 func (a *WxCrypto) DecryptCheckAppID(cipherText string, appIDCheck func(string) error) (string, error) {
 	if cipherText == "" {
 		return "", nil

@@ -46,14 +46,14 @@ func (a *Demo) wx(c *gin.Context) {
 	wc := crypto.WxNewCrypto2("123456", "IDKxiddis98", "lBXYSlGJuQcFPiS4KCfLGxQjmcHJRrJuoIfrKC2NPwt")
 	content, err := wc.Decrypt(body.Encrypt)
 	if err != nil {
-		logger.Errorf(c, err.Error())
+		logger.Errorf(c, logger.ErrorWW(err))
 		c.String(200, "success")
 		return
 	}
 	logger.Infof(c, content)
 	result, err := wc.Encrypt(content)
 	if err != nil {
-		logger.Errorf(c, err.Error())
+		logger.Errorf(c, logger.ErrorWW(err))
 		c.String(200, "success")
 		return
 	}

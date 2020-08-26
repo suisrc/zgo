@@ -46,7 +46,7 @@ func (a *Signin) signin(c *gin.Context) {
 	body := schema.SigninBody{}
 	if err := helper.ParseJSON(c, &body); err != nil {
 		helper.FixResponse406Error(c, err, func() {
-			logger.Errorf(c, err.Error())
+			logger.Errorf(c, logger.ErrorWW(err))
 		})
 		return
 	}
@@ -54,14 +54,14 @@ func (a *Signin) signin(c *gin.Context) {
 	user, err := a.SigninService.SigninByPasswd(c, &body)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
-			logger.Errorf(c, err.Error())
+			logger.Errorf(c, logger.ErrorWW(err))
 		})
 		return
 	}
 	token, err := a.Auther.GenerateToken(c, user)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
-			logger.Errorf(c, err.Error())
+			logger.Errorf(c, logger.ErrorWW(err))
 		})
 		return
 	}
@@ -137,7 +137,7 @@ func (a *Signin) refresh(c *gin.Context) {
 	token, err := a.Auther.GenerateToken(c, user)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
-			logger.Errorf(c, err.Error())
+			logger.Errorf(c, logger.ErrorWW(err))
 		})
 		return
 	}

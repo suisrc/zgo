@@ -28,7 +28,7 @@ func main() {
 	}
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Println(err.Error())
+		log.Println(logger.ErrorWW(err))
 	}
 }
 

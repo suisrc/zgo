@@ -29,17 +29,15 @@ type I18n struct {
 func (a *I18n) LoadI18nMessage() error {
 	i18n0 := schema.I18nGpaMessage{}
 	i18ns := []schema.I18nGpaMessage{}
-	err := a.Sqlx.Select(&i18ns, i18n0.SQLByALL())
-	if err != nil {
-		logger.Errorf(nil, "i18n add message error: %s", err.Error())
+	if err := i18n0.QueryAll(a.Sqlx, &i18ns); err != nil {
+		logger.Errorf(nil, "i18n add message error: %s", logger.ErrorWW(err))
 		return err
 	}
 	count := 0
 	for _, m := range i18ns {
 		message, language := m.I18nMessage()
-		err2 := a.Bundle.AddMessages(language, message)
-		if err2 != nil {
-			logger.Errorf(nil, "i18n add message error: %s", err2.Error())
+		if err := a.Bundle.AddMessages(language, message); err != nil {
+			logger.Errorf(nil, "i18n add message error: %s", logger.ErrorWW(err))
 		} else {
 			count++
 		}

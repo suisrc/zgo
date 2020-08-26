@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-08-21 16:16:12 CST
+-- time: 2020-08-26 11:14:23 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -8,7 +8,7 @@
 CREATE TABLE `zgo_account` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `pid` int(11) DEFAULT NULL COMMENT '上级账户',
-  `account` varchar(255) DEFAULT NULL COMMENT '账户',
+  `account` varchar(255) NOT NULL COMMENT '账户',
   `account_typ` tinyint(4) DEFAULT '1' COMMENT '账户类型',
   `account_kid` varchar(64) DEFAULT NULL COMMENT '账户归属平台',
   `password` varchar(255) DEFAULT NULL COMMENT '登录密码',
@@ -29,7 +29,11 @@ CREATE TABLE `zgo_account` (
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
+  `string_2` varchar(255) DEFAULT NULL COMMENT '备用字段',
+  `string_3` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
+  `number_2` int(11) DEFAULT NULL COMMENT '备用字段',
+  `number_3` int(11) DEFAULT NULL COMMENT '备用字段',
   UNIQUE udx_account(`account`,`account_typ`,`account_kid`),
   INDEX idx_account_client(`oa2_client`),
   PRIMARY KEY (`id`)
@@ -98,14 +102,15 @@ CREATE TABLE `zgo_oauth2_client` (
   `kid` varchar(64)  NOT NULL COMMENT '客户端标识',
   `audience` varchar(255) DEFAULT NULL COMMENT '令牌接受平台',
   `issuer` varchar(255) DEFAULT NULL COMMENT '令牌签发平台',
-  `expired` int(11) DEFAULT NULL COMMENT '令牌有效期',
-  `token_type` varchar(32) DEFAULT NULL COMMENT '令牌类型',
-  `token_method` varchar(32) DEFAULT NULL COMMENT '令牌方法',
-  `token_secret` varchar(255) DEFAULT NULL COMMENT '令牌密钥',
+  `expired` int(11) DEFAULT 7200 COMMENT '令牌有效期',
+  `token_type` varchar(32) DEFAULT 'JWT' COMMENT '令牌类型',
+  `token_method` varchar(32) DEFAULT 'HS512' COMMENT '令牌方法',
+  `token_secret` varchar(255) NOT NULL COMMENT '令牌密钥',
   `token_getter` varchar(32) DEFAULT NULL COMMENT '令牌获取方法',
   `signin_url` varchar(2048) DEFAULT NULL COMMENT '登陆地址',
   `signin_force` tinyint(4) DEFAULT 0 COMMENT '强制跳转登陆',
   `signin_check` tinyint(4) DEFAULT 0 COMMENT '登陆确认',
+  `status` tinyint(4) DEFAULT 1 COMMENT '状态',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
@@ -121,9 +126,9 @@ CREATE TABLE `zgo_oauth2_account` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `kid` varchar(64) NOT NULL COMMENT '唯一标识',
   `account_id` int(11) DEFAULT NULL COMMENT '账户标识',
+  `client_id` int(11) DEFAULT NULL COMMENT '客户端标识',
   `user_kid` varchar(64) DEFAULT NULL COMMENT '用户标识',
   `role_kid` varchar(64) DEFAULT NULL COMMENT '角色标识',
-  `client_id` int(11) DEFAULT NULL COMMENT '客户端标识',
   `expired` int(11) DEFAULT NULL COMMENT '授权有效期',
   `last_ip` varchar(64) DEFAULT NULL COMMENT '上次登陆IP',
   `last_at` timestamp DEFAULT NULL COMMENT '上次登陆时间',
@@ -136,11 +141,11 @@ CREATE TABLE `zgo_oauth2_account` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  UNIQUE udx_oauth2_account_client_id(`client_id`),
+  UNIQUE udx_oauth2_account_user_kid(`user_kid`),
+  UNIQUE udx_oauth2_account_role_kid(`role_kid`),
   UNIQUE udx_oauth2_account_kid(`kid`),
-  INDEX idx_oauth2_account_user_kid(`user_kid`),
-  INDEX idx_oauth2_account_role_kid(`role_kid`),
-  INDEX idx_oauth2_account_client_id(`client_id`),
-  INDEX idx_oauth2_account_account_id(`account_id`),
+  UNIQUE udx_oauth2_account_account_id(`account_id`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -287,8 +292,8 @@ CREATE TABLE `zgo_menu_role` (
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   UNIQUE udx_menu_role_kid(`kid`),
-  INDEX idx_role_kid(`role_kid`),
   INDEX idx_parent_id(`pid`),
+  INDEX idx_role_kid(`role_kid`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -506,8 +511,8 @@ ADD CONSTRAINT `fk_role_owner_id` FOREIGN KEY (`owner_id`)  REFERENCES `zgo_role
 ADD CONSTRAINT `fk_role_child_id` FOREIGN KEY (`child_id`)  REFERENCES `zgo_role` (`id`);
 
 ALTER TABLE `zgo_user_role`
-ADD CONSTRAINT `fk_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`);
+ADD CONSTRAINT `fk_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
+ADD CONSTRAINT `fk_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`);
 
 ALTER TABLE `zgo_resource_role`
 ADD CONSTRAINT `fk_resource_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
@@ -546,11 +551,11 @@ ADD CONSTRAINT `fk_u_msg_to_id` FOREIGN KEY (`to_id`)  REFERENCES `zgo_user` (`i
 -- -------------------------------------------------------
 -- insert into 
 -- -------------------------------------------------------
--- INSERT INTO `zgo_account`(`id`, `pid`, `account`, `account_typ`, `account_kid`, `password`, `password_salt`, `password_type`, `verify_secret`, `verify_type`, `user_id`, `role_id`, `status`, `description`, `oa2_token`, `oa2_expired`, `oa2_fake`, `oa2_client`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_account`(`id`, `pid`, `account`, `account_typ`, `account_kid`, `password`, `password_salt`, `password_type`, `verify_secret`, `verify_type`, `user_id`, `role_id`, `status`, `description`, `oa2_token`, `oa2_expired`, `oa2_fake`, `oa2_client`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `string_2`, `string_3`, `number_1`, `number_2`, `number_3`) VALUES ();
 -- INSERT INTO `zgo_oauth2_platform`(`id`, `kid`, `platform`, `app_id`, `app_secret`, `avatar`, `description`, `status`, `signin`, `agent_id`, `agent_secret`, `suite_id`, `suite_secret`, `authorize_url`, `token_url`, `profile_url`, `js_secret`, `state_secret`, `callback`, `cb_domain`, `cb_scheme`, `cb_encrypt`, `cb_token`, `cb_encoding`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_oauth2_token`(`id`, `oauth2_id`, `access_token`, `expires_in`, `expires_time`, `sync_lock`, `sync_time`, `call_count`, `token_type`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
--- INSERT INTO `zgo_oauth2_client`(`id`, `kid`, `audience`, `issuer`, `expired`, `token_type`, `token_method`, `token_secret`, `token_getter`, `signin_url`, `signin_force`, `signin_check`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
--- INSERT INTO `zgo_oauth2_account`(`id`, `kid`, `account_id`, `user_kid`, `role_kid`, `client_id`, `expired`, `last_ip`, `last_at`, `limit_exp`, `limit_key`, `mode`, `secret`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `zgo_oauth2_client`(`id`, `kid`, `audience`, `issuer`, `expired`, `token_type`, `token_method`, `token_secret`, `token_getter`, `signin_url`, `signin_force`, `signin_check`, `status`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_oauth2_account`(`id`, `kid`, `account_id`, `client_id`, `user_kid`, `role_kid`, `expired`, `last_ip`, `last_at`, `limit_exp`, `limit_key`, `mode`, `secret`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_user`(`id`, `kid`, `name`, `status`, `delete`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_role`(`id`, `kid`, `name`, `description`, `status`, `domain`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_role_role`(`id`, `owner_id`, `child_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
@@ -588,8 +593,8 @@ ADD CONSTRAINT `fk_u_msg_to_id` FOREIGN KEY (`to_id`)  REFERENCES `zgo_user` (`i
 -- DROP FOREIGN KEY `fk_role_owner_id`,
 -- DROP FOREIGN KEY `fk_role_child_id`;
 -- ALTER TABLE `zgo_user_role`
--- DROP FOREIGN KEY `fk_role_role_id`,
--- DROP FOREIGN KEY `fk_role_user_id`;
+-- DROP FOREIGN KEY `fk_role_user_id`,
+-- DROP FOREIGN KEY `fk_role_role_id`;
 -- ALTER TABLE `zgo_resource_role`
 -- DROP FOREIGN KEY `fk_resource_role_id`,
 -- DROP FOREIGN KEY `fk_resource_role_res`;
@@ -600,11 +605,11 @@ ADD CONSTRAINT `fk_u_msg_to_id` FOREIGN KEY (`to_id`)  REFERENCES `zgo_user` (`i
 -- DROP FOREIGN KEY `fk_menu_role_role_id`,
 -- DROP FOREIGN KEY `fk_menu_role_menu_id`;
 -- ALTER TABLE `zgo_menu_user`
--- DROP FOREIGN KEY `fk_menu_user_user_id`,
--- DROP FOREIGN KEY `fk_menu_user_role_id`;
+-- DROP FOREIGN KEY `fk_menu_user_role_id`,
+-- DROP FOREIGN KEY `fk_menu_user_user_id`;
 -- ALTER TABLE `zgo_menu_action`
--- DROP FOREIGN KEY `fk_menu_action_menu_id`,
--- DROP FOREIGN KEY `fk_menu_action_role_id`;
+-- DROP FOREIGN KEY `fk_menu_action_role_id`,
+-- DROP FOREIGN KEY `fk_menu_action_menu_id`;
 -- ALTER TABLE `zgo_user_detail`
 -- DROP FOREIGN KEY `fk_user_detail`;
 -- ALTER TABLE `zgo_user_employee`

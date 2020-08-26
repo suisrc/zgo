@@ -101,7 +101,8 @@ type SigninGpaUser struct {
 
 // QueryByID sql select
 func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int) error {
-	SQL := "select id, kid, name, status from user where id=?"
+	SQL := "select id, kid, name, status from {{TP}}user where id=?"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, id)
 }
 
@@ -114,35 +115,32 @@ type SigninGpaRole struct {
 
 // QueryByID sql select
 func (a *SigninGpaRole) QueryByID(sqlx *sqlx.DB, id int) error {
-	SQL := "select id, kid, name from  role where id=? and status=1"
+	SQL := "select id, kid, name from {{TP}}role where id=? and status=1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, id)
 }
 
 // QueryByKID sql select
 func (a *SigninGpaRole) QueryByKID(sqlx *sqlx.DB, kid string) error {
-	SQL := "select id, kid, name from role where kid=? and status=1"
+	SQL := "select id, kid, name from {{TP}}role where kid=? and status=1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, kid)
 }
 
-// QueryByName sql select
-func (a *SigninGpaRole) QueryByName(sqlx *sqlx.DB, name string) error {
-	SQL := "select id, kid, name from role where name=? and status=1"
-	return sqlx.Get(a, SQL, name)
-}
-
 // QueryByUserID sql select
-func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, userid string) error {
-	SQL := "select r.id, r.kid, r.name from user_role ur inner join role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
-	return sqlx.Get(a, SQL, userid)
+func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, userid int) error {
+	SQL := "select r.id, r.kid, r.name from {{TP}}user_role ur inner join {{TP}}role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Select(dest, SQL, userid)
 }
 
 // SigninGpaAccount account
 type SigninGpaAccount struct {
 	ID           int            `db:"id"`
-	PID          sql.NullInt32  `db:"pid"`
+	PID          sql.NullInt64  `db:"pid"`
 	Account      string         `db:"account"`
 	AccountType  int            `db:"account_typ"`
-	AccountKind  sql.NullInt32  `db:"account_kid"`
+	AccountKind  sql.NullInt64  `db:"account_kid"`
 	Password     sql.NullString `db:"password"`
 	PasswordSalt sql.NullString `db:"password_salt"`
 	PasswordType sql.NullString `db:"password_type"`
@@ -157,39 +155,41 @@ type SigninGpaAccount struct {
 
 // QueryByAccount sql select
 func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, kid string) error {
-	SQL := strings.Builder{}
-	SQL.WriteString("select id")
-	SQL.WriteString(", pid")
-	SQL.WriteString(", account")
-	SQL.WriteString(", account_typ")
-	SQL.WriteString(", account_kid")
-	SQL.WriteString(", password")
-	SQL.WriteString(", password_salt")
-	SQL.WriteString(", password_type")
-	SQL.WriteString(", verify_type")
-	SQL.WriteString(", verify_secret")
-	SQL.WriteString(", user_id")
-	SQL.WriteString(", role_id")
-	SQL.WriteString(" from account")
-	SQL.WriteString(" where account=? and account_typ=?")
+	sqr := strings.Builder{}
+	sqr.WriteString("select id")
+	sqr.WriteString(", pid")
+	sqr.WriteString(", account")
+	sqr.WriteString(", account_typ")
+	sqr.WriteString(", account_kid")
+	sqr.WriteString(", password")
+	sqr.WriteString(", password_salt")
+	sqr.WriteString(", password_type")
+	sqr.WriteString(", verify_type")
+	sqr.WriteString(", verify_secret")
+	sqr.WriteString(", user_id")
+	sqr.WriteString(", role_id")
+	sqr.WriteString(" from {{TP}}account")
+	sqr.WriteString(" where account=? and account_typ=?")
 
 	params := []interface{}{acc, typ}
 	if kid != "" {
-		SQL.WriteString(" and account_kid=?")
+		sqr.WriteString(" and account_kid=?")
 		params = append(params, kid)
 	} else {
-		SQL.WriteString(" and account_kid is null")
+		sqr.WriteString(" and account_kid is null")
 	}
-	SQL.WriteString(" and status=1")
-	return sqlx.Get(a, SQL.String(), params...)
+	sqr.WriteString(" and status=1")
+	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, params...)
 }
 
-// SigninGPAOAuth2Account account
-type SigninGPAOAuth2Account struct {
+// SigninGpaOAuth2Account account
+type SigninGpaOAuth2Account struct {
 	KID string `db:"kid"`
 }
 
-// SQLByKID kid
-func (*SigninGPAOAuth2Account) SQLByKID() string {
-	return "select kid where account_id=? and client_id=? and user_kid=? and role_kid=?"
+// QueryByUdx kid
+func (a *SigninGpaOAuth2Account) QueryByUdx(sqlx *sqlx.DB, accountID, clientID int, userKID, roleKID string) error {
+	SQL := "select kid from {{TP}}oauth2_account where account_id=? and client_id=? and user_kid=? and role_kid=?"
+	return sqlx.Get(a, SQL, accountID, clientID, userKID, roleKID)
 }

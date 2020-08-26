@@ -24,7 +24,7 @@ func (a *ModelFile) RunBuild() error {
 
 	bytes, err := ioutil.ReadFile(a.Model)
 	if err != nil {
-		log.Println(fmt.Sprintf("model file error: %s", err.Error()))
+		log.Println(fmt.Sprintf("model file error: %s", logger.ErrorWW(err)))
 		return err
 	}
 	content := string(bytes)
@@ -37,24 +37,24 @@ func (a *ModelFile) RunBuild() error {
 	}
 
 	if err := m.init(); err != nil {
-		log.Println(fmt.Sprintf("model init error: %s", err.Error()))
+		log.Println(fmt.Sprintf("model init error: %s", logger.ErrorWW(err)))
 		return err
 	}
 	content, err = m.build()
 	if err != nil {
-		log.Println(fmt.Sprintf("model build error: %s", err.Error()))
+		log.Println(fmt.Sprintf("model build error: %s", logger.ErrorWW(err)))
 		return err
 	}
 	var file *os.File
 	file, err = os.Create(a.Output)
 	if err != nil {
-		log.Println(fmt.Sprintf("model output error: %s", err.Error()))
+		log.Println(fmt.Sprintf("model output error: %s", logger.ErrorWW(err)))
 		return err
 	}
 	defer file.Close()
 	_, err = file.WriteString(content)
 	if err != nil {
-		log.Println(fmt.Sprintf("model write error: %s", err.Error()))
+		log.Println(fmt.Sprintf("model write error: %s", logger.ErrorWW(err)))
 		return err
 	}
 
