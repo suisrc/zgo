@@ -45,10 +45,10 @@ func BuildInjector() (*Injector, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	authOpts := &AuthOpts{
+	authOpts := &service.AuthOpts{
 		GPA: gpa,
 	}
-	auther := NewAuther(authOpts)
+	auther := service.NewAuther(authOpts)
 	demo := &api.Demo{
 		GPA: gpa,
 	}

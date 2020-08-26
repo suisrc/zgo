@@ -1,27 +1,25 @@
-package injector
+package service
 
 import (
 	"context"
 	"errors"
 	"time"
 
+	jwtgo "github.com/dgrijalva/jwt-go"
+	"github.com/suisrc/zgo/app/schema"
+	"github.com/suisrc/zgo/modules/auth"
+	"github.com/suisrc/zgo/modules/auth/jwt"
+	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
 	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/crypto"
 	"github.com/suisrc/zgo/modules/helper"
 	"github.com/suisrc/zgo/modules/logger"
-
-	jwtgo "github.com/dgrijalva/jwt-go"
-	"github.com/suisrc/zgo/app/schema"
-	"github.com/suisrc/zgo/app/service"
-	"github.com/suisrc/zgo/modules/auth"
-	"github.com/suisrc/zgo/modules/auth/jwt"
-	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
 )
 
 // AuthOpts 认证配置信息
 // 认证需要频繁操作,所以这里需要使用内存缓存
 type AuthOpts struct {
-	service.GPA
+	GPA
 	jwts map[interface{}]*schema.JwtGpaOpts
 }
 
