@@ -173,15 +173,19 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 
 第三方授权实体, 用户完成授权后,需要处理令牌,选择授权系统
 已知: 
-A用户请求: [hostname]用户请求域, [kid]平台ID, [client]子应用
-B用户登陆: [Role.domain]用户角色域, [Role.tag]用户标签
-C系统限定: [Client.kid]客户端令牌, [Client.audience]客户端接收者, [Client.tag]客户端标签
+A用户:  [host]          请求域
+        [client]            应用ID
+B角色:  [Role.domain]       角色域
+C应用:  [Client.kid]        应用ID
+        [Client.audience]   接受域
 约束:
-1.A的[client]不为空, 使用[client]对应的[Client]进行处理,同时需要验证B的[Role.domain]和A的[hostname], 如果B的[Role.domain]为空,不进行处理验证
-2.A的[client]为空, 使用B的[Role.domain]确认[Client], 同时需要验证B的[Role.domain]和A的[hostname], 如果B的[Role.domain]为空,不进行处理验证
-3.A的[client]和B的[Role.domain]都为空,使用A的[Role.tag]确认[Client]
+0.[Client]为空, 通过[host]确认[Client], 如果存在多个,随机选择
+1.[Client]为空, [Role.domain]必须为空或者等于[host]
+2.[Client.audience]不为空, 必须等于[host]
+3.[Role.domain]为空, 直接返回true, 该角色为全平台角色 
+4.[Client.audience]不为空, 必须等于[Role.domain]需要匹配
+5.验证[Role.domain]和[host]
 
-当在一个系统[Client]中登陆,需要向另外一个系统跳转,得到另外一个系统的角色,通过角色完成授权,但是不需要验证[Role.domain]和[hostname]
 角色约束:
 1.如果当前账户的角色可以授权,直接授权
 2.如果该用户具有单角色,登陆的子系统没有角色,则放弃授权
@@ -191,11 +195,10 @@ C系统限定: [Client.kid]客户端令牌, [Client.audience]客户端接收者,
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| kid           | 唯一标识       | 字符串   |                                                     | varchar(64) NOT NULL, udx_oauth2_account_kid         |
-| account_id    | 账户标识       | 数值     |                                                     | int(11), udx_oauth2_account_account_id               |
-| client_id     | 客户端标识     | 数值     |                                                     | int(11), udx_oauth2_account_client_id                |
-| user_kid      | 用户标识       | 数值     |                                                     | varchar(64), udx_oauth2_account_user_kid             |
-| role_kid      | 角色标识       | 数值     |                                                     | varchar(64), udx_oauth2_account_role_kid             |
+| account_id    | 账户标识       | 数值     |                                                     | int(11), udx_oauth2_account_aid                      |
+| client_id     | 客户端标识     | 数值     |                                                     | int(11), udx_oauth2_account_cid                      |
+| user_kid      | 用户标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_ukid                 |
+| role_kid      | 角色标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_rkid                 |
 | expired       | 授权有效期     | 数值     | NULL 表示永久有效                                   | int(11)                                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | last_ip       | 上次登陆IP     | 字符串   |                                                     | varchar(64)                                          |

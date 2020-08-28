@@ -7,6 +7,7 @@ import (
 
 	entcmd "github.com/suisrc/zgo/cmd/db/ent"
 	mysqlcmd "github.com/suisrc/zgo/cmd/db/mysql"
+	"github.com/suisrc/zgo/modules/logger"
 
 	"github.com/urfave/cli/v2"
 )

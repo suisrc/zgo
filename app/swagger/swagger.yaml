@@ -65,23 +65,6 @@ paths:
       summary: Authorize
       tags:
       - auth
-  /authz/signin:
-    get:
-      consumes:
-      - application/json
-      description: 授权接口
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/helper.Success'
-      security:
-      - ApiKeyAuth: []
-      summary: Authorize
-      tags:
-      - auth
   /signin:
     post:
       consumes:

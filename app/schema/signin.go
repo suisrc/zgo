@@ -17,6 +17,7 @@ type SigninBody struct {
 	Captcha  string `json:"captcha"`                     // 验证码
 	Code     string `json:"code"`                        // 标识码
 	Role     string `json:"role"`                        // 角色
+	Domain   string `json:"host"`                        // 域, 如果无,使用c.Reqest.Host代替
 }
 
 // SigninResult 登陆返回值
@@ -108,28 +109,30 @@ func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int) error {
 
 // SigninGpaRole role
 type SigninGpaRole struct {
-	ID   int    `db:"id" json:"-"`
-	KID  string `db:"kid" json:"id"`
-	Name string `db:"name" json:"name"`
+	ID     int    `db:"id" json:"-"`
+	KID    string `db:"kid" json:"id"`
+	Name   string `db:"name" json:"name"`
+	Domain string `db:"domain" json:"domain"`
+	// Domain sql.NullString `db:"domain" json:"domain"`
 }
 
 // QueryByID sql select
 func (a *SigninGpaRole) QueryByID(sqlx *sqlx.DB, id int) error {
-	SQL := "select id, kid, name from {{TP}}role where id=? and status=1"
+	SQL := "select id, kid, name, domain from {{TP}}role where id=? and status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, id)
 }
 
 // QueryByKID sql select
 func (a *SigninGpaRole) QueryByKID(sqlx *sqlx.DB, kid string) error {
-	SQL := "select id, kid, name from {{TP}}role where kid=? and status=1"
+	SQL := "select id, kid, name, domain from {{TP}}role where kid=? and status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, kid)
 }
 
 // QueryByUserID sql select
 func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, userid int) error {
-	SQL := "select r.id, r.kid, r.name from {{TP}}user_role ur inner join {{TP}}role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
+	SQL := "select r.id, r.kid, r.name, r.domain from {{TP}}user_role ur inner join {{TP}}role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Select(dest, SQL, userid)
 }
@@ -185,7 +188,18 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 
 // SigninGpaOAuth2Account account
 type SigninGpaOAuth2Account struct {
-	KID string `db:"kid"`
+	ID        string         `db:"id"`
+	AccountID int            `db:"account_id"`
+	ClientID  sql.NullInt64  `db:"client_id"`
+	UserKID   string         `db:"user_kid"`
+	RoleKID   string         `db:"role_kid"`
+	Expired   sql.NullInt64  `db:"expired"`
+	LastIP    sql.NullString `db:"last_ip"`
+	LastAt    sql.NullTime   `db:"last_at"`
+	LimitExp  sql.NullTime   `db:"limitExp"`
+	LimitKey  sql.NullString `db:"limitKey"`
+	Mode      sql.NullString `db:"mode"`
+	Secret    sql.NullString `db:"secret"`
 }
 
 // QueryByUdx kid

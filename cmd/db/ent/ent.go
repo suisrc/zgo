@@ -7,6 +7,8 @@ import (
 	"os"
 	"regexp"
 	"strings"
+
+	"github.com/suisrc/zgo/modules/logger"
 )
 
 //ModelFile file

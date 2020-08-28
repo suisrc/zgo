@@ -56,34 +56,6 @@ var doc = `{
                 }
             }
         },
-        "/authz/signin": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "授权接口",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Authorize",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/helper.Success"
-                        }
-                    }
-                }
-            }
-        },
         "/signin": {
             "post": {
                 "description": "登陆",

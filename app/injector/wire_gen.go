@@ -56,7 +56,7 @@ func BuildInjector() (*Injector, func(), error) {
 		Enforcer: syncedEnforcer,
 		Auther:   auther,
 	}
-	validator := passwd.Validator{}
+	validator := &passwd.Validator{}
 	signin := service.Signin{
 		GPA:    gpa,
 		Passwd: validator,

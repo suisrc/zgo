@@ -20,7 +20,7 @@ import (
 // 认证需要频繁操作,所以这里需要使用内存缓存
 type AuthOpts struct {
 	GPA
-	jwts map[interface{}]*schema.JwtGpaOpts
+	Jwts map[interface{}]*schema.JwtGpaOpts
 }
 
 // NewAuther of auth.Auther
@@ -36,7 +36,7 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 		logger.Infof(nil, "jwt secret: %s", secret)
 	}
 
-	opts.jwts = map[interface{}]*schema.JwtGpaOpts{}
+	opts.Jwts = map[interface{}]*schema.JwtGpaOpts{}
 	auther := jwt.New(store,
 		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
 		jwt.SetKeyFunc(opts.keyFunc),
@@ -62,7 +62,7 @@ func (a *AuthOpts) updateFunc(c context.Context) error {
 			opts[v.KID] = &v
 		}
 	}
-	a.jwts = opts
+	a.Jwts = opts
 
 	return nil
 }
@@ -70,7 +70,7 @@ func (a *AuthOpts) updateFunc(c context.Context) error {
 // 修正令牌
 func (a *AuthOpts) claimsFunc(c context.Context, claims *jwt.UserClaims) error {
 	if kid, ok := helper.GetJwtKid(c); ok {
-		opt, ok := a.jwts[kid]
+		opt, ok := a.Jwts[kid]
 		if !ok {
 			return errors.New("signing jwt, kid error")
 		}
@@ -95,7 +95,7 @@ func (a *AuthOpts) keyFunc(c context.Context, token *jwtgo.Token, method jwtgo.S
 	// 获取处理的密钥
 	if kid, ok := token.Header["kid"]; ok {
 		helper.SetJwtKid(c, kid)
-		if opt, ok := a.jwts[kid]; ok {
+		if opt, ok := a.Jwts[kid]; ok {
 			return opt.SecretByte, nil
 		}
 		return nil, errors.New("parse jwt, kid error")
@@ -108,7 +108,7 @@ func (a *AuthOpts) keyFunc(c context.Context, token *jwtgo.Token, method jwtgo.S
 func (a *AuthOpts) signingFunc(c context.Context, claims jwtgo.Claims, method jwtgo.SigningMethod, secret interface{}) (string, error) {
 	if kid, ok := helper.GetJwtKid(c); ok {
 		// 使用jwt私有密钥
-		if opt, ok := a.jwts[kid]; ok {
+		if opt, ok := a.Jwts[kid]; ok {
 			token := &jwtgo.Token{
 				Header: map[string]interface{}{
 					"typ": "JWT",
