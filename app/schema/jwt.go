@@ -9,7 +9,7 @@ import (
 
 // JwtGpaOpts jwt配置信息
 type JwtGpaOpts struct {
-	ID          string         `db:"id"`
+	ID          int            `db:"id"`
 	KID         string         `db:"kid"`
 	Expired     int            `db:"expired"`
 	Secret      string         `db:"token_secret"`

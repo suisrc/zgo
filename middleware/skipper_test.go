@@ -17,3 +17,10 @@ func TestJoinPath(t *testing.T) {
 
 	assert.NotNil(t, nil)
 }
+
+func TestNull(t *testing.T) {
+	var s1 interface{}
+	s2 := s1.(string)
+	log.Println(s2)
+	assert.Nil(t, nil)
+}

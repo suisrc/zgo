@@ -195,8 +195,9 @@ C应用:  [Client.kid]        应用ID
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| account_id    | 账户标识       | 数值     |                                                     | int(11), udx_oauth2_account_aid                      |
+| account_id    | 账户标识       | 数值     |                                                     | int(11) NOT NULL, udx_oauth2_account_aid             |
 | client_id     | 客户端标识     | 数值     |                                                     | int(11), udx_oauth2_account_cid                      |
+| client_kid    | 客户端标识     | 数值     |                                                     | varchar(64), idx_oauth2_account_ckid                     |
 | user_kid      | 用户标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_ukid                 |
 | role_kid      | 角色标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_rkid                 |
 | expired       | 授权有效期     | 数值     | NULL 表示永久有效                                   | int(11)                                              |

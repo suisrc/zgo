@@ -6,7 +6,6 @@ import (
 
 	"github.com/jmoiron/sqlx"
 	zdbc "github.com/suisrc/zgo/app/model"
-	"github.com/suisrc/zgo/modules/logger"
 )
 
 // NewClient client
@@ -42,5 +41,5 @@ func IsNotFound(err error) bool {
 	if err == nil {
 		return false
 	}
-	return "sql: no rows in result set" == logger.ErrorWW(err)
+	return "sql: no rows in result set" == err.Error()
 }

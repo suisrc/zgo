@@ -118,6 +118,18 @@ func GetJwtKid(ctx context.Context) (interface{}, bool) {
 	return "", false
 }
 
+// GetJwtKidStr 获取令牌加密方式
+func GetJwtKidStr(ctx context.Context) (string, bool) {
+	if c, ok := ctx.(*gin.Context); ok {
+		if v, ok := c.Get(ResJwtKey); ok {
+			if s, ok := v.(string); ok {
+				return s, true
+			}
+		}
+	}
+	return "", false
+}
+
 // SetJwtKid 配置令牌加密方式
 func SetJwtKid(ctx context.Context, kid interface{}) bool {
 	if c, ok := ctx.(*gin.Context); ok {
@@ -126,3 +138,9 @@ func SetJwtKid(ctx context.Context, kid interface{}) bool {
 	}
 	return false
 }
+
+// Now 获取当前时间
+// func Now() time.Time {
+// 	//return time.Now().In(time.Local)
+// 	return time.Now()
+// }

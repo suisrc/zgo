@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"strings"
 
+	"github.com/suisrc/zgo/app/model/sqlxc"
+
 	"github.com/jmoiron/sqlx"
 	"github.com/suisrc/zgo/modules/auth"
 )
@@ -109,11 +111,11 @@ func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int) error {
 
 // SigninGpaRole role
 type SigninGpaRole struct {
-	ID     int    `db:"id" json:"-"`
-	KID    string `db:"kid" json:"id"`
-	Name   string `db:"name" json:"name"`
-	Domain string `db:"domain" json:"domain"`
-	// Domain sql.NullString `db:"domain" json:"domain"`
+	ID     int     `db:"id" json:"-"`
+	KID    string  `db:"kid" json:"id"`
+	Name   string  `db:"name" json:"name"`
+	Domain *string `db:"domain" json:"domain"`
+	//Domain sql.NullString `db:"domain" json:"domain"`
 }
 
 // QueryByID sql select
@@ -188,22 +190,79 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 
 // SigninGpaOAuth2Account account
 type SigninGpaOAuth2Account struct {
-	ID        string         `db:"id"`
+	ID        int            `db:"id"`
 	AccountID int            `db:"account_id"`
 	ClientID  sql.NullInt64  `db:"client_id"`
+	ClientKID sql.NullString `db:"client_kid"`
 	UserKID   string         `db:"user_kid"`
-	RoleKID   string         `db:"role_kid"`
+	RoleKID   sql.NullString `db:"role_kid"`
 	Expired   sql.NullInt64  `db:"expired"`
 	LastIP    sql.NullString `db:"last_ip"`
 	LastAt    sql.NullTime   `db:"last_at"`
-	LimitExp  sql.NullTime   `db:"limitExp"`
-	LimitKey  sql.NullString `db:"limitKey"`
+	LimitExp  sql.NullTime   `db:"limit_exp"`
+	LimitKey  sql.NullString `db:"limit_key"`
 	Mode      sql.NullString `db:"mode"`
 	Secret    sql.NullString `db:"secret"`
+	Status    bool           `db:"status"`
 }
 
-// QueryByUdx kid
-func (a *SigninGpaOAuth2Account) QueryByUdx(sqlx *sqlx.DB, accountID, clientID int, userKID, roleKID string) error {
-	SQL := "select kid from {{TP}}oauth2_account where account_id=? and client_id=? and user_kid=? and role_kid=?"
-	return sqlx.Get(a, SQL, accountID, clientID, userKID, roleKID)
+// QueryByAccountAndClient kid
+func (a *SigninGpaOAuth2Account) QueryByAccountAndClient(sqlx *sqlx.DB, accountID, clientID int) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_account where account_id=?"
+	params := []interface{}{accountID}
+	if clientID > 0 {
+		SQL += " and client_id=?"
+		params = append(params, clientID)
+	} else {
+		SQL += " and client_id is null"
+	}
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, params...)
+}
+
+// QueryByAccountAndClientK kid
+func (a *SigninGpaOAuth2Account) QueryByAccountAndClientK(sqlx *sqlx.DB, accountID int, clientKID string) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_account where account_id=?"
+	params := []interface{}{accountID}
+	if clientKID == "" {
+		SQL += " and client_kid is null"
+	} else {
+		SQL += " and client_kid=?"
+		params = append(params, clientKID)
+	}
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, params...)
+}
+
+// UpdateAndSaveByAccountAndClient 更新
+func (a *SigninGpaOAuth2Account) UpdateAndSaveByAccountAndClient(sqlx *sqlx.DB) (int64, error) {
+	IDC := sqlxc.IDC{}
+	if a.ClientKID.Valid {
+		SQL := "select id from {{TP}}oauth2_account where account_id=? and client_kid=?"
+		SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+		sqlx.Get(&IDC, SQL, a.AccountID, a.ClientKID)
+	} else if a.ClientID.Valid {
+		SQL := "select id from {{TP}}oauth2_account where account_id=? and client_id=?"
+		SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+		sqlx.Get(&IDC, SQL, a.AccountID, a.ClientID)
+	} else {
+		SQL := "select id from {{TP}}oauth2_account where account_id=? and client_id is null"
+		SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+		sqlx.Get(&IDC, SQL, a.AccountID)
+	}
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"oauth2_account", "id", IDC, a)
+	if err != nil {
+		return 0, err
+	}
+	// tx := sqlx.MustBegin()
+	// tx.MustExec(SQL, params)
+	// tx.Commit()
+	res, err := sqlx.NamedExec(SQL, params)
+	if err != nil {
+		return 0, err
+	}
+	if IDC.ID > 0 {
+		return IDC.ID, nil
+	}
+	return res.LastInsertId()
 }

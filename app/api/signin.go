@@ -1,9 +1,16 @@
 package api
 
 import (
+	"database/sql"
+	"strconv"
+	"time"
+
+	i18n "github.com/suisrc/gin-i18n"
+	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/logger"
 
 	"github.com/gin-gonic/gin"
+	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/modules/auth"
@@ -50,8 +57,29 @@ func (a *Signin) signin(c *gin.Context) {
 		})
 		return
 	}
+
+	// 获取上次登陆的信息
+	lastSignin := func(aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
+		o2a := schema.SigninGpaOAuth2Account{}
+		if err := o2a.QueryByAccountAndClient(a.Sqlx, aid, cid); err != nil {
+			if !sqlxc.IsNotFound(err) {
+				// 数据库查询发生异常
+				logger.Errorf(c, logger.ErrorWW(err))
+				return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-DB-UNKONW", Other: "数据库发生位置异常"})
+			}
+		}
+		if o2a.LastAt.Valid && time.Now().Unix()-o2a.LastAt.Time.Unix() < config.C.JWTAuth.LimitTime {
+			// 登陆时间非常短,直接返回上次结果
+			return nil, helper.NewSuccess(c, &schema.SigninResult{
+				Status:  "ok",
+				Token:   o2a.Secret.String,
+				Expired: o2a.Expired.Int64,
+			})
+		}
+		return &o2a, nil
+	}
 	// 执行登录
-	user, err := a.SigninService.SigninByPasswd(c, &body)
+	user, err := a.SigninService.SigninByPasswd(c, &body, lastSignin)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -66,6 +94,29 @@ func (a *Signin) signin(c *gin.Context) {
 		return
 	}
 
+	// 登陆日志
+	aid, _ := strconv.Atoi(user.AccountID)
+	cid, cok := helper.GetJwtKidStr(c)
+	o2a := schema.SigninGpaOAuth2Account{
+		AccountID: aid,
+		UserKID:   user.UserID,
+		RoleKID:   sql.NullString{Valid: true, String: user.RoleID},
+		ClientID:  sql.NullInt64{Valid: false},
+		ClientKID: sql.NullString{Valid: cok, String: cid},
+		Expired:   sql.NullInt64{Valid: true, Int64: token.GetExpiresAt()},
+		LastIP:    sql.NullString{Valid: true, String: helper.GetClientIP(c)},
+		LastAt:    sql.NullTime{Valid: true, Time: time.Now()},
+		LimitExp:  sql.NullTime{Valid: false},
+		LimitKey:  sql.NullString{Valid: false},
+		Mode:      sql.NullString{Valid: true, String: "signin"},
+		Secret:    sql.NullString{Valid: true, String: token.GetAccessToken()},
+		Status:    true,
+	}
+	if _, err := o2a.UpdateAndSaveByAccountAndClient(a.Sqlx); err != nil {
+		logger.Errorf(c, logger.ErrorWW(err))
+	}
+
+	// 登陆结果
 	result := schema.SigninResult{
 		Status:  "ok",
 		Token:   token.GetAccessToken(),

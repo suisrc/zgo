@@ -24,10 +24,10 @@ type Signin struct {
 //============================================================================================
 
 // SigninByPasswd 密码登陆
-func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody) (*schema.SigninUser, error) {
+func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, lastSignin func(aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
 	// 查询账户信息
 	account := schema.SigninGpaAccount{}
-	if err := account.QueryByAccount(a.Sqlx, b.Username, 1, b.KID); err != nil {
+	if err := account.QueryByAccount(a.Sqlx, b.Username, 1, b.KID); err != nil || account.ID <= 0 {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
 	// 验证密码
@@ -41,16 +41,14 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody) (*schema.S
 		helper.SetJwtKid(c, b.Client)
 	}
 	// 获取用户信息
-	return a.GetSignUserBySelectRole(c, &account, b)
+	return a.GetSignUserByAutoRole(c, &account, b, lastSignin)
 }
 
 // GetSignUserByAutoRole auto role
-func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, b *schema.SigninBody) (*schema.SigninUser, error) {
+func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, b *schema.SigninBody, lastSignin func(aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
 	// 登陆用户
 	suser := schema.SigninUser{}
-	if account.ID > 0 {
-		suser.AccountID = strconv.Itoa(account.ID)
-	}
+	suser.AccountID = strconv.Itoa(account.ID)
 	// 用户
 	user := schema.SigninGpaUser{}
 	if err := user.QueryByID(a.Sqlx, account.UserID); err != nil {
@@ -73,8 +71,21 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
 		}
 	} else if b.Domain != "" {
+		// 一般定义了重定向的域名
 		if err := client.QueryByAudience(a.Sqlx, b.Domain); err != nil {
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
+		}
+	} else {
+		// do nothing
+		// 不进行域名验证,但是下文会验证当前请求域名和角色域.
+	}
+	if client.ID > 0 {
+		helper.SetJwtKid(c, client.KID) // 配置客户端
+	}
+
+	if lastSignin == nil {
+		lastSignin = func(aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
+			return nil, nil
 		}
 	}
 
@@ -84,40 +95,69 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 		// 单角色,账户上又绑定的角色
 		if err := role.QueryByID(a.Sqlx, int(account.RoleID.Int64)); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err)) // 角色ID不存在,只有数据库数据不一致才会发生问题
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色[ID]"})
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-NOROLE", Other: "用户没有有效角色[ID]"})
 		}
 		// 验证角色是否合法
 		if !a.CheckRoleClient(c, &client, domain, &role) {
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
 		}
-	} else {
-		// 多角色问题
+	} else if o2a, err := lastSignin(account.ID, client.ID); err != nil || o2a != nil && o2a.Status && o2a.RoleKID.Valid {
+		if err != nil {
+			return nil, err
+		}
+		if err := role.QueryByKID(a.Sqlx, o2a.RoleKID.String); err != nil {
+			logger.Errorf(c, logger.ErrorWW(err)) // 角色ID不存在,只有数据库数据不一致才会发生问题
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-NOROLE", Other: "用户没有有效角色[KID]"})
+		}
+		// 验证角色是否合法
+		// if !a.CheckRoleClient(c, &client, domain, &role) {
+		// 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
+		// }
+	}
+	if role.ID == 0 {
+		// 多角色问题, 查询第一个可用角色
 		roles := []schema.SigninGpaRole{}
 		if err := role.QueryByUserID(a.Sqlx, &roles, account.UserID); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err))
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
 		}
+		for _, r := range roles {
+			if a.CheckRoleClient(c, &client, domain, &r) {
+				role = r
+				break
+			}
+		}
+		if role.ID == 0 {
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
+		}
 	}
+	suser.RoleID = role.KID
 
+	suser.Issuer = c.Request.Host
+	suser.Audience = c.Request.Host
 	return &suser, nil
 }
 
 // CheckRoleClient 确定访问权限
 func (a *Signin) CheckRoleClient(c *gin.Context, client *schema.JwtGpaOpts, domain string, role *schema.SigninGpaRole) bool {
-	if client.ID == "" {
-		return role.Domain == "" || role.Domain == domain // 未指定客户端信息, 使用的角色域必须为空或者等于请求域
+	if role.ID == 0 {
+		return false // 没有可用角色
+	}
+	if client.ID == 0 {
+		// 未指定客户端信息, 使用的角色域必须为空或者等于请求域
+		return role.Domain == nil || *role.Domain == domain
 	}
 	if client.Audience.Valid && client.Audience.String != domain {
 		return false // 客户端, 接受域必须等于请求域
 	}
-	if role.Domain == "" {
+	if role.Domain == nil {
 		return true // 该角色为全平台角色
 	}
-	if client.Audience.Valid && client.Audience.String != role.Domain {
+	if client.Audience.Valid && client.Audience.String != *role.Domain {
 		return false // 该角色的作用域和客户端的作用域冲突
 	}
 	// c.Redirect
-	return role.Domain == domain // 该角色的域和请求域必须相等
+	return *role.Domain == domain // 该角色的域和请求域必须相等
 }
 
 // GetSignUserBySelectRole 通过角色选择获取用户信息
@@ -126,9 +166,7 @@ func (a *Signin) CheckRoleClient(c *gin.Context, client *schema.JwtGpaOpts, doma
 func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninGpaAccount, b *schema.SigninBody) (*schema.SigninUser, error) {
 	// 登陆用户
 	suser := schema.SigninUser{}
-	if account.ID > 0 {
-		suser.AccountID = strconv.Itoa(account.ID)
-	}
+	suser.AccountID = strconv.Itoa(account.ID)
 	// 用户
 	user := schema.SigninGpaUser{}
 	if err := user.QueryByID(a.Sqlx, account.UserID); err != nil {
