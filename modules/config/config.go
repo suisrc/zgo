@@ -110,7 +110,7 @@ type JWTAuth struct {
 	FilePath      string
 	RedisDB       int
 	RedisPrefix   string
-	LimitTime     int64 `default:"300"`
+	LimitTime     int64 `default:"60"` // 可以配置<=0, 不使用缓存
 }
 
 // RateLimiter 请求频率限制配置参数

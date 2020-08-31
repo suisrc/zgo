@@ -12,13 +12,14 @@ import (
 // ServiceSet wire注入服务
 var ServiceSet = wire.NewSet(
 	NewAuther,                               // Auther注册
-	wire.Struct(new(passwd.Validator), "*"), // 密码验证
+	NewStorer,                               // 缓存
 	entc.NewClient,                          // 数据库连接注册
 	sqlxc.NewClient,                         // 数据库连接注册
 	wire.Struct(new(GPA), "*"),              // 数据库服务
-	wire.Struct(new(AuthOpts), "GPA"),       // Auther依赖
-	// 服务
-	wire.Struct(new(Signin), "*"),
+	wire.Struct(new(passwd.Validator), "*"), // 密码验证
+	wire.Struct(new(AuthOpts), "GPA", "Store"), // Auther依赖
+
+	wire.Struct(new(Signin), "*"), // 服务
 )
 
 //======================================

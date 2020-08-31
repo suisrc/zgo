@@ -12,6 +12,7 @@ import (
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/crypto"
 	"github.com/suisrc/zgo/modules/logger"
+	"github.com/suisrc/zgo/modules/store"
 )
 
 type options struct {
@@ -98,7 +99,7 @@ func SetFixClaimsFunc(f func(context.Context, *UserClaims) error) Option {
 //===================================================
 
 // New 创建认证实例
-func New(store Storer, opts ...Option) *Auther {
+func New(store store.Storer, opts ...Option) *Auther {
 	o := options{
 		tokenType:     "JWT",
 		expired:       7200,
@@ -126,7 +127,7 @@ func New(store Storer, opts ...Option) *Auther {
 
 // Release 释放资源
 func (a *Auther) Release() error {
-	return a.callStore(func(store Storer) error {
+	return a.callStore(func(store store.Storer) error {
 		return store.Close()
 	})
 }
@@ -140,7 +141,7 @@ var _ auth.Auther = &Auther{}
 // Auther jwt认证
 type Auther struct {
 	opts  *options
-	store Storer
+	store store.Storer
 }
 
 // GetUserInfo 获取用户
@@ -164,7 +165,7 @@ func (a *Auther) GetUserInfo(c context.Context) (auth.UserInfo, error) {
 		return nil, err
 	}
 
-	err = a.callStore(func(store Storer) error {
+	err = a.callStore(func(store store.Storer) error {
 		// 反向验证该用户是否已经登出
 		if exists, err := store.Check(c, claims.GetTokenID()); err != nil {
 			return err
@@ -219,9 +220,9 @@ func (a *Auther) DestroyToken(c context.Context, user auth.UserInfo) error {
 	}
 
 	// 如果设定了存储，则将未过期的令牌放入
-	return a.callStore(func(store Storer) error {
+	return a.callStore(func(store store.Storer) error {
 		expired := time.Unix(claims.ExpiresAt, 0).Sub(time.Now())
-		return store.Set(c, claims.GetTokenID(), expired)
+		return store.Set1(c, claims.GetTokenID(), expired)
 	})
 }
 
@@ -259,7 +260,7 @@ func (a *Auther) keyFunc(c context.Context, t *jwt.Token) (interface{}, error) {
 }
 
 // 调用存储方法
-func (a *Auther) callStore(fn func(Storer) error) error {
+func (a *Auther) callStore(fn func(store.Storer) error) error {
 	if store := a.store; store != nil {
 		return fn(store)
 	}

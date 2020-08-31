@@ -58,28 +58,8 @@ func (a *Signin) signin(c *gin.Context) {
 		return
 	}
 
-	// 获取上次登陆的信息
-	lastSignin := func(aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
-		o2a := schema.SigninGpaOAuth2Account{}
-		if err := o2a.QueryByAccountAndClient(a.Sqlx, aid, cid); err != nil {
-			if !sqlxc.IsNotFound(err) {
-				// 数据库查询发生异常
-				logger.Errorf(c, logger.ErrorWW(err))
-				return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-DB-UNKONW", Other: "数据库发生位置异常"})
-			}
-		}
-		if o2a.LastAt.Valid && time.Now().Unix()-o2a.LastAt.Time.Unix() < config.C.JWTAuth.LimitTime {
-			// 登陆时间非常短,直接返回上次结果
-			return nil, helper.NewSuccess(c, &schema.SigninResult{
-				Status:  "ok",
-				Token:   o2a.Secret.String,
-				Expired: o2a.Expired.Int64,
-			})
-		}
-		return &o2a, nil
-	}
 	// 执行登录
-	user, err := a.SigninService.SigninByPasswd(c, &body, lastSignin)
+	user, err := a.SigninService.SigninByPasswd(c, &body, a.lastSignin)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -95,27 +75,7 @@ func (a *Signin) signin(c *gin.Context) {
 	}
 
 	// 登陆日志
-	aid, _ := strconv.Atoi(user.AccountID)
-	cid, cok := helper.GetJwtKidStr(c)
-	o2a := schema.SigninGpaOAuth2Account{
-		AccountID: aid,
-		UserKID:   user.UserID,
-		RoleKID:   sql.NullString{Valid: true, String: user.RoleID},
-		ClientID:  sql.NullInt64{Valid: false},
-		ClientKID: sql.NullString{Valid: cok, String: cid},
-		Expired:   sql.NullInt64{Valid: true, Int64: token.GetExpiresAt()},
-		LastIP:    sql.NullString{Valid: true, String: helper.GetClientIP(c)},
-		LastAt:    sql.NullTime{Valid: true, Time: time.Now()},
-		LimitExp:  sql.NullTime{Valid: false},
-		LimitKey:  sql.NullString{Valid: false},
-		Mode:      sql.NullString{Valid: true, String: "signin"},
-		Secret:    sql.NullString{Valid: true, String: token.GetAccessToken()},
-		Status:    true,
-	}
-	if _, err := o2a.UpdateAndSaveByAccountAndClient(a.Sqlx); err != nil {
-		logger.Errorf(c, logger.ErrorWW(err))
-	}
-
+	a.logSignin(c, user, token, "signin")
 	// 登陆结果
 	result := schema.SigninResult{
 		Status:  "ok",
@@ -128,6 +88,57 @@ func (a *Signin) signin(c *gin.Context) {
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
 }
+
+// 获取最后一次登陆信息
+func (a *Signin) lastSignin(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
+	if config.C.JWTAuth.LimitTime <= 0 {
+		// 不使用上去签名的结果作为缓存
+		return nil, nil
+	}
+	o2a := schema.SigninGpaOAuth2Account{}
+	if err := o2a.QueryByAccountAndClient(a.Sqlx, aid, cid); err != nil {
+		if !sqlxc.IsNotFound(err) {
+			// 数据库查询发生异常
+			logger.Errorf(c, logger.ErrorWW(err))
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-DB-UNKONW", Other: "数据库发生位置异常"})
+		}
+	}
+	if o2a.LastAt.Valid && time.Now().Unix()-o2a.LastAt.Time.Unix() < config.C.JWTAuth.LimitTime {
+		// 登陆时间非常短,直接返回上次签名结果
+		return nil, helper.NewSuccess(c, &schema.SigninResult{
+			Status:  "ok",
+			Token:   o2a.Secret.String,
+			Expired: o2a.Expired.Int64,
+		})
+	}
+	return &o2a, nil
+}
+
+// 登陆日志
+func (a *Signin) logSignin(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode string) {
+	aid, _ := strconv.Atoi(u.GetAccountID())
+	cid, cok := helper.GetJwtKidStr(c)
+	o2a := schema.SigninGpaOAuth2Account{
+		AccountID: aid,
+		UserKID:   u.GetUserID(),
+		RoleKID:   sql.NullString{Valid: true, String: u.GetRoleID()},
+		ClientID:  sql.NullInt64{Valid: false},
+		ClientKID: sql.NullString{Valid: cok, String: cid},
+		Expired:   sql.NullInt64{Valid: true, Int64: t.GetExpiresAt()},
+		LastIP:    sql.NullString{Valid: true, String: helper.GetClientIP(c)},
+		LastAt:    sql.NullTime{Valid: true, Time: time.Now()},
+		LimitExp:  sql.NullTime{Valid: false},
+		LimitKey:  sql.NullString{Valid: false},
+		Mode:      sql.NullString{Valid: true, String: mode},
+		Secret:    sql.NullString{Valid: true, String: t.GetAccessToken()},
+		Status:    true,
+	}
+	if _, err := o2a.UpdateAndSaveByAccountAndClient(a.Sqlx); err != nil {
+		logger.Errorf(c, logger.ErrorWW(err))
+	}
+
+}
+
 func (a *Signin) signin2(c *gin.Context) {
 	helper.ResSuccess(c, "ok")
 }

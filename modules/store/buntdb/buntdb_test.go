@@ -15,7 +15,7 @@ func TestStore(t *testing.T) {
 
 	key := "test"
 	ctx := context.Background()
-	err = store.Set(ctx, key, 0)
+	err = store.Set1(ctx, key, 0)
 	assert.Nil(t, err)
 
 	b, err := store.Check(ctx, key)

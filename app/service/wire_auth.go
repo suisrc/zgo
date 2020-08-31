@@ -9,27 +9,34 @@ import (
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/auth/jwt"
-	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
 	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/crypto"
 	"github.com/suisrc/zgo/modules/helper"
 	"github.com/suisrc/zgo/modules/logger"
+	"github.com/suisrc/zgo/modules/store"
+	"github.com/suisrc/zgo/modules/store/buntdb"
 )
 
 // AuthOpts 认证配置信息
 // 认证需要频繁操作,所以这里需要使用内存缓存
 type AuthOpts struct {
 	GPA
-	Jwts map[interface{}]*schema.JwtGpaOpts
+	Store store.Storer
+	Jwts  map[interface{}]*schema.JwtGpaOpts
+}
+
+// NewStorer 全局缓存
+func NewStorer() (store.Storer, func(), error) {
+	store, err := buntdb.NewStore(":memory:") // 使用内存缓存
+	if err != nil {
+		return nil, nil, err
+	}
+	return store, func() { store.Close() }, nil
 }
 
 // NewAuther of auth.Auther
 // 授权认证使用的auther内容
 func NewAuther(opts *AuthOpts) auth.Auther {
-	store, err := buntdb.NewStore(":memory:") // 使用内存缓存
-	if err != nil {
-		panic(err)
-	}
 	secret := config.C.JWTAuth.SigningSecret
 	if secret == "" {
 		secret = crypto.UUID(128)
@@ -37,7 +44,7 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 	}
 
 	opts.Jwts = map[interface{}]*schema.JwtGpaOpts{}
-	auther := jwt.New(store,
+	auther := jwt.New(opts.Store,
 		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
 		jwt.SetKeyFunc(opts.keyFunc),
 		jwt.SetNewClaims(opts.signingFunc),

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis"
+	"github.com/suisrc/zgo/modules/store"
 )
 
 // Config redis配置参数
@@ -55,6 +56,8 @@ type redisClienter interface {
 	Close() error
 }
 
+var _ store.Storer = new(Store)
+
 // Store redis存储
 type Store struct {
 	cli    redisClienter
@@ -65,15 +68,30 @@ func (s *Store) wrapperKey(key string) string {
 	return fmt.Sprintf("%s%s", s.prefix, key)
 }
 
+// Get ...
+func (s *Store) Get(ctx context.Context, key string) (string, bool, error) {
+	cmd := s.cli.Get(s.wrapperKey(key))
+	if err := cmd.Err(); err != nil {
+		return "", false, err
+	}
+	return cmd.Val(), true, nil
+}
+
 // Set ...
-func (s *Store) Set(ctx context.Context, tokenString string, expiration time.Duration) error {
-	cmd := s.cli.Set(s.wrapperKey(tokenString), "1", expiration)
+func (s *Store) Set(ctx context.Context, key, value string, expiration time.Duration) error {
+	cmd := s.cli.Set(s.wrapperKey(key), value, expiration)
+	return cmd.Err()
+}
+
+// Set1 ...
+func (s *Store) Set1(ctx context.Context, key string, expiration time.Duration) error {
+	cmd := s.cli.Set(s.wrapperKey(key), "1", expiration)
 	return cmd.Err()
 }
 
 // Delete ...
-func (s *Store) Delete(ctx context.Context, tokenString string) error {
-	cmd := s.cli.Del(tokenString)
+func (s *Store) Delete(ctx context.Context, key string) error {
+	cmd := s.cli.Del(key)
 	if err := cmd.Err(); err != nil {
 		return err
 	}
@@ -81,8 +99,8 @@ func (s *Store) Delete(ctx context.Context, tokenString string) error {
 }
 
 // Check ...
-func (s *Store) Check(ctx context.Context, tokenString string) (bool, error) {
-	cmd := s.cli.Exists(s.wrapperKey(tokenString))
+func (s *Store) Check(ctx context.Context, key string) (bool, error) {
+	cmd := s.cli.Exists(s.wrapperKey(key))
 	if err := cmd.Err(); err != nil {
 		return false, err
 	}

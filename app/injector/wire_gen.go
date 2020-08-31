@@ -45,8 +45,16 @@ func BuildInjector() (*Injector, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
+	storer, cleanup4, err := service.NewStorer()
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	authOpts := &service.AuthOpts{
-		GPA: gpa,
+		GPA:   gpa,
+		Store: storer,
 	}
 	auther := service.NewAuther(authOpts)
 	demo := &api.Demo{
@@ -80,8 +88,9 @@ func BuildInjector() (*Injector, func(), error) {
 		User:     user,
 	}
 	endpoints := api.InitEndpoints(options)
-	watcher, cleanup4, err := casbinmem.NewCasbinWatcher(casbinAdapter, syncedEnforcer)
+	watcher, cleanup5, err := casbinmem.NewCasbinWatcher(casbinAdapter, syncedEnforcer)
 	if err != nil {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -106,6 +115,7 @@ func BuildInjector() (*Injector, func(), error) {
 		Healthz:    healthz,
 	}
 	return injector, func() {
+		cleanup5()
 		cleanup4()
 		cleanup3()
 		cleanup2()

@@ -24,7 +24,7 @@ type Signin struct {
 //============================================================================================
 
 // SigninByPasswd 密码登陆
-func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, lastSignin func(aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
 	// 查询账户信息
 	account := schema.SigninGpaAccount{}
 	if err := account.QueryByAccount(a.Sqlx, b.Username, 1, b.KID); err != nil || account.ID <= 0 {
@@ -45,7 +45,7 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, lastSignin
 }
 
 // GetSignUserByAutoRole auto role
-func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, b *schema.SigninBody, lastSignin func(aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
 	// 登陆用户
 	suser := schema.SigninUser{}
 	suser.AccountID = strconv.Itoa(account.ID)
@@ -84,9 +84,7 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	}
 
 	if lastSignin == nil {
-		lastSignin = func(aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
-			return nil, nil
-		}
+		lastSignin = a.lastSigninNil
 	}
 
 	// 角色
@@ -101,7 +99,7 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 		if !a.CheckRoleClient(c, &client, domain, &role) {
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
 		}
-	} else if o2a, err := lastSignin(account.ID, client.ID); err != nil || o2a != nil && o2a.Status && o2a.RoleKID.Valid {
+	} else if o2a, err := lastSignin(c, account.ID, client.ID); err != nil || o2a != nil && o2a.Status && o2a.RoleKID.Valid {
 		if err != nil {
 			return nil, err
 		}
@@ -136,6 +134,11 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	suser.Issuer = c.Request.Host
 	suser.Audience = c.Request.Host
 	return &suser, nil
+}
+
+// 空的上次登陆验证器
+func (a *Signin) lastSigninNil(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
+	return nil, nil
 }
 
 // CheckRoleClient 确定访问权限

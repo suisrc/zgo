@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/guonaihong/gout"
+	"github.com/suisrc/zgo/modules/store"
 
 	goutapi "github.com/guonaihong/gout/interface"
-	"github.com/suisrc/zgo/modules/auth/jwt"
 )
 
 // Config 配置
@@ -28,7 +28,7 @@ func NewStore(cfg *Config) *Store {
 	}
 }
 
-var _ jwt.Storer = &Store{}
+var _ store.Storer = new(Store)
 
 // Store redis存储
 type Store struct {
@@ -37,13 +37,28 @@ type Store struct {
 	middleware goutapi.RequestMiddler
 }
 
-// Set 存储令牌数据，并指定到期时间
-func (s *Store) Set(ctx context.Context, tokenString string, expiration time.Duration) error {
+// Get ...
+func (s *Store) Get(ctx context.Context, key string) (string, bool, error) {
+	return "", false, nil
+}
+
+// Set ...
+func (s *Store) Set(ctx context.Context, key, value string, expiration time.Duration) error {
+	return nil
+}
+
+// Delete ...
+func (s *Store) Delete(ctx context.Context, key string) error {
+	return nil
+}
+
+// Set1 存储令牌数据，并指定到期时间
+func (s *Store) Set1(ctx context.Context, key string, expiration time.Duration) error {
 	res := ResResult{}
 	err := gout.New(s.cli).
 		POST(s.url).
 		SetJSON(gout.H{
-			"token":   tokenString,
+			"token":   key,
 			"expired": expiration,
 		}).
 		RequestUse(s.middleware).
@@ -61,12 +76,12 @@ func (s *Store) Set(ctx context.Context, tokenString string, expiration time.Dur
 }
 
 // Check 检查令牌是否存在
-func (s *Store) Check(ctx context.Context, tokenString string) (bool, error) {
+func (s *Store) Check(ctx context.Context, key string) (bool, error) {
 	res := ResResult{}
 	err := gout.New(s.cli).
 		GET(s.url).
 		SetQuery(gout.H{
-			"token": tokenString,
+			"token": key,
 		}).
 		RequestUse(s.middleware).
 		BindJSON(&res).
