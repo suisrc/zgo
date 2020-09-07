@@ -167,7 +167,7 @@ func (a *Auther) GetUserInfo(c context.Context) (auth.UserInfo, error) {
 
 	err = a.callStore(func(store store.Storer) error {
 		// 反向验证该用户是否已经登出
-		if exists, err := store.Check(c, claims.GetTokenID()); err != nil {
+		if exists, err := store.Check(c, "token:"+claims.GetTokenID()); err != nil {
 			return err
 		} else if exists {
 			return auth.ErrInvalidToken
@@ -222,7 +222,7 @@ func (a *Auther) DestroyToken(c context.Context, user auth.UserInfo) error {
 	// 如果设定了存储，则将未过期的令牌放入
 	return a.callStore(func(store store.Storer) error {
 		expired := time.Unix(claims.ExpiresAt, 0).Sub(time.Now())
-		return store.Set1(c, claims.GetTokenID(), expired)
+		return store.Set1(c, "token:"+claims.GetTokenID(), expired)
 	})
 }
 

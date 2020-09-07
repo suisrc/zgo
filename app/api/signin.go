@@ -27,16 +27,18 @@ type Signin struct {
 // Register 注册路由,认证接口特殊,需要独立注册
 func (a *Signin) Register(r gin.IRouter) {
 	// sign 开头的路由会被全局casbin放行
-	r.POST("signin", a.signin)         // 登陆必须是POST请求
-	r.POST("signin/{:kid}", a.signin2) // 登陆必须是POST请求
+	r.POST("signin", a.signin) // 登陆必须是POST请求
+	//r.POST("signin/{:kid}", a.signin2) // 登陆必须是POST请求
 
 	// ua := middleware.UserAuthMiddleware(a.Auther)
 	// r.GET("signout", ua, a.signout)
+
 	r.GET("signout", a.signout)
 	r.GET("signin/refresh", a.refresh)
+	r.GET("signin/captcha", a.captcha)
 
-	r.POST("signup", a.signup)         // 注册
-	r.POST("signup/{:kid}", a.signup2) // 注册
+	r.POST("signup", a.signup) // 注册
+	//r.POST("signup/{:kid}", a.signup2) // 注册
 }
 
 // Signin godoc
@@ -59,7 +61,7 @@ func (a *Signin) signin(c *gin.Context) {
 	}
 
 	// 执行登录
-	user, err := a.SigninService.SigninByPasswd(c, &body, a.lastSignin)
+	user, err := a.SigninService.Signin(c, &body, a.lastSignin)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -139,13 +141,9 @@ func (a *Signin) logSignin(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mo
 
 }
 
-func (a *Signin) signin2(c *gin.Context) {
-	helper.ResSuccess(c, "ok")
-}
-
 // Signout godoc
 // @Tags sign
-// @Summary Signin
+// @Summary Signout
 // @Description 登出
 // @Accept  json
 // @Produce  json
@@ -216,6 +214,35 @@ func (a *Signin) refresh(c *gin.Context) {
 
 // Signup godoc
 // @Tags sign
+// @Summary Captcha
+// @Description 推送验证码
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} helper.Success
+// @Router /signin/captcha [get]
+func (a *Signin) captcha(c *gin.Context) {
+	// 解析参数
+	body := schema.SigninOfCaptcha{}
+	if err := helper.ParseQuery(c, &body); err != nil {
+		helper.FixResponse406Error(c, err, func() {
+			logger.Errorf(c, logger.ErrorWW(err))
+		})
+		return
+	}
+	code, err := a.SigninService.Captcha(c, &body)
+	if err != nil {
+		helper.FixResponse401Error(c, err, func() {
+			logger.Errorf(c, logger.ErrorWW(err))
+		})
+		return
+	}
+	helper.ResSuccess(c, helper.H{
+		"code": code,
+	})
+}
+
+// Signup godoc
+// @Tags sign
 // @Summary Signup
 // @Description 登陆
 // @Accept  json
@@ -224,6 +251,11 @@ func (a *Signin) refresh(c *gin.Context) {
 // @Router /signup [post]
 func (a *Signin) signup(c *gin.Context) {
 	helper.ResSuccess(c, "功能为开放")
+}
+
+// 登陆
+func (a *Signin) signin2(c *gin.Context) {
+	helper.ResSuccess(c, "ok")
 }
 
 // 注册

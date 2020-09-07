@@ -11,13 +11,18 @@ import (
 
 // ServiceSet wire注入服务
 var ServiceSet = wire.NewSet(
-	NewAuther,                               // Auther注册
-	NewStorer,                               // 缓存
-	entc.NewClient,                          // 数据库连接注册
-	sqlxc.NewClient,                         // 数据库连接注册
-	wire.Struct(new(GPA), "*"),              // 数据库服务
-	wire.Struct(new(passwd.Validator), "*"), // 密码验证
+	NewAuther,       // Auther注册
+	NewStorer,       // 缓存
+	entc.NewClient,  // 数据库连接注册
+	sqlxc.NewClient, // 数据库连接注册
+
+	wire.Struct(new(GPA), "*"),                 // 数据库服务
+	wire.Struct(new(passwd.Validator), "*"),    // 密码验证
 	wire.Struct(new(AuthOpts), "GPA", "Store"), // Auther依赖
+
+	wire.Struct(new(MobileSender), "*"), // 手机发送器
+	wire.Struct(new(EmailSender), "*"),  // 邮件发送器
+	wire.Struct(new(ThreeSender), "*"),  // 第三方平台发送器
 
 	wire.Struct(new(Signin), "*"), // 服务
 )

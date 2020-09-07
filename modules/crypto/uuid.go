@@ -9,6 +9,8 @@ import (
 )
 
 var (
+	code10 = []byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}
+
 	code36 = []byte{'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
 		'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
 		'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
@@ -26,6 +28,16 @@ var (
 		'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
 		'-', '_'}
 )
+
+// CODE code
+func CODE(length int) string {
+	elen := len(code10)
+	var uuid strings.Builder
+	for i := 0; i < length; i++ {
+		uuid.WriteByte(code36[fastrand.Intn(elen)])
+	}
+	return uuid.String()
+}
 
 // UUID uuid
 func UUID(length int) string {

@@ -68,3 +68,12 @@ func AesDecryptStr(cipherText, keysStr string) (string, error) {
 	}
 	return AesDecrypt(cipherText, keys)
 }
+
+// AesEncryptStr2 aes
+func AesEncryptStr2(cipherText, keysStr string) (string, error) {
+	keys, err := Base64DecodeString(keysStr)
+	if err != nil {
+		return "", err
+	}
+	return AesEncrypt(cipherText, keys)
+}

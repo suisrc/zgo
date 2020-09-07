@@ -196,7 +196,7 @@ func CreateUpdateSQLByNamed(table, idc string, id IDC, obj interface{}, fix func
 	}
 
 	if id.ID > 0 {
-		SQL := "update " + table + " SET" + SQL1.String()[1:] + " where " + idc + "=:" + idc
+		SQL := "update " + table + " set" + SQL1.String()[1:] + " where " + idc + "=:" + idc
 		params[idc] = id.ID
 		return SQL, params, nil
 	}

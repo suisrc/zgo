@@ -13,13 +13,30 @@ import (
 // SigninBody 登陆参数
 type SigninBody struct {
 	Username string `json:"username" binding:"required"` // 账户
-	Password string `json:"password" binding:"required"` // 密码
+	Password string `json:"password"`                    // 密码
 	KID      string `json:"kid"`                         // 授权平台
 	Client   string `json:"client"`                      // 子应用ID
 	Captcha  string `json:"captcha"`                     // 验证码
 	Code     string `json:"code"`                        // 标识码
 	Role     string `json:"role"`                        // 角色
 	Domain   string `json:"host"`                        // 域, 如果无,使用c.Reqest.Host代替
+}
+
+// SigninOfCaptcha 使用登陆发生认证信息
+type SigninOfCaptcha struct {
+	Mobile string `query:"mobile"` // 手机
+	Email  string `query:"email"`  // 邮箱
+	Openid string `query:"openid"` // openid
+	KID    string `query:"kid"`    // 平台标识
+}
+
+// SigninQuery 登陆参数
+type SigninQuery struct {
+	Openid   string `query:"openid"`       // openid
+	Code     string `query:"code"`         // code
+	State    string `query:"state"`        // state
+	Kid      string `query:"kid"`          // kid
+	Redirect string `query:"redirect_uri"` // redirect_uri
 }
 
 // SigninResult 登陆返回值
@@ -145,11 +162,10 @@ type SigninGpaAccount struct {
 	PID          sql.NullInt64  `db:"pid"`
 	Account      string         `db:"account"`
 	AccountType  int            `db:"account_typ"`
-	AccountKind  sql.NullInt64  `db:"account_kid"`
+	AccountKind  sql.NullString `db:"account_kid"`
 	Password     sql.NullString `db:"password"`
 	PasswordSalt sql.NullString `db:"password_salt"`
 	PasswordType sql.NullString `db:"password_type"`
-	VerifyType   sql.NullString `db:"verify_type"`
 	VerifySecret sql.NullString `db:"verify_secret"`
 	UserID       int            `db:"user_id"`
 	RoleID       sql.NullInt64  `db:"role_id"`
@@ -158,21 +174,17 @@ type SigninGpaAccount struct {
 	// SQLX2 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
 }
 
+// QueryByID 查询
+func (a *SigninGpaAccount) QueryByID(sqlx *sqlx.DB, id int) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account where id=?"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, id)
+}
+
 // QueryByAccount sql select
 func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, kid string) error {
 	sqr := strings.Builder{}
-	sqr.WriteString("select id")
-	sqr.WriteString(", pid")
-	sqr.WriteString(", account")
-	sqr.WriteString(", account_typ")
-	sqr.WriteString(", account_kid")
-	sqr.WriteString(", password")
-	sqr.WriteString(", password_salt")
-	sqr.WriteString(", password_type")
-	sqr.WriteString(", verify_type")
-	sqr.WriteString(", verify_secret")
-	sqr.WriteString(", user_id")
-	sqr.WriteString(", role_id")
+	sqr.WriteString("select " + sqlxc.SelectColumns(a, ""))
 	sqr.WriteString(" from {{TP}}account")
 	sqr.WriteString(" where account=? and account_typ=?")
 
@@ -186,6 +198,14 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 	sqr.WriteString(" and status=1")
 	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, params...)
+}
+
+// UpdateVerifySecret update verify secret
+func (a *SigninGpaAccount) UpdateVerifySecret(sqlx *sqlx.DB) error {
+	SQL := "update {{TP}}account set verify_secret=? where id=?"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	_, err := sqlx.Exec(SQL, a.VerifySecret.String, a.ID)
+	return err
 }
 
 // SigninGpaOAuth2Account account

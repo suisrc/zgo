@@ -44,7 +44,6 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | password_salt | 密码盐值       | 字符串   | 加密规则加固, 防止暴力破解                          | varchar(255)                                         |
 | password_type | 密码方式       | 字符串   | 1:(明文) 2:MD5 3:SHA1 4: BCR 5: BCR2 6: BCR3        | varchar(16)                                          |
 | verify_secret | 校验密钥       | 字符串   | SMS 和 OAUTH2 验证时候,对状态进行签名               | varchar(255)                                         |
-| verify_type   | 校验方式       | 字符串   | 1:PASSWD 2:SMS 3:OAUTH2 0:PID(多账户统一验证)       | tinyint(4) DEFAULT '1'                               |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | user_id       | 用户标识       | 数值     |                                                     | int(11) NOT NULL, fk_account_user->user.id           |
 | role_id       | 角色标识       | 数值     | 如果不为空,表示账户和角色已绑定                     | int(11), fk_account_role->role.id                    |
@@ -195,9 +194,9 @@ C应用:  [Client.kid]        应用ID
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| account_id    | 账户标识       | 数值     |                                                     | int(11) NOT NULL, udx_oauth2_account_aid             |
-| client_id     | 客户端标识     | 数值     |                                                     | int(11), udx_oauth2_account_cid                      |
-| client_kid    | 客户端标识     | 数值     |                                                     | varchar(64), idx_oauth2_account_ckid                     |
+| account_id    | 账户标识       | 数值     |                                                     | int(11) NOT NULL, idx_oauth2_account_aid             |
+| client_id     | 客户端标识     | 数值     |                                                     | int(11), idx_oauth2_account_cid                      |
+| client_kid    | 客户端标识     | 数值     |                                                     | varchar(64), idx_oauth2_account_ckid                 |
 | user_kid      | 用户标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_ukid                 |
 | role_kid      | 角色标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_rkid                 |
 | expired       | 授权有效期     | 数值     | NULL 表示永久有效                                   | int(11)                                              |
@@ -215,6 +214,9 @@ C应用:  [Client.kid]        应用ID
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
 | updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
+| number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
 ## 用户实体(`user`)

@@ -2,11 +2,18 @@ package service
 
 import (
 	"strconv"
+	"strings"
+	"time"
+
+	"github.com/suisrc/zgo/modules/crypto"
+
+	"github.com/suisrc/zgo/app/model/sqlxc"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	gi18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/modules/helper"
 	"github.com/suisrc/zgo/modules/passwd"
+	"github.com/suisrc/zgo/modules/store"
 
 	"github.com/suisrc/zgo/modules/logger"
 
@@ -16,9 +23,66 @@ import (
 
 // Signin 账户管理
 type Signin struct {
-	GPA                      // 数据库
-	Passwd *passwd.Validator // 密码验证其
-	// Auth   *AuthOpts         // 认证
+	GPA                       // 数据库
+	Passwd  *passwd.Validator // 密码验证其
+	Store   store.Storer      // 缓存控制器
+	MSender MobileSender      // 手机
+	ESender EmailSender       // 邮箱
+	TSender ThreeSender       // 第三方
+}
+
+// Signin 登陆控制
+func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+	if b.Password != "" {
+		return a.SigninByPasswd(c, b, lastSignin)
+	}
+	if b.Captcha != "" {
+		if b.Code == "" {
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-CODE", Other: "校验码无效"})
+		}
+		return a.SigninByCaptcha(c, b, lastSignin)
+	}
+	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-NONE", Other: "无效登陆"})
+}
+
+// Captcha 发送验证码
+func (a *Signin) Captcha(c *gin.Context, b *schema.SigninOfCaptcha) (string, error) {
+	var duration time.Duration = 120 // 秒
+	acc, kid, typ, sender, err := a.parseCaptchaType(c, b)
+	if err != nil {
+		return "", err
+	}
+	account := schema.SigninGpaAccount{}
+	if err := account.QueryByAccount(a.Sqlx, acc, typ, kid); err != nil {
+		if sqlxc.IsNotFound(err) {
+			return "", helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-USER", Other: "账户异常,请联系管理员"})
+		}
+		return "", err
+	}
+
+	salt := helper.GetClientIP(c) // crypto.UUID(16)
+	key := "captcha:" + strconv.Itoa(typ) + ":" + kid + ":" + acc + ":" + salt
+	// 验证是否发送过
+	if b, err := a.Store.Check(c, key); err != nil {
+		return "", err
+	} else if b {
+		return "", helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-FREQUENTLY", Other: "发送频繁,稍后重试"})
+	}
+	a.Store.Set1(c, key, duration) // 防止频繁发送
+	captcha, err := sender()       // 发送验证码
+	if err != nil {
+		return "", err
+	}
+	if !account.VerifySecret.Valid {
+		account.VerifySecret.String = crypto.RandomAes32()
+		account.UpdateVerifySecret(a.Sqlx)
+	}
+	checkCode, err := crypto.AesEncryptStr2(captcha, account.VerifySecret.String) // 对验证码进行加密, 验证码后端不存储
+	if err != nil {
+		return "", err // 加密出现问题
+	}
+	resultCode := strconv.Itoa(account.ID) + ":" + checkCode // 给出登陆账户信息,以用来进行解密
+	return resultCode, nil
 }
 
 //============================================================================================
@@ -43,6 +107,37 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, lastSignin
 	// 获取用户信息
 	return a.GetSignUserByAutoRole(c, &account, b, lastSignin)
 }
+
+// SigninByCaptcha 验证码登陆
+func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+	offset := strings.IndexRune(b.Code, ':')
+	accountID, err := strconv.Atoi(b.Code[:offset])
+	if err != nil {
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-CODE", Other: "校验码无效"})
+	}
+	checkCode := b.Code[offset+1:]
+
+	// 查询账户信息
+	account := schema.SigninGpaAccount{}
+	if err := account.QueryByID(a.Sqlx, accountID); err != nil || account.ID <= 0 {
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-USER", Other: "账户异常,请联系管理员"})
+	} else if account.Account != b.Username || account.AccountKind.String != b.KID || !account.VerifySecret.Valid {
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-USER", Other: "账户异常,请联系管理员"})
+	}
+	// 验证验证码
+	if captcha, err := crypto.AesDecryptStr(checkCode, account.VerifySecret.String); err != nil {
+		return nil, err // 解密出现问题
+	} else if captcha != b.Captcha {
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-CHECK", Other: "验证码不正确"})
+	}
+	if b.Client != "" {
+		helper.SetJwtKid(c, b.Client)
+	}
+	// 获取用户信息
+	return a.GetSignUserByAutoRole(c, &account, b, lastSignin)
+}
+
+//============================================================================================
 
 // GetSignUserByAutoRole auto role
 func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
@@ -136,10 +231,7 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	return &suser, nil
 }
 
-// 空的上次登陆验证器
-func (a *Signin) lastSigninNil(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
-	return nil, nil
-}
+//============================================================================================
 
 // CheckRoleClient 确定访问权限
 func (a *Signin) CheckRoleClient(c *gin.Context, client *schema.JwtGpaOpts, domain string, role *schema.SigninGpaRole) bool {
@@ -162,6 +254,43 @@ func (a *Signin) CheckRoleClient(c *gin.Context, client *schema.JwtGpaOpts, doma
 	// c.Redirect
 	return *role.Domain == domain // 该角色的域和请求域必须相等
 }
+
+// 空的上次登陆验证器
+func (a *Signin) lastSigninNil(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
+	return nil, nil
+}
+
+// 解析验证类型
+func (a *Signin) parseCaptchaType(c *gin.Context, b *schema.SigninOfCaptcha) (string, string, int, func() (string, error), error) {
+	var acc string
+	var typ int
+	var sender func() (string, error)
+	if b.Mobile != "" {
+		// 使用手机发送
+		sender = func() (string, error) {
+			return a.MSender.SendCaptcha(b.Mobile)
+		}
+		acc, typ = b.Mobile, int(schema.ATMobile)
+	} else if b.Email != "" {
+		// 使用邮箱发送
+		sender = func() (string, error) {
+			return a.ESender.SendCaptcha(b.Email)
+		}
+		acc, typ = b.Email, int(schema.ATEmail)
+	} else if b.Openid != "" && b.KID != "" {
+		// 使用第三方程序发送
+		sender = func() (string, error) {
+			return a.TSender.SendCaptcha(b.KID, b.Openid)
+		}
+		acc, typ = b.Openid, int(schema.ATOpenid)
+	} else {
+		// 验证码无法发送
+		return "", "", 0, nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-NONE", Other: "无效验证"})
+	}
+	return acc, b.KID, typ, sender, nil
+}
+
+//============================================================================================
 
 // GetSignUserBySelectRole 通过角色选择获取用户信息
 // 用户选择角色,不对角色进行如何判定,当发现用户具有多角色的时候,用户选择使用的角色
@@ -226,8 +355,9 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 	return &suser, nil
 }
 
-// VerifyPassword 验证密码
 //============================================================================================
+
+// VerifyPassword 验证密码
 func (a *Signin) VerifyPassword(pwd string, acc *schema.SigninGpaAccount) (bool, error) {
 	ok, _ := a.Passwd.Verify(&PasswdCheck{
 		Account:  acc,
