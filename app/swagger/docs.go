@@ -103,6 +103,32 @@ var doc = `{
                     "sign"
                 ],
                 "summary": "Captcha",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "mobile",
+                        "name": "mobile",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "email",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "openid",
+                        "name": "openid",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "kid",
+                        "name": "kid",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

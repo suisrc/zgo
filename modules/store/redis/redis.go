@@ -79,13 +79,19 @@ func (s *Store) Get(ctx context.Context, key string) (string, bool, error) {
 
 // Set ...
 func (s *Store) Set(ctx context.Context, key, value string, expiration time.Duration) error {
-	cmd := s.cli.Set(s.wrapperKey(key), value, expiration)
+	cmd := s.cli.Set(s.wrapperKey(key), value, expiration/time.Second)
 	return cmd.Err()
 }
 
 // Set1 ...
 func (s *Store) Set1(ctx context.Context, key string, expiration time.Duration) error {
-	cmd := s.cli.Set(s.wrapperKey(key), "1", expiration)
+	cmd := s.cli.Set(s.wrapperKey(key), "1", expiration/time.Second)
+	return cmd.Err()
+}
+
+// Expire ...
+func (s *Store) Expire(ctx context.Context, key string, expiration time.Duration) error {
+	cmd := s.cli.Expire(s.wrapperKey(key), expiration/time.Second)
 	return cmd.Err()
 }
 

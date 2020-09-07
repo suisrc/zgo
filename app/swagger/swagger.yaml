@@ -94,6 +94,23 @@ paths:
       consumes:
       - application/json
       description: 推送验证码
+      parameters:
+      - description: mobile
+        in: query
+        name: mobile
+        type: string
+      - description: email
+        in: query
+        name: email
+        type: string
+      - description: openid
+        in: query
+        name: openid
+        type: string
+      - description: kid
+        in: query
+        name: kid
+        type: string
       produces:
       - application/json
       responses:

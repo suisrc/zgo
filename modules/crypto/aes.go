@@ -6,12 +6,11 @@ import (
 	"crypto/cipher"
 )
 
-// AesEncrypt aes
-func AesEncrypt(plainText string, keys []byte) (string, error) {
+// AesEncryptBytes aes
+func AesEncryptBytes(plainTextBytes, keys []byte) ([]byte, error) {
 	// randomStr := UUID2(16)
 	// randomStringBytes := []byte(randomStr)
 	randomStringBytes := RandomBytes(16)
-	plainTextBytes := []byte(plainText)
 
 	var byteCollector bytes.Buffer
 	byteCollector.Write(randomStringBytes)
@@ -20,24 +19,33 @@ func AesEncrypt(plainText string, keys []byte) (string, error) {
 	//create aes
 	cip, err := aes.NewCipher(keys)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	//encrypt string
+	//encrypt
 	cbc := cipher.NewCBCEncrypter(cip, keys[:cip.BlockSize()])
 	encrypted := make([]byte, len(unencrypted))
 	cbc.CryptBlocks(encrypted, unencrypted)
+
+	return encrypted, nil
+}
+
+// AesEncrypt aes
+func AesEncrypt(plainText string, keys []byte) (string, error) {
+	plainTextBytes := []byte(plainText)
+	encrypted, err := AesEncryptBytes(plainTextBytes, keys)
+	if err != nil {
+		return "", err
+	}
 
 	cipherText := Base64EncodeToString(encrypted)
 	return cipherText, nil
 }
 
-// AesDecrypt aes
-func AesDecrypt(cipherText string, keys []byte) (string, error) {
-	encrypted, err := Base64DecodeString(cipherText)
-
+// AesDecryptBytes aes
+func AesDecryptBytes(encrypted, keys []byte) ([]byte, error) {
 	cip, err := aes.NewCipher(keys)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	cbc := cipher.NewCBCDecrypter(cip, keys[:cip.BlockSize()])
 	unencrypted := make([]byte, len(encrypted))
@@ -45,8 +53,20 @@ func AesDecrypt(cipherText string, keys []byte) (string, error) {
 
 	// 去除补位字符
 	content := PKCS7UnPadding(unencrypted, 32)
+	// 删除16位随机数
+	return content[16:], nil
+}
 
-	plainTextBytes := content[16:]
+// AesDecrypt aes
+func AesDecrypt(cipherText string, keys []byte) (string, error) {
+	encrypted, err := Base64DecodeString(cipherText)
+	if err != nil {
+		return "", err
+	}
+	plainTextBytes, err := AesDecryptBytes(encrypted, keys)
+	if err != nil {
+		return "", err
+	}
 	return string(plainTextBytes), nil
 }
 

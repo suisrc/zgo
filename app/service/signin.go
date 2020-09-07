@@ -1,8 +1,9 @@
 package service
 
 import (
+	"bytes"
+	"errors"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/suisrc/zgo/modules/crypto"
@@ -47,8 +48,9 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, lastSignin func(c 
 
 // Captcha 发送验证码
 func (a *Signin) Captcha(c *gin.Context, b *schema.SigninOfCaptcha) (string, error) {
-	var duration time.Duration = 120 // 秒
-	acc, kid, typ, sender, err := a.parseCaptchaType(c, b)
+	var duration time.Duration = 120 * time.Second // 120秒
+
+	acc, kid, typ, expire, sender, err := a.parseCaptchaType(c, b)
 	if err != nil {
 		return "", err
 	}
@@ -77,12 +79,7 @@ func (a *Signin) Captcha(c *gin.Context, b *schema.SigninOfCaptcha) (string, err
 		account.VerifySecret.String = crypto.RandomAes32()
 		account.UpdateVerifySecret(a.Sqlx)
 	}
-	checkCode, err := crypto.AesEncryptStr2(captcha, account.VerifySecret.String) // 对验证码进行加密, 验证码后端不存储
-	if err != nil {
-		return "", err // 加密出现问题
-	}
-	resultCode := strconv.Itoa(account.ID) + ":" + checkCode // 给出登陆账户信息,以用来进行解密
-	return resultCode, nil
+	return a.parseCaptchaEncrypt(c, &account, captcha, expire)
 }
 
 //============================================================================================
@@ -110,23 +107,23 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, lastSignin
 
 // SigninByCaptcha 验证码登陆
 func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
-	offset := strings.IndexRune(b.Code, ':')
-	accountID, err := strconv.Atoi(b.Code[:offset])
-	if err != nil {
-		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-CODE", Other: "校验码无效"})
-	}
-	checkCode := b.Code[offset+1:]
-
 	// 查询账户信息
+	accountID, captchaGetter, err := a.parseCaptchaDecrypt(c, b.Code)
+	if err != nil {
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-CODE", Other: "校验码不正确"})
+	}
 	account := schema.SigninGpaAccount{}
 	if err := account.QueryByID(a.Sqlx, accountID); err != nil || account.ID <= 0 {
+		logger.Errorf(c, logger.ErrorWW(err)) // 账户异常
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-USER", Other: "账户异常,请联系管理员"})
 	} else if account.Account != b.Username || account.AccountKind.String != b.KID || !account.VerifySecret.Valid {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-USER", Other: "账户异常,请联系管理员"})
 	}
 	// 验证验证码
-	if captcha, err := crypto.AesDecryptStr(checkCode, account.VerifySecret.String); err != nil {
+	if captcha, expire, err := captchaGetter(&account); err != nil {
 		return nil, err // 解密出现问题
+	} else if expire <= 0 {
+		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-EXPIRED", Other: "验证码已过期"})
 	} else if captcha != b.Captcha {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-CHECK", Other: "验证码不正确"})
 	}
@@ -255,13 +252,63 @@ func (a *Signin) CheckRoleClient(c *gin.Context, client *schema.JwtGpaOpts, doma
 	return *role.Domain == domain // 该角色的域和请求域必须相等
 }
 
-// 空的上次登陆验证器
-func (a *Signin) lastSigninNil(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
-	return nil, nil
+//============================================================================================
+
+// CaptchaEncrypt 加密验证码
+func (a *Signin) parseCaptchaEncrypt(c *gin.Context, account *schema.SigninGpaAccount, captcha string, expire time.Duration) (string, error) {
+	checkTime := time.Now().Add(expire).Unix()                      // 过期时间
+	var buffer bytes.Buffer                                         // byte buffer
+	buffer.Write(crypto.Number2BytesInNetworkOrder(int(checkTime))) // 占用4个字节
+	buffer.Write(crypto.Number2BytesInNetworkOrder(account.ID))     // 占用4个字节
+	buffer.Write([]byte(captcha))                                   // 验证码
+	// 节目加密KEY的内容
+	keys, err := crypto.Base64DecodeString(account.VerifySecret.String)
+	if err != nil {
+		return "", err
+	}
+	// 对验证码进行加密, 验证码后端不存储, 加密成校验码
+	checkCodeBytes, err := crypto.AesEncryptBytes(buffer.Bytes(), keys)
+	if err != nil {
+		return "", err // 加密出现问题
+	}
+	// 给出登陆账户信息,以用来进行解密
+	resultCodeBytes := append(checkCodeBytes, crypto.Number2BytesInNetworkOrder(account.ID)...)
+	return crypto.Base64EncodeToString(resultCodeBytes), nil
 }
 
-// 解析验证类型
-func (a *Signin) parseCaptchaType(c *gin.Context, b *schema.SigninOfCaptcha) (string, string, int, func() (string, error), error) {
+// CaptchaDecrypt 解密验证码
+func (a *Signin) parseCaptchaDecrypt(c *gin.Context, code string) (int, func(*schema.SigninGpaAccount) (string, time.Duration, error), error) {
+	resultCodeBytes, err := crypto.Base64DecodeString(code)
+	if err != nil {
+		return 0, nil, err
+	}
+	resultCodeLen := len(resultCodeBytes)
+	if resultCodeLen < 12 {
+		// 不可预知异常, 往往来自恶意攻击
+		return 0, nil, errors.New("code is error")
+	}
+	accountID := crypto.BytesNetworkOrder2Number(resultCodeBytes[resultCodeLen-4:])
+	return accountID, func(account *schema.SigninGpaAccount) (string, time.Duration, error) {
+		keys, err := crypto.Base64DecodeString(account.VerifySecret.String)
+		if err != nil {
+			return "", 0, err
+		}
+		checkCodeBytes, err := crypto.AesDecryptBytes(resultCodeBytes[:resultCodeLen-4], keys)
+		accountID2 := crypto.BytesNetworkOrder2Number(checkCodeBytes[4:8])
+		if accountID != accountID2 {
+			// 不可预知异常, 往往来自恶意攻击
+			return "", 0, errors.New("account id error")
+		}
+		checkTime := crypto.BytesNetworkOrder2Number(checkCodeBytes[:4])
+		expire := time.Unix(int64(checkTime), 0).Sub(time.Now())
+		captcha := string(checkCodeBytes[8:])
+		return captcha, expire, nil
+	}, nil
+}
+
+// CaptchaType 解析验证类型
+func (a *Signin) parseCaptchaType(c *gin.Context, b *schema.SigninOfCaptcha) (string, string, int, time.Duration, func() (string, error), error) {
+	var expire time.Duration = 300 * time.Second // 300秒
 	var acc string
 	var typ int
 	var sender func() (string, error)
@@ -285,9 +332,9 @@ func (a *Signin) parseCaptchaType(c *gin.Context, b *schema.SigninOfCaptcha) (st
 		acc, typ = b.Openid, int(schema.ATOpenid)
 	} else {
 		// 验证码无法发送
-		return "", "", 0, nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-NONE", Other: "无效验证"})
+		return "", "", 0, 0, nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-NONE", Other: "验证方式无效"})
 	}
-	return acc, b.KID, typ, sender, nil
+	return acc, b.KID, typ, expire, sender, nil
 }
 
 //============================================================================================
@@ -392,4 +439,11 @@ func (a *PasswdCheck) Salt() string {
 // Type 加密类型
 func (a *PasswdCheck) Type() string {
 	return a.Account.PasswordType.String
+}
+
+//============================================================================================
+
+// 空的上次登陆验证器
+func (a *Signin) lastSigninNil(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
+	return nil, nil
 }

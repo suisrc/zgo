@@ -36,12 +36,13 @@ func (a *Signin) Register(r gin.IRouter) {
 	r.GET("signout", a.signout)
 	r.GET("signin/refresh", a.refresh)
 	r.GET("signin/captcha", a.captcha)
+	//r.GET("signin/mfa", a.signinMFA)
 
 	r.POST("signup", a.signup) // 注册
 	//r.POST("signup/{:kid}", a.signup2) // 注册
 }
 
-// Signin godoc
+// signin godoc
 // @Tags sign
 // @Summary Signin
 // @Description 登陆
@@ -141,7 +142,7 @@ func (a *Signin) logSignin(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mo
 
 }
 
-// Signout godoc
+// signout godoc
 // @Tags sign
 // @Summary Signout
 // @Description 登出
@@ -174,7 +175,7 @@ func (a *Signin) signout(c *gin.Context) {
 	helper.ResSuccess(c, "ok")
 }
 
-// Refresh godoc
+// refresh godoc
 // @Tags sign
 // @Summary Refresh
 // @Description 刷新令牌
@@ -212,12 +213,16 @@ func (a *Signin) refresh(c *gin.Context) {
 	helper.ResSuccess(c, &result)
 }
 
-// Signup godoc
+// captcha godoc
 // @Tags sign
 // @Summary Captcha
 // @Description 推送验证码
 // @Accept  json
 // @Produce  json
+// @Param mobile query string false "mobile"
+// @Param email query string false "email"
+// @Param openid query string false "openid"
+// @Param kid query string false "kid"
 // @Success 200 {object} helper.Success
 // @Router /signin/captcha [get]
 func (a *Signin) captcha(c *gin.Context) {
@@ -237,7 +242,8 @@ func (a *Signin) captcha(c *gin.Context) {
 		return
 	}
 	helper.ResSuccess(c, helper.H{
-		"code": code,
+		"status": "ok",
+		"code":   code,
 	})
 }
 

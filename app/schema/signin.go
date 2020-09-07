@@ -24,19 +24,19 @@ type SigninBody struct {
 
 // SigninOfCaptcha 使用登陆发生认证信息
 type SigninOfCaptcha struct {
-	Mobile string `query:"mobile"` // 手机
-	Email  string `query:"email"`  // 邮箱
-	Openid string `query:"openid"` // openid
-	KID    string `query:"kid"`    // 平台标识
+	Mobile string `form:"mobile"` // 手机
+	Email  string `form:"email"`  // 邮箱
+	Openid string `form:"openid"` // openid
+	KID    string `form:"kid"`    // 平台标识
 }
 
 // SigninQuery 登陆参数
 type SigninQuery struct {
-	Openid   string `query:"openid"`       // openid
-	Code     string `query:"code"`         // code
-	State    string `query:"state"`        // state
-	Kid      string `query:"kid"`          // kid
-	Redirect string `query:"redirect_uri"` // redirect_uri
+	Openid   string `form:"openid"`       // openid
+	Code     string `form:"code"`         // code
+	State    string `form:"state"`        // state
+	Kid      string `form:"kid"`          // kid
+	Redirect string `form:"redirect_uri"` // redirect_uri
 }
 
 // SigninResult 登陆返回值
