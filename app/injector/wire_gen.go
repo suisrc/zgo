@@ -65,9 +65,22 @@ func BuildInjector() (*Injector, func(), error) {
 		Auther:   auther,
 	}
 	validator := &passwd.Validator{}
+	mobileSender := service.MobileSender{
+		GPA: gpa,
+	}
+	emailSender := service.EmailSender{
+		GPA: gpa,
+	}
+	threeSender := service.ThreeSender{
+		GPA: gpa,
+	}
 	signin := service.Signin{
-		GPA:    gpa,
-		Passwd: validator,
+		GPA:     gpa,
+		Passwd:  validator,
+		Store:   storer,
+		MSender: mobileSender,
+		ESender: emailSender,
+		TSender: threeSender,
 	}
 	apiSignin := &api.Signin{
 		GPA:           gpa,

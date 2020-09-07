@@ -23,6 +23,9 @@ definitions:
       code:
         description: 标识码
         type: string
+      host:
+        description: 域, 如果无,使用c.Reqest.Host代替
+        type: string
       kid:
         description: 授权平台
         type: string
@@ -36,7 +39,6 @@ definitions:
         description: 账户
         type: string
     required:
-    - password
     - username
     type: object
 info:
@@ -87,6 +89,21 @@ paths:
       summary: Signin
       tags:
       - sign
+  /signin/captcha:
+    get:
+      consumes:
+      - application/json
+      description: 推送验证码
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      summary: Captcha
+      tags:
+      - sign
   /signin/refresh:
     get:
       consumes:
@@ -118,7 +135,7 @@ paths:
             $ref: '#/definitions/helper.Success'
       security:
       - ApiKeyAuth: []
-      summary: Signin
+      summary: Signout
       tags:
       - sign
   /signup:

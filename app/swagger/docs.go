@@ -90,6 +90,29 @@ var doc = `{
                 }
             }
         },
+        "/signin/captcha": {
+            "get": {
+                "description": "推送验证码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sign"
+                ],
+                "summary": "Captcha",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
         "/signin/refresh": {
             "get": {
                 "security": [
@@ -135,7 +158,7 @@ var doc = `{
                 "tags": [
                     "sign"
                 ],
-                "summary": "Signin",
+                "summary": "Signout",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -275,7 +298,6 @@ var doc = `{
         "schema.SigninBody": {
             "type": "object",
             "required": [
-                "password",
                 "username"
             ],
             "properties": {
@@ -289,6 +311,10 @@ var doc = `{
                 },
                 "code": {
                     "description": "标识码",
+                    "type": "string"
+                },
+                "host": {
+                    "description": "域, 如果无,使用c.Reqest.Host代替",
                     "type": "string"
                 },
                 "kid": {
