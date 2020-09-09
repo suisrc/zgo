@@ -8,6 +8,7 @@ package injector
 import (
 	"github.com/suisrc/zgo/app/api"
 	"github.com/suisrc/zgo/app/model/entc"
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/oauth2"
 	"github.com/suisrc/zgo/app/service"
@@ -33,12 +34,12 @@ func BuildInjector() (*Injector, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	gpa := service.GPA{
+	gpaGPA := gpa.GPA{
 		Entc: client,
 		Sqlx: db,
 	}
 	casbinAdapter := service.CasbinAdapter{
-		GPA: gpa,
+		GPA: gpaGPA,
 	}
 	syncedEnforcer, cleanup3, err := casbin.NewCasbinEnforcer(casbinAdapter)
 	if err != nil {
@@ -54,12 +55,12 @@ func BuildInjector() (*Injector, func(), error) {
 		return nil, nil, err
 	}
 	authOpts := &service.AuthOpts{
-		GPA:   gpa,
+		GPA:   gpaGPA,
 		Store: storer,
 	}
 	auther := service.NewAuther(authOpts)
 	demo := &api.Demo{
-		GPA: gpa,
+		GPA: gpaGPA,
 	}
 	auth := &api.Auth{
 		Enforcer: syncedEnforcer,
@@ -67,13 +68,13 @@ func BuildInjector() (*Injector, func(), error) {
 	}
 	validator := &passwd.Validator{}
 	mobileSender := service.MobileSender{
-		GPA: gpa,
+		GPA: gpaGPA,
 	}
 	emailSender := service.EmailSender{
-		GPA: gpa,
+		GPA: gpaGPA,
 	}
 	threeSender := service.ThreeSender{
-		GPA: gpa,
+		GPA: gpaGPA,
 	}
 	selector, err := oauth2.NewSelector()
 	if err != nil {
@@ -84,7 +85,7 @@ func BuildInjector() (*Injector, func(), error) {
 		return nil, nil, err
 	}
 	signin := service.Signin{
-		GPA:            gpa,
+		GPA:            gpaGPA,
 		Passwd:         validator,
 		Store:          storer,
 		MSender:        mobileSender,
@@ -93,12 +94,12 @@ func BuildInjector() (*Injector, func(), error) {
 		OAuth2Selector: selector,
 	}
 	apiSignin := &api.Signin{
-		GPA:           gpa,
+		GPA:           gpaGPA,
 		Auther:        auther,
 		SigninService: signin,
 	}
 	user := &api.User{
-		GPA: gpa,
+		GPA: gpaGPA,
 	}
 	options := &api.Options{
 		Engine:   engine,
@@ -120,7 +121,7 @@ func BuildInjector() (*Injector, func(), error) {
 		return nil, nil, err
 	}
 	i18n := &service.I18n{
-		GPA:    gpa,
+		GPA:    gpaGPA,
 		Bundle: bundle,
 	}
 	i18nLoader := service.InitI18nLoader(i18n)

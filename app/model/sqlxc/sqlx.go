@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/jmoiron/sqlx"
-	zdbc "github.com/suisrc/zgo/app/model"
+	"github.com/suisrc/zgo/app/model/gpa"
 )
 
 // NewClient client
 func NewClient() (*sqlx.DB, func(), error) {
 	//db, err := sqlx.Connect("sqlite3", "file:db1?mode=memory&cache=shared&_fk=1")
-	db, err := sqlx.Connect(zdbc.DatabaseType, zdbc.DatabaseDSN())
+	db, err := sqlx.Connect(gpa.DatabaseType, gpa.DatabaseDSN())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -20,12 +20,12 @@ func NewClient() (*sqlx.DB, func(), error) {
 	db.SetConnMaxLifetime(time.Hour) //连接最长存活期，超过这个时间连接将不再被复用
 
 	// run the auto migration tool.
-	if zdbc.TableSchemaInitSqlx || zdbc.TableSchemaInit {
+	if gpa.TableSchemaInitSqlx || gpa.TableSchemaInit {
 		if err := db.MustExec(schema); err != nil {
 			log.Fatalf("failed creating schema resources: %v", err)
 		} else {
 			// 防止其他持久化框架更新table结构
-			zdbc.TableSchemaInit = false
+			gpa.TableSchemaInit = false
 		}
 	}
 

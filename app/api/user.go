@@ -2,13 +2,13 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/suisrc/zgo/app/service"
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/modules/helper"
 )
 
 // User 用户管理器
 type User struct {
-	service.GPA
+	gpa.GPA
 }
 
 // Register 注册接口

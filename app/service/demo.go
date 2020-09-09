@@ -5,11 +5,12 @@ import (
 
 	"github.com/suisrc/zgo/app/model/ent"
 	"github.com/suisrc/zgo/app/model/entc"
+	"github.com/suisrc/zgo/app/model/gpa"
 )
 
 // Demo 用户
 type Demo struct {
-	GPA
+	gpa.GPA
 }
 
 // T1WithTx 更新用户信息

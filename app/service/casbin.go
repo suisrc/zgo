@@ -8,6 +8,7 @@ import (
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
 	"github.com/google/wire"
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/schema"
 	zgocasbin "github.com/suisrc/zgo/modules/casbin"
@@ -25,7 +26,7 @@ var CasbinAdapterSet = wire.NewSet(
 
 // CasbinAdapter 账户管理
 type CasbinAdapter struct {
-	GPA              // 数据库
+	gpa.GPA          // 数据库
 	VerPolicy string // adapter版本,防止重复更新
 }
 

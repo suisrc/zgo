@@ -8,6 +8,7 @@ import (
 
 	"github.com/suisrc/zgo/modules/crypto"
 
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/oauth2"
 
@@ -25,7 +26,7 @@ import (
 
 // Signin 账户管理
 type Signin struct {
-	GPA                              // 数据库
+	gpa.GPA                          // 数据库
 	Passwd         *passwd.Validator // 密码验证其
 	Store          store.Storer      // 缓存控制器
 	MSender        MobileSender      // 手机

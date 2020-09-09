@@ -2,9 +2,8 @@ package service
 
 import (
 	"github.com/google/wire"
-	"github.com/jmoiron/sqlx"
-	"github.com/suisrc/zgo/app/model/ent"
 	"github.com/suisrc/zgo/app/model/entc"
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/oauth2"
 	"github.com/suisrc/zgo/modules/passwd"
@@ -19,7 +18,7 @@ var ServiceSet = wire.NewSet(
 
 	oauth2.NewSelector, // OAuth2注册
 
-	wire.Struct(new(GPA), "*"),                 // 数据库服务
+	wire.Struct(new(gpa.GPA), "*"),             // 数据库服务
 	wire.Struct(new(passwd.Validator), "*"),    // 密码验证
 	wire.Struct(new(AuthOpts), "GPA", "Store"), // Auther依赖
 
@@ -37,10 +36,4 @@ var ServiceSet = wire.NewSet(
 // ResultRef 返回值暂存器
 type ResultRef struct {
 	D interface{}
-}
-
-// GPA golang persistence api 数据持久化
-type GPA struct {
-	Entc *ent.Client // ent client, 数据修改和插入
-	Sqlx *sqlx.DB    // sqlx client, 数据查询
 }

@@ -1,7 +1,8 @@
-package zdbc
+package gpa
 
 import (
 	"github.com/suisrc/zgo/modules/config"
+
 	// 引入数据库
 	// _ "github.com/mattn/go-sqlite3"
 	_ "github.com/go-sql-driver/mysql"

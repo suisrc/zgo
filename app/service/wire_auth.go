@@ -6,6 +6,7 @@ import (
 	"time"
 
 	jwtgo "github.com/dgrijalva/jwt-go"
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/auth/jwt"
@@ -20,7 +21,7 @@ import (
 // AuthOpts 认证配置信息
 // 认证需要频繁操作,所以这里需要使用内存缓存
 type AuthOpts struct {
-	GPA
+	gpa.GPA
 	Store store.Storer
 	Jwts  map[interface{}]*schema.JwtGpaOpts
 }

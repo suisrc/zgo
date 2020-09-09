@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/logger"
@@ -21,8 +22,8 @@ type I18nLoader *I18n
 
 // I18n 账户管理
 type I18n struct {
-	GPA                 // 数据库
-	Bundle *i18n.Bundle // 控制器
+	gpa.GPA              // 数据库
+	Bundle  *i18n.Bundle // 控制器
 }
 
 // LoadI18nMessage load

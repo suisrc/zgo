@@ -11,6 +11,7 @@ import (
 	"github.com/suisrc/zgo/modules/logger"
 
 	"github.com/gin-gonic/gin"
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
@@ -20,7 +21,7 @@ import (
 
 // Signin signin
 type Signin struct {
-	service.GPA
+	gpa.GPA
 	Auther        auth.Auther
 	SigninService service.Signin
 }

@@ -6,15 +6,15 @@ import (
 	"time"
 
 	"github.com/facebookincubator/ent/dialect/sql"
-	zdbc "github.com/suisrc/zgo/app/model"
 	"github.com/suisrc/zgo/app/model/ent"
+	"github.com/suisrc/zgo/app/model/gpa"
 )
 
 // NewClient client
 func NewClient() (*ent.Client, func(), error) {
 
 	// drv, err := sql.Open("sqlite3", "file:db1?mode=memory&cache=shared&_fk=1")
-	drv, err := sql.Open(zdbc.DatabaseType, zdbc.DatabaseDSN())
+	drv, err := sql.Open(gpa.DatabaseType, gpa.DatabaseDSN())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -31,12 +31,12 @@ func NewClient() (*ent.Client, func(), error) {
 	//}
 
 	// run the auto migration tool.
-	if zdbc.TableSchemaInitEnt || zdbc.TableSchemaInit {
+	if gpa.TableSchemaInitEnt || gpa.TableSchemaInit {
 		if err := client.Schema.Create(context.Background()); err != nil {
 			log.Fatalf("failed creating schema resources: %v", err)
 		} else {
 			// 防止其他持久化框架更新table结构
-			zdbc.TableSchemaInit = false
+			gpa.TableSchemaInit = false
 		}
 	}
 

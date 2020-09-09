@@ -4,18 +4,18 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/modules/helper"
 
 	"github.com/suisrc/zgo/modules/crypto"
 	"github.com/suisrc/zgo/modules/logger"
 
 	"github.com/gin-gonic/gin"
-	"github.com/suisrc/zgo/app/service"
 )
 
 // Demo 接口
 type Demo struct {
-	service.GPA
+	gpa.GPA
 	// DemoService *service.Demo
 }
 
