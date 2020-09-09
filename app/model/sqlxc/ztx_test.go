@@ -21,7 +21,7 @@ func TestNewNowTime(t *testing.T) {
 
 func TestStruct2Map(t *testing.T) {
 
-	o2a := SigninGpaOAuth2Account{
+	o2a := SigninGpaAccountToken{
 		AccountID: 1,
 		ClientID:  sql.NullInt64{Valid: false},
 		ClientKID: sql.NullString{Valid: true, String: "2"},
@@ -42,7 +42,7 @@ func TestStruct2Map(t *testing.T) {
 
 func TestSelectColumns(t *testing.T) {
 
-	o2a := SigninGpaOAuth2Account{}
+	o2a := SigninGpaAccountToken{}
 
 	m := SelectColumns(&o2a, "t.")
 	log.Println(m)
@@ -51,7 +51,7 @@ func TestSelectColumns(t *testing.T) {
 }
 func TestCreateUpdateSQLByNamed(t *testing.T) {
 
-	o2a := SigninGpaOAuth2Account{
+	o2a := SigninGpaAccountToken{
 		AccountID: 1,
 		ClientID:  sql.NullInt64{Valid: false},
 		ClientKID: sql.NullString{Valid: true, String: "2"},
@@ -73,7 +73,7 @@ func TestCreateUpdateSQLByNamed(t *testing.T) {
 
 func TestCreateUpdateSQLByNamedSkipNil(t *testing.T) {
 
-	o2a := SigninGpaOAuth2Account{
+	o2a := SigninGpaAccountToken{
 		AccountID: 1,
 		ClientID:  sql.NullInt64{Valid: false},
 		ClientKID: sql.NullString{Valid: true, String: "2"},
@@ -96,7 +96,7 @@ func TestCreateUpdateSQLByNamedSkipNil(t *testing.T) {
 
 func TestCreateUpdateSQLByNamedSkipNilAndSet(t *testing.T) {
 
-	o2a := SigninGpaOAuth2Account{
+	o2a := SigninGpaAccountToken{
 		AccountID: 1,
 		ClientID:  sql.NullInt64{Valid: false},
 		ClientKID: sql.NullString{Valid: true, String: "2"},
@@ -117,8 +117,8 @@ func TestCreateUpdateSQLByNamedSkipNilAndSet(t *testing.T) {
 	assert.NotNil(t, nil)
 }
 
-// SigninGpaOAuth2Account account
-type SigninGpaOAuth2Account struct {
+// SigninGpaAccountToken account
+type SigninGpaAccountToken struct {
 	ID           int            `db:"id"`
 	AccountID    int            `db:"account_id"`
 	UserKID      string         `db:"user_kid"`

@@ -64,7 +64,7 @@ func (a *Signin) signin(c *gin.Context) {
 	}
 
 	// 执行登录
-	user, err := a.SigninService.Signin(c, &body, a.lastSignin)
+	user, err := a.SigninService.Signin(c, &body, a.last)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -80,7 +80,7 @@ func (a *Signin) signin(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.logSignin(c, usr, token, "signin", token.GetRefreshToken())
+	a.log(c, usr, token, "signin", token.GetRefreshToken())
 	// 登陆结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
@@ -96,13 +96,15 @@ func (a *Signin) signin(c *gin.Context) {
 	helper.ResSuccess(c, &result)
 }
 
+//==================================================================================================================
+
 // 获取最后一次登陆信息
-func (a *Signin) lastSignin(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
+func (a *Signin) last(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error) {
 	if config.C.JWTAuth.LimitTime <= 0 {
 		// 不使用上去签名的结果作为缓存
 		return nil, nil
 	}
-	o2a := schema.SigninGpaOAuth2Account{}
+	o2a := schema.SigninGpaAccountToken{}
 	if err := o2a.QueryByAccountAndClient(a.Sqlx, aid, cid, helper.GetClientIP(c)); err != nil {
 		if !sqlxc.IsNotFound(err) {
 			// 数据库查询发生异常
@@ -126,10 +128,10 @@ func (a *Signin) lastSignin(c *gin.Context, aid, cid int) (*schema.SigninGpaOAut
 }
 
 // 登陆日志
-func (a *Signin) logSignin(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode, refresh string) {
+func (a *Signin) log(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode, refresh string) {
 	aid, _ := strconv.Atoi(u.GetAccountID())
 	cid, cok := helper.GetJwtKidStr(c)
-	o2a := schema.SigninGpaOAuth2Account{
+	o2a := schema.SigninGpaAccountToken{
 		AccountID:    aid,
 		TokenID:      u.GetTokenID(),
 		UserKID:      u.GetUserID(),
@@ -151,6 +153,8 @@ func (a *Signin) logSignin(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mo
 	}
 
 }
+
+//==================================================================================================================
 
 // signout godoc
 // @Tags sign
@@ -201,7 +205,7 @@ func (a *Signin) refresh(c *gin.Context) {
 		helper.ResError(c, helper.Err401Unauthorized)
 		return
 	}
-	o2a := schema.SigninGpaOAuth2Account{}
+	o2a := schema.SigninGpaAccountToken{}
 	if err := o2a.QueryByRefreshToken(a.Sqlx, refreshToken); err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -242,7 +246,7 @@ func (a *Signin) refresh(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.logSignin(c, user, token, "refresh", "")
+	a.log(c, user, token, "refresh", "")
 	result := schema.SigninResult{
 		TokenStatus: "ok",
 		TokenType:   "Bearer",
@@ -295,7 +299,7 @@ func (a *Signin) captcha(c *gin.Context) {
 // @Description 第三方授权登陆
 // @Accept  json
 // @Produce  json
-// @Param kid path string false "kid"
+// @Param kid path string true "kid"
 // @Param redirect_uri query string false "redirect_uri"
 // @Success 200 {object} helper.Success
 // @Router /signin/oauth2/{kid} [get]
@@ -310,7 +314,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 	}
 
 	// 执行登录
-	user, err := a.SigninService.OAuth2(c, &body, a.lastSignin)
+	user, err := a.SigninService.OAuth2(c, &body, a.last)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -326,7 +330,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.logSignin(c, usr, token, "oauth2", token.GetRefreshToken())
+	a.log(c, usr, token, "oauth2", token.GetRefreshToken())
 	// 登陆结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",

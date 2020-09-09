@@ -9,6 +9,7 @@ import (
 	"github.com/suisrc/zgo/app/api"
 	"github.com/suisrc/zgo/app/model/entc"
 	"github.com/suisrc/zgo/app/model/sqlxc"
+	"github.com/suisrc/zgo/app/oauth2"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middlewire"
 	"github.com/suisrc/zgo/modules/casbin"
@@ -74,13 +75,22 @@ func BuildInjector() (*Injector, func(), error) {
 	threeSender := service.ThreeSender{
 		GPA: gpa,
 	}
+	selector, err := oauth2.NewSelector()
+	if err != nil {
+		cleanup4()
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	signin := service.Signin{
-		GPA:     gpa,
-		Passwd:  validator,
-		Store:   storer,
-		MSender: mobileSender,
-		ESender: emailSender,
-		TSender: threeSender,
+		GPA:            gpa,
+		Passwd:         validator,
+		Store:          storer,
+		MSender:        mobileSender,
+		ESender:        emailSender,
+		TSender:        threeSender,
+		OAuth2Selector: selector,
 	}
 	apiSignin := &api.Signin{
 		GPA:           gpa,

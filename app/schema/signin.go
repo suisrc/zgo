@@ -14,11 +14,11 @@ import (
 type SigninBody struct {
 	Username string `json:"username" binding:"required"` // 账户
 	Password string `json:"password"`                    // 密码
-	KID      string `json:"kid"`                         // 授权平台
-	Client   string `json:"client"`                      // 子应用ID
 	Captcha  string `json:"captcha"`                     // 验证码
 	Code     string `json:"code"`                        // 标识码
+	KID      string `json:"kid"`                         // 授权平台
 	Role     string `json:"role"`                        // 角色
+	Client   string `json:"client"`                      // 子应用ID
 	Domain   string `json:"host"`                        // 域, 如果无,使用c.Reqest.Host代替
 }
 
@@ -33,6 +33,9 @@ type SigninOfCaptcha struct {
 // SigninOfOAuth2 登陆参数
 type SigninOfOAuth2 struct {
 	KID      string `form:"kid"`          // kid
+	Role     string `form:"role"`         // 角色
+	Client   string `form:"client"`       // 子应用ID
+	Domain   string `form:"host"`         // 域, 如果无,使用c.Reqest.Host代替
 	Redirect string `form:"redirect_uri"` // redirect_uri
 }
 
@@ -110,7 +113,9 @@ func (s *SigninUser) GetAudience() string {
 	return s.Audience
 }
 
-//==============================================================================
+//=========================================================================
+//=========================================================================
+//=========================================================================
 
 // SigninGpaUser user
 type SigninGpaUser struct {
@@ -156,6 +161,10 @@ func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, user
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Select(dest, SQL, userid)
 }
+
+//=========================================================================
+//=========================================================================
+//=========================================================================
 
 // SigninGpaAccount account
 type SigninGpaAccount struct {
@@ -209,8 +218,12 @@ func (a *SigninGpaAccount) UpdateVerifySecret(sqlx *sqlx.DB) error {
 	return err
 }
 
-// SigninGpaOAuth2Account account
-type SigninGpaOAuth2Account struct {
+//=========================================================================
+//=========================================================================
+//=========================================================================
+
+// SigninGpaAccountToken account
+type SigninGpaAccountToken struct {
 	ID           int            `db:"id"`
 	AccountID    int            `db:"account_id"`
 	UserKID      string         `db:"user_kid"`
@@ -234,7 +247,7 @@ type SigninGpaOAuth2Account struct {
 }
 
 // QueryByAccountAndClient kid
-func (a *SigninGpaOAuth2Account) QueryByAccountAndClient(sqlx *sqlx.DB, accountID, clientID int, clientIP string) error {
+func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, accountID, clientID int, clientIP string) error {
 	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where account_id=?"
 	params := []interface{}{accountID}
 	if clientID > 0 {
@@ -254,7 +267,7 @@ func (a *SigninGpaOAuth2Account) QueryByAccountAndClient(sqlx *sqlx.DB, accountI
 }
 
 // QueryByAccountAndClientK kid
-func (a *SigninGpaOAuth2Account) QueryByAccountAndClientK(sqlx *sqlx.DB, accountID int, clientKID, clientIP string) error {
+func (a *SigninGpaAccountToken) QueryByAccountAndClientK(sqlx *sqlx.DB, accountID int, clientKID, clientIP string) error {
 	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where account_id=?"
 	params := []interface{}{accountID}
 	if clientKID == "" {
@@ -274,14 +287,14 @@ func (a *SigninGpaOAuth2Account) QueryByAccountAndClientK(sqlx *sqlx.DB, account
 }
 
 // QueryByRefreshToken tid
-func (a *SigninGpaOAuth2Account) QueryByRefreshToken(sqlx *sqlx.DB, token string) error {
+func (a *SigninGpaAccountToken) QueryByRefreshToken(sqlx *sqlx.DB, token string) error {
 	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where refresh_token=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, token)
 }
 
 // UpdateAndSaveByAccountAndClient 更新
-func (a *SigninGpaOAuth2Account) UpdateAndSaveByAccountAndClient(sqlx *sqlx.DB) (int64, error) {
+func (a *SigninGpaAccountToken) UpdateAndSaveByAccountAndClient(sqlx *sqlx.DB) (int64, error) {
 	IDC := sqlxc.IDC{}
 	if a.TokenID != "" {
 		SQL := "select id from {{TP}}account_token where token_kid=?"
@@ -303,4 +316,22 @@ func (a *SigninGpaOAuth2Account) UpdateAndSaveByAccountAndClient(sqlx *sqlx.DB) 
 		return IDC.ID, nil
 	}
 	return res.LastInsertId()
+}
+
+//=========================================================================
+//=========================================================================
+//=========================================================================
+
+// SigninGpaOAuth2Platfrm 第三方登陆实体
+type SigninGpaOAuth2Platfrm struct {
+	ID       int    `db:"id"`
+	KID      string `db:"kid"`
+	Platform string `db:"platform"`
+}
+
+// QueryByKID kid
+func (a *SigninGpaOAuth2Platfrm) QueryByKID(sqlx *sqlx.DB, kid string) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_platform where kid=?"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, kid)
 }

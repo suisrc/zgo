@@ -130,6 +130,7 @@ paths:
       - description: kid
         in: path
         name: kid
+        required: true
         type: string
       - description: redirect_uri
         in: query

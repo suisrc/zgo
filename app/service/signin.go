@@ -9,6 +9,7 @@ import (
 	"github.com/suisrc/zgo/modules/crypto"
 
 	"github.com/suisrc/zgo/app/model/sqlxc"
+	"github.com/suisrc/zgo/app/oauth2"
 
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	gi18n "github.com/suisrc/gin-i18n"
@@ -24,37 +25,63 @@ import (
 
 // Signin 账户管理
 type Signin struct {
-	GPA                       // 数据库
-	Passwd  *passwd.Validator // 密码验证其
-	Store   store.Storer      // 缓存控制器
-	MSender MobileSender      // 手机
-	ESender EmailSender       // 邮箱
-	TSender ThreeSender       // 第三方
+	GPA                              // 数据库
+	Passwd         *passwd.Validator // 密码验证其
+	Store          store.Storer      // 缓存控制器
+	MSender        MobileSender      // 手机
+	ESender        EmailSender       // 邮箱
+	TSender        ThreeSender       // 第三方
+	OAuth2Selector oauth2.Selector   // OAuth2选择器
 }
 
 // Signin 登陆控制
-func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	if b.Password != "" {
-		return a.SigninByPasswd(c, b, lastSignin)
+		return a.SigninByPasswd(c, b, last)
 	}
 	if b.Captcha != "" {
 		if b.Code == "" {
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-CODE", Other: "校验码无效"})
 		}
-		return a.SigninByCaptcha(c, b, lastSignin)
+		return a.SigninByCaptcha(c, b, last)
 	}
 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-NONE", Other: "无效登陆"})
 }
 
 // OAuth2 登陆控制
-func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
-	kid := c.Param("kid")
-	if kid != "" {
-		b.KID = kid
+func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+	if b.KID == "" {
+		b.KID = c.Param("kid")
+	}
+	if b.KID != "" {
 		logger.Infof(c, b.KID)
+
+		o2p := schema.SigninGpaOAuth2Platfrm{}
+		if err := o2p.QueryByKID(a.Sqlx, b.KID); err != nil {
+			return nil, err
+		}
+		o2h, ok := a.OAuth2Selector[o2p.Platform]
+		if !ok {
+			return nil, helper.NewError(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOHL",
+				Other: "无有效登陆控制器: [{{.platfrom}}]"}, helper.H{
+				"platfrom": o2p.Platform,
+			})
+		}
+
+		account := &schema.SigninGpaAccount{}
+		if err := o2h.Handle(c, b, &o2p, account); err != nil {
+			return nil, err
+		}
+		if b.Client != "" {
+			helper.SetJwtKid(c, b.Client)
+		}
+		// 获取用户信息
+		return a.GetSignUserByAutoRole(c, account, b.Domain, b.Client, last)
 	}
 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
 }
+
+//============================================================================================
 
 // Captcha 发送验证码
 func (a *Signin) Captcha(c *gin.Context, b *schema.SigninOfCaptcha) (string, error) {
@@ -95,7 +122,7 @@ func (a *Signin) Captcha(c *gin.Context, b *schema.SigninOfCaptcha) (string, err
 //============================================================================================
 
 // SigninByPasswd 密码登陆
-func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 查询账户信息
 	account := schema.SigninGpaAccount{}
 	if err := account.QueryByAccount(a.Sqlx, b.Username, 1, b.KID); err != nil || account.ID <= 0 {
@@ -112,11 +139,11 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, lastSignin
 		helper.SetJwtKid(c, b.Client)
 	}
 	// 获取用户信息
-	return a.GetSignUserByAutoRole(c, &account, b, lastSignin)
+	return a.GetSignUserByAutoRole(c, &account, b.Domain, b.Client, last)
 }
 
 // SigninByCaptcha 验证码登陆
-func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 查询账户信息
 	accountID, captchaGetter, err := a.parseCaptchaDecrypt(c, b.Code)
 	if err != nil {
@@ -141,13 +168,13 @@ func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, lastSigni
 		helper.SetJwtKid(c, b.Client)
 	}
 	// 获取用户信息
-	return a.GetSignUserByAutoRole(c, &account, b, lastSignin)
+	return a.GetSignUserByAutoRole(c, &account, b.Domain, b.Client, last)
 }
 
 //============================================================================================
 
 // GetSignUserByAutoRole auto role
-func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, b *schema.SigninBody, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, bDomain, bClient string, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 登陆用户
 	suser := schema.SigninUser{}
 	suser.AccountID = strconv.Itoa(account.ID)
@@ -162,19 +189,19 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	suser.UserName = user.Name
 	suser.UserID = user.KID
 
-	domain := b.Domain // 用户请求域名
+	domain := bDomain // 用户请求域名
 	if domain == "" {
 		domain = c.Request.Host
 	}
 	client := schema.JwtGpaOpts{} // 用户请求应用, 如果client.ID == ""标识client不存在
-	if b.Client != "" {
-		if err := client.QueryByKID(a.Sqlx, b.Client); err != nil {
+	if bClient != "" {
+		if err := client.QueryByKID(a.Sqlx, bClient); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err))
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
 		}
-	} else if b.Domain != "" {
+	} else if bDomain != "" {
 		// 一般定义了重定向的域名
-		if err := client.QueryByAudience(a.Sqlx, b.Domain); err != nil {
+		if err := client.QueryByAudience(a.Sqlx, bDomain); err != nil {
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
 		}
 	} else {
@@ -185,8 +212,8 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 		helper.SetJwtKid(c, client.KID) // 配置客户端
 	}
 
-	if lastSignin == nil {
-		lastSignin = a.lastSigninNil
+	if last == nil {
+		last = a.lastNil
 	}
 
 	// 角色
@@ -201,7 +228,7 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 		if !a.CheckRoleClient(c, &client, domain, &role) {
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
 		}
-	} else if o2a, err := lastSignin(c, account.ID, client.ID); err != nil || o2a != nil && o2a.Status.Valid && o2a.Status.Bool && o2a.RoleKID.Valid {
+	} else if o2a, err := last(c, account.ID, client.ID); err != nil || o2a != nil && o2a.Status.Valid && o2a.Status.Bool && o2a.RoleKID.Valid {
 		if err != nil {
 			return nil, err
 		}
@@ -454,6 +481,6 @@ func (a *PasswdCheck) Type() string {
 //============================================================================================
 
 // 空的上次登陆验证器
-func (a *Signin) lastSigninNil(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error) {
+func (a *Signin) lastNil(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error) {
 	return nil, nil
 }

@@ -157,7 +157,8 @@ var doc = `{
                         "type": "string",
                         "description": "kid",
                         "name": "kid",
-                        "in": "path"
+                        "in": "path",
+                        "required": true
                     },
                     {
                         "type": "string",
