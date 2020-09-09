@@ -32,6 +32,8 @@ type SigninOfCaptcha struct {
 
 // SigninOfOAuth2 登陆参数
 type SigninOfOAuth2 struct {
+	Code     string `form:"code"`         // 票据
+	State    string `form:"state"`        // 验签
 	KID      string `form:"kid"`          // kid
 	Role     string `form:"role"`         // 角色
 	Client   string `form:"client"`       // 子应用ID

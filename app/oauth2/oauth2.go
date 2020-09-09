@@ -2,15 +2,27 @@ package oauth2
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/schema"
+	"github.com/suisrc/zgo/modules/store"
 )
 
 // Selector 选择器
 type Selector map[string]Handler
 
 // NewSelector 全局缓存
-func NewSelector() (Selector, error) {
+func NewSelector(GPA gpa.GPA, Storer store.Storer) (Selector, error) {
 	selector := make(map[string]Handler)
+
+	selector["WX"] = &WeixinQm{
+		GPA:    GPA,
+		Storer: Storer,
+	}
+	selector["WXQ"] = &WeixinQy{
+		GPA:    GPA,
+		Storer: Storer,
+	}
+
 	return selector, nil
 }
 

@@ -76,7 +76,7 @@ func BuildInjector() (*Injector, func(), error) {
 	threeSender := service.ThreeSender{
 		GPA: gpaGPA,
 	}
-	selector, err := oauth2.NewSelector()
+	selector, err := oauth2.NewSelector(gpaGPA, storer)
 	if err != nil {
 		cleanup4()
 		cleanup3()
