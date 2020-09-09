@@ -54,8 +54,6 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, last func(c *g
 		b.KID = c.Param("kid")
 	}
 	if b.KID != "" {
-		logger.Infof(c, b.KID)
-
 		o2p := schema.SigninGpaOAuth2Platfrm{}
 		if err := o2p.QueryByKID(a.Sqlx, b.KID); err != nil {
 			return nil, err
