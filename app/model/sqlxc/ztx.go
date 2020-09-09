@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
@@ -137,17 +138,21 @@ func SelectColumns(obj interface{}, prefix string) string {
 
 // CreateUpdateSQLByNamedAndSkipNil create update sql by named
 func CreateUpdateSQLByNamedAndSkipNil(table, idc string, id IDC, obj interface{}) (string, map[string]interface{}, error) {
-	return CreateUpdateSQLByNamed(table, idc, id, obj, func(name, tag string, v interface{}) (interface{}, bool) {
-		obj = PickProxy(v)
-		if obj == nil {
+	return CreateUpdateSQLByNamed(table, idc, id, obj, func(typ reflect.Type, field, tag string, v interface{}) (interface{}, bool) {
+		if field == "CreatedAt" && v == nil && id.ID == 0 || field == "UpdateAt" && v == nil {
+			// 增加构建时间和更新时间字段
+			v = NewNowTime(typ)
+		}
+		res := PickProxy(v)
+		if res == nil {
 			return nil, false
 		}
-		return obj, true
+		return res, true
 	})
 }
 
 // CreateUpdateSQLByNamed create update sql by named
-func CreateUpdateSQLByNamed(table, idc string, id IDC, obj interface{}, fix func(name, tag string, v interface{}) (interface{}, bool)) (string, map[string]interface{}, error) {
+func CreateUpdateSQLByNamed(table, idc string, id IDC, obj interface{}, fix func(typ reflect.Type, name, tag string, v interface{}) (interface{}, bool)) (string, map[string]interface{}, error) {
 	t := reflect.TypeOf(obj)
 	v := reflect.ValueOf(obj)
 	if t.Kind() == reflect.Ptr {
@@ -168,12 +173,15 @@ func CreateUpdateSQLByNamed(table, idc string, id IDC, obj interface{}, fix func
 		}
 		obj := v.Field(i).Interface()
 		key := t.Field(i).Name
+		typ := t.Field(i).Type
 		if fix != nil {
-			res, ok := fix(key, tag, obj)
+			res, ok := fix(typ, key, tag, obj)
 			if !ok {
 				continue
 			}
-			obj = res
+			if res != obj {
+				obj = res
+			}
 		} else {
 			obj = PickProxy(obj)
 		}
@@ -237,4 +245,19 @@ func PickProxy(obj interface{}) interface{} {
 		return v
 	}
 	return nil
+}
+
+// NewNowTime 获取当前时间
+func NewNowTime(t reflect.Type) interface{} {
+	switch t.String() {
+	case "sql.NullTime":
+		return sql.NullTime{Valid: true, Time: time.Now()}
+	case "time.Time":
+		return time.Now()
+	case "sql.NullInt64":
+		return sql.NullInt64{Valid: true, Int64: time.Now().Unix()}
+	case "int64":
+		return time.Now().Unix()
+	}
+	return nil // 无法处理
 }

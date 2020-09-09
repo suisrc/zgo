@@ -112,7 +112,7 @@ func (a *AuthOpts) keyFunc(c context.Context, token *jwtgo.Token, method jwtgo.S
 }
 
 // 签名jwt令牌
-func (a *AuthOpts) signingFunc(c context.Context, claims jwtgo.Claims, method jwtgo.SigningMethod, secret interface{}) (string, error) {
+func (a *AuthOpts) signingFunc(c context.Context, claims *jwt.UserClaims, method jwtgo.SigningMethod, secret interface{}) (string, error) {
 	if kid, ok := helper.GetJwtKid(c); ok {
 		// 使用jwt私有密钥
 		if opt, ok := a.Jwts[kid]; ok {

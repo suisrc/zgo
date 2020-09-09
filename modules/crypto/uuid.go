@@ -98,6 +98,39 @@ func DecodeBaseX64(code string) (int64, error) {
 	return value, nil
 }
 
+// EncodeBaseX32 64位编码
+func EncodeBaseX32(code int64) string {
+	if code == 0 {
+		return "0"
+	}
+	var sbir strings.Builder
+	value := uint64(code) // go 没有无符号左移,需要使用无符号字符处理
+	for value != 0 {
+		current := value & 0X1F
+		sbir.WriteByte(code36[current])
+		value >>= 5
+	}
+	return Reverse(sbir.String())
+}
+
+// DecodeBaseX32 64解码
+func DecodeBaseX32(code string) (int64, error) {
+	if strings.TrimSpace(code) == "" || code == "0" {
+		return 0, nil
+	}
+	var value int64
+	for _, ch := range []byte(code) {
+		if '0' <= ch && ch <= '9' {
+			value = (value << 6) + (int64(ch) - int64('0'))
+		} else if 'a' <= ch && ch <= 'v' {
+			value = (value << 6) + (int64(ch) - int64('a') + 10)
+		} else {
+			return 0, errors.New(string(ch) + ":code is must in [0-9a-v]")
+		}
+	}
+	return value, nil
+}
+
 // RandomBytes random
 func RandomBytes(length int) []byte {
 	var buffer bytes.Buffer

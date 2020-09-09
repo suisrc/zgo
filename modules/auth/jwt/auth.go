@@ -6,6 +6,7 @@ package jwt
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -16,16 +17,18 @@ import (
 )
 
 type options struct {
-	tokenType     string                                                                                 // 令牌类型,传递给TokenInfo
-	expired       int                                                                                    // 过期间隔
-	signingMethod jwt.SigningMethod                                                                      // 签名方法
-	signingSecret interface{}                                                                            // 公用签名密钥
-	signingFunc   func(context.Context, jwt.Claims, jwt.SigningMethod, interface{}) (string, error)      // JWT构建令牌
-	claimsFunc    func(context.Context, *UserClaims) error                                               // 处理令牌
-	keyFunc       func(context.Context, *jwt.Token, jwt.SigningMethod, interface{}) (interface{}, error) // JWT中获取密钥, 该内容可以忽略默认的signingMethod和signingSecret
-	parseFunc     func(context.Context, string) (*UserClaims, error)                                     // 解析令牌
-	tokenFunc     func(context.Context) (string, error)                                                  // 获取令牌
-	updateFunc    func(context.Context) error                                                            // 更新Auther
+	tokenType        string                                                                                 // 令牌类型,传递给TokenInfo
+	expired          int                                                                                    // 访问令牌间隔
+	refresh          int                                                                                    // 刷新令牌间隔
+	signingMethod    jwt.SigningMethod                                                                      // 签名方法
+	signingSecret    interface{}                                                                            // 公用签名密钥
+	signingFunc      func(context.Context, *UserClaims, jwt.SigningMethod, interface{}) (string, error)     // JWT构建令牌
+	claimsFunc       func(context.Context, *UserClaims) error                                               // 处理令牌载体, 对载体的内容进行处理
+	keyFunc          func(context.Context, *jwt.Token, jwt.SigningMethod, interface{}) (interface{}, error) // JWT中获取密钥, 该内容可以忽略默认的signingMethod和signingSecret
+	parseClaimsFunc  func(context.Context, string) (*UserClaims, error)                                     // 解析令牌
+	parseRefreshFunc func(context.Context, string) (*UserClaims, error)                                     // 解析刷新令牌
+	tokenFunc        func(context.Context) (string, error)                                                  // 获取令牌
+	updateFunc       func(context.Context) error                                                            // 更新Auther
 }
 
 // Option 定义参数项
@@ -45,10 +48,17 @@ func SetSigningSecret(secret string) Option {
 	}
 }
 
-// SetExpired 设定令牌过期时长(单位秒，默认7200)
+// SetExpired 设定令牌过期时长(单位秒，默认2小时)
 func SetExpired(expired int) Option {
 	return func(o *options) {
 		o.expired = expired
+	}
+}
+
+// SetRefresh 设定令牌过期时长(单位秒，默认7天)
+func SetRefresh(refresh int) Option {
+	return func(o *options) {
+		o.refresh = refresh
 	}
 }
 
@@ -60,7 +70,7 @@ func SetKeyFunc(f func(context.Context, *jwt.Token, jwt.SigningMethod, interface
 }
 
 // SetNewClaims 设定声明内容
-func SetNewClaims(f func(context.Context, jwt.Claims, jwt.SigningMethod, interface{}) (string, error)) Option {
+func SetNewClaims(f func(context.Context, *UserClaims, jwt.SigningMethod, interface{}) (string, error)) Option {
 	return func(o *options) {
 		o.signingFunc = f
 	}
@@ -73,10 +83,17 @@ func SetTokenFunc(f func(context.Context) (string, error)) Option {
 	}
 }
 
-// SetParseFunc 设定刷新者
-func SetParseFunc(f func(context.Context, string) (*UserClaims, error)) Option {
+// SetParseClaimsFunc 设定解析令牌方法
+func SetParseClaimsFunc(f func(context.Context, string) (*UserClaims, error)) Option {
 	return func(o *options) {
-		o.parseFunc = f
+		o.parseClaimsFunc = f
+	}
+}
+
+// SetParseRefreshFunc 设定解析刷新令牌方法
+func SetParseRefreshFunc(f func(context.Context, string) (*UserClaims, error)) Option {
+	return func(o *options) {
+		o.parseRefreshFunc = f
 	}
 }
 
@@ -87,7 +104,7 @@ func SetUpdateFunc(f func(context.Context) error) Option {
 	}
 }
 
-// SetFixClaimsFunc 设定刷新者
+// SetFixClaimsFunc 设定修复载体的方法
 func SetFixClaimsFunc(f func(context.Context, *UserClaims) error) Option {
 	return func(o *options) {
 		o.claimsFunc = f
@@ -100,29 +117,30 @@ func SetFixClaimsFunc(f func(context.Context, *UserClaims) error) Option {
 
 // New 创建认证实例
 func New(store store.Storer, opts ...Option) *Auther {
+	a := &Auther{
+		store: store,
+	}
 	o := options{
-		tokenType:     "JWT",
-		expired:       7200,
-		signingMethod: jwt.SigningMethodHS512,
-		signingFunc:   NewWithClaims,
-		keyFunc:       KeyFuncCallback,
-		tokenFunc:     GetBearerToken,
-		updateFunc:    nil,
-		parseFunc:     nil,
-		claimsFunc:    nil,
+		tokenType:        "JWT",
+		expired:          2 * 3600,
+		refresh:          7 * 24 * 3600,
+		signingMethod:    jwt.SigningMethodHS512,
+		signingFunc:      NewWithClaims,
+		keyFunc:          KeyFuncCallback,
+		tokenFunc:        GetBearerToken,
+		parseClaimsFunc:  a.parseTokenClaims,
+		parseRefreshFunc: a.parseRefreshClaims,
 	}
 	for _, opt := range opts {
 		opt(&o)
 	}
 	if o.signingSecret == nil {
-		o.signingSecret = []byte(NewRandomID()) // 默认随机生成
+		o.signingSecret = []byte(NewRandomID("zgo")) // 默认随机生成
 		logger.Infof(nil, "new random signing secret: %s", o.signingSecret)
 	}
+	a.opts = &o
 
-	return &Auther{
-		opts:  &o,
-		store: store,
-	}
+	return a
 }
 
 // Release 释放资源
@@ -151,12 +169,7 @@ func (a *Auther) GetUserInfo(c context.Context) (auth.UserInfo, error) {
 		return nil, err
 	}
 
-	claims := new(UserClaims)
-	if a.opts.parseFunc != nil {
-		claims, err = a.opts.parseFunc(c, tokenString)
-	} else {
-		claims, err = a.parseToken(c, tokenString)
-	}
+	claims, err := a.opts.parseClaimsFunc(c, tokenString)
 	if err != nil {
 		var e *jwt.ValidationError
 		if errors.As(err, &e) {
@@ -184,13 +197,12 @@ func (a *Auther) GetUserInfo(c context.Context) (auth.UserInfo, error) {
 // GenerateToken 生成令牌
 func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.TokenInfo, error) {
 	now := time.Now()
-	expiresAt := now.Add(time.Duration(a.opts.expired) * time.Second).Unix()
-	issuedAt := now.Unix()
 
+	// 访问令牌
 	claims := NewUserInfo(user)
-	claims.IssuedAt = issuedAt
-	claims.NotBefore = issuedAt
-	claims.ExpiresAt = expiresAt
+	claims.IssuedAt = now.Unix()
+	claims.NotBefore = now.Unix()
+	claims.ExpiresAt = now.Add(time.Duration(a.opts.expired) * time.Second).Unix()
 
 	if a.opts.claimsFunc != nil {
 		if err := a.opts.claimsFunc(c, claims); err != nil {
@@ -204,12 +216,50 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 	}
 
 	tokenInfo := &TokenInfo{
-		AccessToken: tokenString,
-		TokenStatus: "ok",
-		TokenType:   a.opts.tokenType,
-		ExpiresAt:   expiresAt,
+		//TokenType:  "Bearer",
+		AccessToken:  tokenString,
+		ExpiresAt:    claims.ExpiresAt,
+		RefreshToken: claims.GetTokenID() + crypto.UUID(16),
 	}
 	return tokenInfo, nil
+}
+
+// RefreshToken 刷新令牌
+func (a *Auther) RefreshToken(c context.Context, tokenString string, check func(auth.UserInfo, int) error) (auth.TokenInfo, auth.UserInfo, error) {
+	claims, err := a.opts.parseRefreshFunc(c, tokenString)
+	if err != nil {
+		var e *jwt.ValidationError
+		if errors.As(err, &e) {
+			return nil, nil, auth.ErrInvalidToken
+		}
+		return nil, nil, err
+	}
+	// 外部自定义验证令牌
+	if check != nil {
+		if err := check(claims, a.opts.refresh); err != nil {
+			return nil, nil, err
+		}
+	}
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// 修正令牌时间
+	now := time.Now()
+	claims.IssuedAt = now.Unix()
+	claims.NotBefore = now.Unix()
+	claims.ExpiresAt = now.Add(time.Duration(a.opts.expired) * time.Second).Unix()
+
+	token, err := a.opts.signingFunc(c, claims, a.opts.signingMethod, a.opts.signingSecret)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	tokenInfo := &TokenInfo{
+		AccessToken: token,
+		ExpiresAt:   claims.ExpiresAt,
+	}
+	return tokenInfo, claims, nil
 }
 
 // DestroyToken 销毁令牌
@@ -239,16 +289,37 @@ func (a *Auther) UpdateAuther(c context.Context) error {
 //===================================================
 
 // 解析令牌
-func (a *Auther) parseToken(c context.Context, tokenString string) (*UserClaims, error) {
-	keyFunc := func(t *jwt.Token) (interface{}, error) { return a.keyFunc(c, t) }
-	token, err := jwt.ParseWithClaims(tokenString, &UserClaims{}, keyFunc)
+func (a *Auther) parseTokenClaims(c context.Context, tokenString string) (*UserClaims, error) {
+	key := func(t *jwt.Token) (interface{}, error) { return a.keyFunc(c, t) }
+
+	claims := &UserClaims{}
+	token, err := jwt.ParseWithClaims(tokenString, claims, key)
 	if err != nil {
 		return nil, err
 	} else if !token.Valid {
 		return nil, auth.ErrInvalidToken
 	}
 
-	return token.Claims.(*UserClaims), nil
+	// return token.Claims.(*UserClaims), nil
+	return claims, nil
+}
+
+// 解析令牌
+func (a *Auther) parseRefreshClaims(c context.Context, tokenString string) (*UserClaims, error) {
+	key := func(t *jwt.Token) (interface{}, error) { return a.keyFunc(c, t) }
+
+	claims := &UserClaims{}
+	parser := jwt.Parser{SkipClaimsValidation: true}
+	// 需要忽略自身的验证
+	token, err := parser.ParseWithClaims(tokenString, claims, key)
+	if err != nil {
+		return nil, err
+	} else if !token.Valid {
+		return nil, auth.ErrInvalidToken
+	}
+
+	// return token.Claims.(*UserClaims), nil
+	return claims, nil
 }
 
 // 获取密钥
@@ -287,7 +358,7 @@ func KeyFuncCallback(c context.Context, token *jwt.Token, method jwt.SigningMeth
 
 // NewWithClaims new claims
 // jwt.NewWithClaims
-func NewWithClaims(c context.Context, claims jwt.Claims, method jwt.SigningMethod, secret interface{}) (string, error) {
+func NewWithClaims(c context.Context, claims *UserClaims, method jwt.SigningMethod, secret interface{}) (string, error) {
 	token := &jwt.Token{
 		Header: map[string]interface{}{
 			"typ": "JWT",
@@ -301,12 +372,11 @@ func NewWithClaims(c context.Context, claims jwt.Claims, method jwt.SigningMetho
 }
 
 // NewRandomID new ID
-func NewRandomID() string {
-	// uuid, err := uuid.NewRandom()
-	// if err != nil {
-	// 	panic(err)
-	// }
-	// strid := uuid.String()
-	// return strid
-	return crypto.UUID(32)
+func NewRandomID(prefix string) string {
+	var builder strings.Builder
+	builder.WriteString(prefix)
+	builder.WriteRune('_')
+	builder.WriteString(crypto.UUID(20))
+	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix()))
+	return builder.String()
 }

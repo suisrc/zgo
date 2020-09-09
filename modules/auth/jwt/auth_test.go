@@ -2,13 +2,40 @@ package jwt
 
 import (
 	"context"
+	"log"
 	"testing"
 
-	"github.com/suisrc/zgo/modules/auth/jwt/store/buntdb"
 	"github.com/suisrc/zgo/modules/logger"
+	"github.com/suisrc/zgo/modules/store/buntdb"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestNewRandomID(t *testing.T) {
+	log.Println(NewRandomID("zgo"))
+	assert.NotNil(t, nil)
+}
+
+func TestRefreshToken(t *testing.T) {
+	store, err := buntdb.NewStore(":memory:")
+	assert.Nil(t, err)
+
+	token := "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJkZWYuY29tIiwiZXhwIjoxNTk5NTU0ODk0LCJqdGkiOiJfa3hpcHJ3djZ1eGYzaHVyemxuM3E0MjBxdjFmbGVoYTkiLCJpYXQiOjE1OTk1NTQ4ODksImlzcyI6ImFiYy5jb20iLCJuYmYiOjE1OTk1NTQ4ODksInN1YiI6IjEyMyIsIm5hbSI6Ikpzb24iLCJyb2wiOiI3ODkifQ.085VKYbb7yV5cOQZoIYMhvXyY7gChE6A_w_PoOZnVTQtzkeEnRjU_vSDazkhyZPbA3opOd9wZrpI_pRzbPw2yA"
+	secret := "zgo_c1wcx9vp97pd4iesw68o3byh71fleha9"
+
+	jwtAuth := New(store, Option(func(o *options) {
+		o.signingSecret = []byte(secret)
+	}))
+	defer jwtAuth.Release()
+	ctx := context.Background()
+
+	r, u, err := jwtAuth.RefreshToken(ctx, token, nil)
+	log.Println(r)
+	log.Println(u)
+
+	assert.Nil(t, err)
+	assert.NotNil(t, nil)
+}
 
 func TestAuth(t *testing.T) {
 	store, err := buntdb.NewStore(":memory:")
@@ -21,6 +48,7 @@ func TestAuth(t *testing.T) {
 		o.tokenFunc = func(ctx context.Context) (string, error) {
 			return ref.ref, nil
 		}
+		o.expired = 5
 	}))
 
 	defer jwtAuth.Release()
@@ -55,6 +83,7 @@ func TestAuth(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.EqualError(t, err, "invalid token")
 	//assert.Empty(t, id)
+	assert.NotNil(t, nil)
 }
 
 type TokenRef struct {

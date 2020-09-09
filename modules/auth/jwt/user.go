@@ -1,8 +1,11 @@
 package jwt
 
 import (
+	"strconv"
+
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/suisrc/zgo/modules/auth"
+	"github.com/suisrc/zgo/modules/crypto"
 )
 
 // NewUserInfo 获取用户信息
@@ -11,7 +14,11 @@ func NewUserInfo(user auth.UserInfo) *UserClaims {
 
 	tokenID := user.GetTokenID()
 	if tokenID == "" {
-		tokenID = NewRandomID()
+		if ati, err := strconv.Atoi(user.GetAccountID()); err != nil {
+			tokenID = NewRandomID(user.GetAccountID())
+		} else {
+			tokenID = NewRandomID(crypto.EncodeBaseX32(int64(ati)))
+		}
 	}
 
 	claims.Id = tokenID
@@ -34,7 +41,7 @@ type UserClaims struct {
 	jwt.StandardClaims
 	Name       string      `json:"nam,omitempty"` // 用户名
 	Role       string      `json:"rol,omitempty"` // 角色ID, role id
-	AccountID  string      `json:"acc,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式
+	AccountID  string      `json:"ati,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式
 	Properties interface{} `json:"pps,omitempty"` // 用户的额外属性
 }
 

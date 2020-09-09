@@ -139,6 +139,43 @@ var doc = `{
                 }
             }
         },
+        "/signin/oauth2/{kid}": {
+            "get": {
+                "description": "第三方授权登陆",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sign"
+                ],
+                "summary": "OAuth2",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "kid",
+                        "name": "kid",
+                        "in": "path"
+                    },
+                    {
+                        "type": "string",
+                        "description": "redirect_uri",
+                        "name": "redirect_uri",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
         "/signin/refresh": {
             "get": {
                 "security": [

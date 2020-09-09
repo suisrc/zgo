@@ -43,10 +43,21 @@ func ResJSON(ctx *gin.Context, status int, v interface{}) {
 	ctx.Abort()
 }
 
-// IsResponseError 上级应用已经处理了返回值
-func IsResponseError(err error) bool {
+// FixResponseError 上级应用已经处理了返回值
+func FixResponseError(c *gin.Context, err error) bool {
 	switch err.(type) {
 	case *Success, *ErrorInfo:
+		ResJSON(c, http.StatusOK, err)
+		return true
+	case *ErrorRedirect:
+		code := err.(*ErrorRedirect).Code
+		if code <= 0 {
+			code = http.StatusSeeOther
+		}
+		c.Redirect(code, err.(*ErrorRedirect).Location)
+		return true
+	case *ErrorNone:
+		// do nothing
 		return true
 	default:
 		return false
@@ -55,8 +66,7 @@ func IsResponseError(err error) bool {
 
 // FixResponse401Error 修复返回的异常
 func FixResponse401Error(c *gin.Context, err error, errfunc func()) {
-	if IsResponseError(err) {
-		ResJSON(c, http.StatusOK, err)
+	if FixResponseError(c, err) {
 		return
 	}
 	if errfunc != nil {
@@ -67,8 +77,7 @@ func FixResponse401Error(c *gin.Context, err error, errfunc func()) {
 
 // FixResponse403Error 修复返回的异常
 func FixResponse403Error(c *gin.Context, err error, errfunc func()) {
-	if IsResponseError(err) {
-		ResJSON(c, http.StatusOK, err)
+	if FixResponseError(c, err) {
 		return
 	}
 	if errfunc != nil {
@@ -79,8 +88,7 @@ func FixResponse403Error(c *gin.Context, err error, errfunc func()) {
 
 // FixResponse406Error 修复返回的异常
 func FixResponse406Error(c *gin.Context, err error, errfunc func()) {
-	if IsResponseError(err) {
-		ResJSON(c, http.StatusOK, err)
+	if FixResponseError(c, err) {
 		return
 	}
 	if errfunc != nil {
@@ -91,8 +99,7 @@ func FixResponse406Error(c *gin.Context, err error, errfunc func()) {
 
 // FixResponse500Error 修复返回的异常
 func FixResponse500Error(c *gin.Context, err error, errfunc func()) {
-	if IsResponseError(err) {
-		ResJSON(c, http.StatusOK, err)
+	if FixResponseError(c, err) {
 		return
 	}
 	if errfunc != nil {

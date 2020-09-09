@@ -121,6 +121,30 @@ paths:
       summary: Captcha
       tags:
       - sign
+  /signin/oauth2/{kid}:
+    get:
+      consumes:
+      - application/json
+      description: 第三方授权登陆
+      parameters:
+      - description: kid
+        in: path
+        name: kid
+        type: string
+      - description: redirect_uri
+        in: query
+        name: redirect_uri
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      summary: OAuth2
+      tags:
+      - sign
   /signin/refresh:
     get:
       consumes:

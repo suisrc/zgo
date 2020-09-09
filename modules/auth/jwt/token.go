@@ -14,11 +14,10 @@ var _ auth.TokenInfo = &TokenInfo{}
 
 // TokenInfo 令牌信息
 type TokenInfo struct {
-	AccessToken string `json:"token,omitempty"`   // 访问令牌
-	TokenStatus string `json:"status,omitempty"`  // 令牌状态, ok | error
-	TokenType   string `json:"type,omitempty"`    // 令牌类型
-	ExpiresAt   int64  `json:"expired,omitempty"` // 令牌到期时间
-	ErrMessage  string `json:"message,omitempty"` // 令牌异常原因
+	// TokenType    string `json:"token_type,omitempty"`    // 令牌类型
+	AccessToken  string `json:"access_token,omitempty"`  // 访问令牌
+	ExpiresAt    int64  `json:"expires_at,omitempty"`    // 过期时间
+	RefreshToken string `json:"refresh_token,omitempty"` // 刷新令牌
 }
 
 // GetAccessToken access token
@@ -26,19 +25,14 @@ func (t *TokenInfo) GetAccessToken() string {
 	return t.AccessToken
 }
 
-// GetTokenStatus token status
-func (t *TokenInfo) GetTokenStatus() string {
-	return t.TokenStatus
-}
-
-// GetTokenType token type
-func (t *TokenInfo) GetTokenType() string {
-	return t.TokenType
-}
-
 // GetExpiresAt expires at
 func (t *TokenInfo) GetExpiresAt() int64 {
 	return t.ExpiresAt
+}
+
+// GetRefreshToken refresh token
+func (t *TokenInfo) GetRefreshToken() string {
+	return t.RefreshToken
 }
 
 // EncodeToJSON to json

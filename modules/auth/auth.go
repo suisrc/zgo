@@ -15,12 +15,16 @@ var (
 
 // TokenInfo 令牌信息
 type TokenInfo interface {
+
 	// 获取访问令牌
 	GetAccessToken() string
-	// 获取令牌类型
-	GetTokenType() string
+
 	// 获取令牌到期时间戳
 	GetExpiresAt() int64
+
+	// 获取刷新令牌
+	GetRefreshToken() string
+
 	// JSON
 	EncodeToJSON() ([]byte, error)
 }
@@ -59,6 +63,9 @@ type Auther interface {
 
 	// GenerateToken 生成令牌
 	GenerateToken(c context.Context, u UserInfo) (TokenInfo, error)
+
+	// RefreshToken 刷新令牌
+	RefreshToken(c context.Context, t string, f func(UserInfo, int) error) (TokenInfo, UserInfo, error)
 
 	// DestroyToken 销毁令牌
 	DestroyToken(c context.Context, u UserInfo) error

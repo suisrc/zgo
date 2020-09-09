@@ -3,11 +3,21 @@ package sqlxc
 import (
 	"database/sql"
 	"log"
+	"reflect"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
+
+func TestNewNowTime(t *testing.T) {
+	var x sql.NullTime
+	obj := NewNowTime(reflect.TypeOf(x))
+
+	log.Println(obj)
+
+	assert.NotNil(t, nil)
+}
 
 func TestStruct2Map(t *testing.T) {
 

@@ -39,6 +39,24 @@ func (e *ErrorInfo) Error() string {
 	return e.ErrorMessage
 }
 
+// ErrorRedirect 重定向
+type ErrorRedirect struct {
+	Code     int // http.StatusSeeOther
+	Location string
+}
+
+func (e *ErrorRedirect) Error() string {
+	return "Redirect: " + e.Location
+}
+
+// ErrorNone 返回值已经被处理,无返回值
+type ErrorNone struct {
+}
+
+func (e *ErrorNone) Error() string {
+	return "http none"
+}
+
 // PaginationResult 响应列表数据
 //type PaginationResult struct {
 //	list  interface{} `json:"list"`

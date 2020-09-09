@@ -46,6 +46,16 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, lastSignin func(c 
 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-NONE", Other: "无效登陆"})
 }
 
+// OAuth2 登陆控制
+func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, lastSignin func(c *gin.Context, aid, cid int) (*schema.SigninGpaOAuth2Account, error)) (*schema.SigninUser, error) {
+	kid := c.Param("kid")
+	if kid != "" {
+		b.KID = kid
+		logger.Infof(c, b.KID)
+	}
+	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
+}
+
 // Captcha 发送验证码
 func (a *Signin) Captcha(c *gin.Context, b *schema.SigninOfCaptcha) (string, error) {
 	var duration time.Duration = 120 * time.Second // 120秒
