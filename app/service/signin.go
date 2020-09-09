@@ -201,7 +201,7 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 		if !a.CheckRoleClient(c, &client, domain, &role) {
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
 		}
-	} else if o2a, err := lastSignin(c, account.ID, client.ID); err != nil || o2a != nil && o2a.Status && o2a.RoleKID.Valid {
+	} else if o2a, err := lastSignin(c, account.ID, client.ID); err != nil || o2a != nil && o2a.Status.Valid && o2a.Status.Bool && o2a.RoleKID.Valid {
 		if err != nil {
 			return nil, err
 		}

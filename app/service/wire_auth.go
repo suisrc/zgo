@@ -45,11 +45,13 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 
 	opts.Jwts = map[interface{}]*schema.JwtGpaOpts{}
 	auther := jwt.New(opts.Store,
-		jwt.SetSigningSecret(secret), // 注册令牌签名密钥
 		jwt.SetKeyFunc(opts.keyFunc),
 		jwt.SetNewClaims(opts.signingFunc),
 		jwt.SetFixClaimsFunc(opts.claimsFunc),
 		jwt.SetUpdateFunc(opts.updateFunc),
+		jwt.SetSigningSecret(secret),                  // 注册令牌签名密钥
+		jwt.SetExpired(config.C.JWTAuth.LimitExpired), // 访问令牌生命周期
+		jwt.SetRefresh(config.C.JWTAuth.LimitRefresh), // 刷新令牌声明周期
 	)
 	// 触发updateFunc方法
 	go auther.UpdateAuther(nil)

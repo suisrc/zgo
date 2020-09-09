@@ -44,7 +44,7 @@ type SigninResult struct {
 	ExpiresAt    int64  `json:"expires_at,omitempty"`                  // 过期时间
 	ExpiresIn    int64  `json:"expires_in,omitempty"`                  // 过期时间
 	RefreshToken string `json:"refresh_token,omitempty"`               // 刷新令牌
-	Redirect     string `form:"redirect_uri,omitempty"`                // redirect_uri
+	Redirect     string `json:"redirect_uri,omitempty"`                // redirect_uri
 	// Message 和 Roles 一般用户发生异常后回显
 	Message string        `json:"message,omitempty"` // 消息,有限显示
 	Roles   []interface{} `json:"roles,omitempty"`   // 多角色的时候，返回角色，重新确认登录
@@ -213,11 +213,11 @@ func (a *SigninGpaAccount) UpdateVerifySecret(sqlx *sqlx.DB) error {
 type SigninGpaOAuth2Account struct {
 	ID           int            `db:"id"`
 	AccountID    int            `db:"account_id"`
+	UserKID      string         `db:"user_kid"`
+	TokenID      string         `db:"token_kid"`
 	ClientID     sql.NullInt64  `db:"client_id"`
 	ClientKID    sql.NullString `db:"client_kid"`
-	UserKID      string         `db:"user_kid"`
 	RoleKID      sql.NullString `db:"role_kid"`
-	TokenID      sql.NullString `db:"token_id"`
 	LastIP       sql.NullString `db:"last_ip"`
 	LastAt       sql.NullTime   `db:"last_at"`
 	LimitExp     sql.NullTime   `db:"limit_exp"`
@@ -226,15 +226,16 @@ type SigninGpaOAuth2Account struct {
 	ExpiresAt    sql.NullInt64  `db:"expires_at"`
 	AccessToken  sql.NullString `db:"access_token"`
 	RefreshToken sql.NullString `db:"refresh_token"`
-	RefreshCount int            `db:"refresh_count"`
-	Status       bool           `db:"status"`
-	CreatedAt    sql.NullInt64  `db:"created_at"`
-	UpdatedAt    sql.NullInt64  `db:"updated_at"`
+	RefreshCount sql.NullInt64  `db:"refresh_count" set:"=refresh_count+1"`
+	Status       sql.NullBool   `db:"status"`
+	CreatedAt    sql.NullTime   `db:"created_at"`
+	UpdatedAt    sql.NullTime   `db:"updated_at"`
+	Version      sql.NullInt64  `db:"version" set:"=version+1"`
 }
 
 // QueryByAccountAndClient kid
 func (a *SigninGpaOAuth2Account) QueryByAccountAndClient(sqlx *sqlx.DB, accountID, clientID int, clientIP string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_account where account_id=?"
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where account_id=?"
 	params := []interface{}{accountID}
 	if clientID > 0 {
 		SQL += " and client_id=?"
@@ -254,7 +255,7 @@ func (a *SigninGpaOAuth2Account) QueryByAccountAndClient(sqlx *sqlx.DB, accountI
 
 // QueryByAccountAndClientK kid
 func (a *SigninGpaOAuth2Account) QueryByAccountAndClientK(sqlx *sqlx.DB, accountID int, clientKID, clientIP string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_account where account_id=?"
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where account_id=?"
 	params := []interface{}{accountID}
 	if clientKID == "" {
 		SQL += " and client_kid is null"
@@ -274,7 +275,7 @@ func (a *SigninGpaOAuth2Account) QueryByAccountAndClientK(sqlx *sqlx.DB, account
 
 // QueryByRefreshToken tid
 func (a *SigninGpaOAuth2Account) QueryByRefreshToken(sqlx *sqlx.DB, token string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_account where refresh_token=?"
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where refresh_token=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, token)
 }
@@ -282,12 +283,12 @@ func (a *SigninGpaOAuth2Account) QueryByRefreshToken(sqlx *sqlx.DB, token string
 // UpdateAndSaveByAccountAndClient 更新
 func (a *SigninGpaOAuth2Account) UpdateAndSaveByAccountAndClient(sqlx *sqlx.DB) (int64, error) {
 	IDC := sqlxc.IDC{}
-	if a.TokenID.Valid {
-		SQL := "select id from {{TP}}oauth2_account where token_id=?"
+	if a.TokenID != "" {
+		SQL := "select id from {{TP}}account_token where token_kid=?"
 		SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-		sqlx.Get(&IDC, SQL, a.TokenID.String)
+		sqlx.Get(&IDC, SQL, a.TokenID)
 	}
-	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"oauth2_account", "id", IDC, a)
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(TablePrefix+"account_token", "id", IDC, a)
 	if err != nil {
 		return 0, err
 	}

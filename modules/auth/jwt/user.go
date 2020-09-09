@@ -2,34 +2,60 @@ package jwt
 
 import (
 	"strconv"
+	"strings"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/crypto"
 )
 
+// NewTokenID new ID
+func NewTokenID(atistr string) string {
+	var builder strings.Builder
+	if ati, err := strconv.Atoi(atistr); err != nil {
+		builder.WriteString(atistr)
+	} else {
+		builder.WriteString(crypto.EncodeBaseX32(int64(ati)))
+	}
+	builder.WriteRune('_')
+	builder.WriteString(crypto.UUID(20))                         // 20位
+	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix())) // 7位
+	return builder.String()
+}
+
+// NewRefreshToken new refresh token
+func NewRefreshToken(atistr string) string {
+	var builder strings.Builder
+	if ati, err := strconv.Atoi(atistr); err != nil {
+		builder.WriteString(atistr)
+	} else {
+		builder.WriteString(crypto.EncodeBaseX32(int64(ati)))
+	}
+	builder.WriteRune('_')
+	builder.WriteString(crypto.UUID(20))                         // 20位
+	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix())) // 7位
+	builder.WriteString(crypto.UUID(12))                         // 12位
+	return builder.String()
+}
+
 // NewUserInfo 获取用户信息
 func NewUserInfo(user auth.UserInfo) *UserClaims {
 	claims := UserClaims{}
 
+	claims.AccountID = user.GetAccountID()
 	tokenID := user.GetTokenID()
 	if tokenID == "" {
-		if ati, err := strconv.Atoi(user.GetAccountID()); err != nil {
-			tokenID = NewRandomID(user.GetAccountID())
-		} else {
-			tokenID = NewRandomID(crypto.EncodeBaseX32(int64(ati)))
-		}
+		tokenID = NewTokenID(claims.AccountID)
 	}
-
 	claims.Id = tokenID
 	claims.Subject = user.GetUserID()
+
 	claims.Name = user.GetUserName()
 	claims.Role = user.GetRoleID()
 
 	claims.Issuer = user.GetIssuer()
 	claims.Audience = user.GetAudience()
-
-	claims.AccountID = user.GetAccountID()
 
 	return &claims
 }

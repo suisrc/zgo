@@ -150,6 +150,12 @@ paths:
       consumes:
       - application/json
       description: 刷新令牌
+      parameters:
+      - description: 刷新令牌
+        in: query
+        name: refresh_token
+        required: true
+        type: string
       produces:
       - application/json
       responses:

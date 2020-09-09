@@ -11,11 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewRandomID(t *testing.T) {
-	log.Println(NewRandomID("zgo"))
-	assert.NotNil(t, nil)
-}
-
 func TestRefreshToken(t *testing.T) {
 	store, err := buntdb.NewStore(":memory:")
 	assert.Nil(t, err)
@@ -64,7 +59,7 @@ func TestAuth(t *testing.T) {
 		Audience: "def.com",
 	}
 
-	token, err := jwtAuth.GenerateToken(ctx, user)
+	token, _, err := jwtAuth.GenerateToken(ctx, user)
 	assert.Nil(t, err)
 	assert.NotNil(t, token)
 

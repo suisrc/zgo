@@ -138,21 +138,53 @@ func SelectColumns(obj interface{}, prefix string) string {
 
 // CreateUpdateSQLByNamedAndSkipNil create update sql by named
 func CreateUpdateSQLByNamedAndSkipNil(table, idc string, id IDC, obj interface{}) (string, map[string]interface{}, error) {
-	return CreateUpdateSQLByNamed(table, idc, id, obj, func(typ reflect.Type, field, tag string, v interface{}) (interface{}, bool) {
-		if field == "CreatedAt" && v == nil && id.ID == 0 || field == "UpdateAt" && v == nil {
+	return CreateUpdateSQLByNamed(table, idc, id, obj, func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool) {
+		value := PickProxy(v)
+		if n == "CreatedAt" && value == nil && id.ID == 0 || n == "UpdateAt" && value == nil {
 			// 增加构建时间和更新时间字段
-			v = NewNowTime(typ)
+			value = NewNowTime(t)
 		}
-		res := PickProxy(v)
-		if res == nil {
+		if value == nil {
 			return nil, false
 		}
-		return res, true
-	})
+		return value, true
+	}, nil)
+}
+
+// CreateUpdateSQLByNamedAndSkipNilAndSet create update sql by named
+func CreateUpdateSQLByNamedAndSkipNilAndSet(table, idc string, id IDC, obj interface{}) (string, map[string]interface{}, error) {
+	return CreateUpdateSQLByNamed(table, idc, id, obj,
+		func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool) {
+			value := PickProxy(v)
+			if n == "CreatedAt" && value == nil && id.ID == 0 || n == "UpdatedAt" && value == nil {
+				// 增加构建时间和更新时间字段
+				value = NewNowTime(t)
+			}
+			if value == nil {
+				if id.ID > 0 && f.Tag.Get("set") != "" {
+					return nil, true
+				}
+				return nil, false
+			}
+			return value, true
+		}, func(c string, p map[string]interface{}, v interface{}, f *reflect.StructField) (string, bool) {
+			tag := f.Tag.Get("set")
+			if tag == "" {
+				return "", false
+			}
+			if tag[:1] == "=" {
+				return ", " + c + tag, true
+			}
+			return "", false
+		})
 }
 
 // CreateUpdateSQLByNamed create update sql by named
-func CreateUpdateSQLByNamed(table, idc string, id IDC, obj interface{}, fix func(typ reflect.Type, name, tag string, v interface{}) (interface{}, bool)) (string, map[string]interface{}, error) {
+func CreateUpdateSQLByNamed(table, idc string, id IDC, obj interface{},
+	fix func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool),
+	set func(c string, p map[string]interface{}, v interface{}, f *reflect.StructField) (string, bool),
+) (string, map[string]interface{}, error) {
+
 	t := reflect.TypeOf(obj)
 	v := reflect.ValueOf(obj)
 	if t.Kind() == reflect.Ptr {
@@ -167,15 +199,19 @@ func CreateUpdateSQLByNamed(table, idc string, id IDC, obj interface{}, fix func
 	SQL2 := strings.Builder{}
 	params := make(map[string]interface{})
 	for i := 0; i < t.NumField(); i++ {
-		tag := t.Field(i).Tag.Get("db")
+		key := t.Field(i).Name
+		if key == "ID" {
+			continue
+		}
+		field := t.Field(i)
+		tag := field.Tag.Get("db")
 		if tag == "-" {
 			continue
 		}
 		obj := v.Field(i).Interface()
-		key := t.Field(i).Name
 		typ := t.Field(i).Type
 		if fix != nil {
-			res, ok := fix(typ, key, tag, obj)
+			res, ok := fix(typ, key, obj, &field)
 			if !ok {
 				continue
 			}
@@ -194,12 +230,24 @@ func CreateUpdateSQLByNamed(table, idc string, id IDC, obj interface{}, fix func
 		if column == "" {
 			column = strings.ToLower(key)
 		}
-		params[column] = obj
 		if id.ID > 0 {
-			SQL1.WriteString(", " + column + "=:" + column)
+			sql := ""
+			ok := false
+			if set != nil {
+				sql, ok = set(column, params, obj, &field)
+			}
+			if ok {
+				if sql != "" {
+					SQL1.WriteString(sql)
+				}
+			} else {
+				SQL1.WriteString(", " + column + "=:" + column)
+				params[column] = obj
+			}
 		} else {
 			SQL1.WriteString(", " + column)
 			SQL2.WriteString(", :" + column)
+			params[column] = obj
 		}
 	}
 

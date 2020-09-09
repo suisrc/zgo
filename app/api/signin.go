@@ -2,7 +2,7 @@ package api
 
 import (
 	"database/sql"
-	"errors"
+	"net/http"
 	"strconv"
 	"time"
 
@@ -71,7 +71,7 @@ func (a *Signin) signin(c *gin.Context) {
 		})
 		return
 	}
-	token, err := a.Auther.GenerateToken(c, user)
+	token, usr, err := a.Auther.GenerateToken(c, user)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -80,7 +80,7 @@ func (a *Signin) signin(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.logSignin(c, user, token, "signin")
+	a.logSignin(c, usr, token, "signin", token.GetRefreshToken())
 	// 登陆结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
@@ -126,25 +126,25 @@ func (a *Signin) lastSignin(c *gin.Context, aid, cid int) (*schema.SigninGpaOAut
 }
 
 // 登陆日志
-func (a *Signin) logSignin(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode string) {
+func (a *Signin) logSignin(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode, refresh string) {
 	aid, _ := strconv.Atoi(u.GetAccountID())
 	cid, cok := helper.GetJwtKidStr(c)
 	o2a := schema.SigninGpaOAuth2Account{
 		AccountID:    aid,
+		TokenID:      u.GetTokenID(),
 		UserKID:      u.GetUserID(),
 		RoleKID:      sql.NullString{Valid: true, String: u.GetRoleID()},
 		ClientID:     sql.NullInt64{Valid: false},
 		ClientKID:    sql.NullString{Valid: cok, String: cid},
-		TokenID:      sql.NullString{Valid: true, String: u.GetTokenID()},
 		LastIP:       sql.NullString{Valid: true, String: helper.GetClientIP(c)},
 		LastAt:       sql.NullTime{Valid: true, Time: time.Now()},
 		LimitExp:     sql.NullTime{Valid: false},
 		LimitKey:     sql.NullString{Valid: false},
-		Mode:         sql.NullString{Valid: true, String: mode},
-		ExpiresAt:    sql.NullInt64{Valid: true, Int64: t.GetExpiresAt()},
-		AccessToken:  sql.NullString{Valid: true, String: t.GetAccessToken()},
-		RefreshToken: sql.NullString{Valid: true, String: t.GetRefreshToken()},
-		Status:       true,
+		Mode:         sql.NullString{Valid: mode != "", String: mode},
+		ExpiresAt:    sql.NullInt64{Valid: t.GetExpiresAt() > 0, Int64: t.GetExpiresAt()},
+		AccessToken:  sql.NullString{Valid: t.GetAccessToken() != "", String: t.GetAccessToken()},
+		RefreshToken: sql.NullString{Valid: refresh != "", String: refresh},
+		Status:       sql.NullBool{Valid: true, Bool: true},
 	}
 	if _, err := o2a.UpdateAndSaveByAccountAndClient(a.Sqlx); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err))
@@ -191,6 +191,7 @@ func (a *Signin) signout(c *gin.Context) {
 // @Description 刷新令牌
 // @Accept  json
 // @Produce  json
+// @Param refresh_token query string true "刷新令牌"
 // @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
 // @Router /signin/refresh [get]
@@ -207,9 +208,29 @@ func (a *Signin) refresh(c *gin.Context) {
 		})
 		return
 	}
+	if o2a.Status.Valid && !o2a.Status.Bool {
+		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TOKEN-DISABLE", Other: "刷新令牌被禁用"}))
+		return
+	}
+
+	if config.C.JWTAuth.LimitTime > 0 && o2a.LastAt.Valid && time.Now().Unix()-o2a.LastAt.Time.Unix() < config.C.JWTAuth.LimitTime {
+		// 登陆时间非常短,直接返回上次签名结果, 注意, 如果用于在很短时间从两个不同的设备登陆,会导致签发的令牌相同,并且可能会发生同时退出的问题
+		// 如果需要避免上述问题,可以禁用缓存
+		result := schema.SigninResult{
+			TokenStatus: "ok",
+			TokenType:   "Bearer",
+			AccessToken: o2a.AccessToken.String,
+			ExpiresAt:   o2a.ExpiresAt.Int64,
+			ExpiresIn:   o2a.ExpiresAt.Int64 - time.Now().Unix(),
+		}
+		helper.ResSuccess(c, &result)
+		return
+	}
+
 	token, user, err := a.Auther.RefreshToken(c, o2a.AccessToken.String, func(usr auth.UserInfo, exp int) error {
-		if time.Now().Unix()-o2a.CreatedAt.Int64 > int64(exp) {
-			return errors.New("token is expired")
+		if time.Now().Sub(o2a.CreatedAt.Time) > time.Duration(exp)*time.Second {
+			// return errors.New("token is expired")
+			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TOKEN-EXPIRED", Other: "刷新令牌过期"})
 		}
 		return nil
 	})
@@ -221,14 +242,14 @@ func (a *Signin) refresh(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.logSignin(c, user, token, "refresh")
+	a.logSignin(c, user, token, "refresh", "")
 	result := schema.SigninResult{
-		TokenStatus:  "ok",
-		TokenType:    "Bearer",
-		AccessToken:  token.GetAccessToken(),
-		ExpiresAt:    token.GetExpiresAt(),
-		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
-		RefreshToken: token.GetRefreshToken(),
+		TokenStatus: "ok",
+		TokenType:   "Bearer",
+		AccessToken: token.GetAccessToken(),
+		ExpiresAt:   token.GetExpiresAt(),
+		ExpiresIn:   token.GetExpiresAt() - time.Now().Unix(),
+		// RefreshToken: token.GetRefreshToken(),
 	}
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
@@ -296,7 +317,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 		})
 		return
 	}
-	token, err := a.Auther.GenerateToken(c, user)
+	token, usr, err := a.Auther.GenerateToken(c, user)
 	if err != nil {
 		helper.FixResponse401Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -305,7 +326,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.logSignin(c, user, token, "signin")
+	a.logSignin(c, usr, token, "oauth2", token.GetRefreshToken())
 	// 登陆结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",

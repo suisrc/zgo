@@ -169,7 +169,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
-## 第三方授权实体(`oauth2_account`)
+## 第三方授权实体(`account_token`)
 
 第三方授权实体, 用户完成授权后,需要处理令牌,选择授权系统
 已知: 
@@ -196,10 +196,11 @@ C应用:  [Client.kid]        应用ID
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | account_id    | 账户标识       | 数值     |                                                     | int(11) NOT NULL, idx_oauth2_account_aid             |
+| token_kid     | 角色标识       | 字符串   |                                                     | varchar(64), idx_oauth2_account_tkid                 |
 | client_id     | 客户端标识     | 数值     |                                                     | int(11), idx_oauth2_account_cid                      |
-| client_kid    | 客户端标识     | 数值     |                                                     | varchar(64), idx_oauth2_account_ckid                 |
-| user_kid      | 用户标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_ukid                 |
-| role_kid      | 角色标识       | 数值     |                                                     | varchar(64), idx_oauth2_account_rkid                 |
+| client_kid    | 客户端标识     | 字符串   |                                                     | varchar(64), idx_oauth2_account_ckid                 |
+| user_kid      | 用户标识       | 字符串   |                                                     | varchar(64), idx_oauth2_account_ukid                 |
+| role_kid      | 角色标识       | 字符串   |                                                     | varchar(64), idx_oauth2_account_rkid                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | last_ip       | 上次登陆IP     | 字符串   |                                                     | varchar(64)                                          |
 | last_at       | 上次登陆时间   | 时间格式 |                                                     | timestamp                                            |
@@ -547,8 +548,8 @@ C应用:  [Client.kid]        应用ID
 | mfa_secret    | MFA密钥        | 字符串   |                                                     | varchar(1024)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
-| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
-| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| created_at    | 创建时间       | ���间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时���格式 |                                                     | timestamp                                            |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |

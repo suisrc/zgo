@@ -62,7 +62,7 @@ type Auther interface {
 	GetUserInfo(c context.Context) (UserInfo, error)
 
 	// GenerateToken 生成令牌
-	GenerateToken(c context.Context, u UserInfo) (TokenInfo, error)
+	GenerateToken(c context.Context, u UserInfo) (TokenInfo, UserInfo, error)
 
 	// RefreshToken 刷新令牌
 	RefreshToken(c context.Context, t string, f func(UserInfo, int) error) (TokenInfo, UserInfo, error)

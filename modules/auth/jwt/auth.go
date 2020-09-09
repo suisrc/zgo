@@ -6,7 +6,6 @@ package jwt
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
@@ -135,8 +134,9 @@ func New(store store.Storer, opts ...Option) *Auther {
 		opt(&o)
 	}
 	if o.signingSecret == nil {
-		o.signingSecret = []byte(NewRandomID("zgo")) // 默认随机生成
-		logger.Infof(nil, "new random signing secret: %s", o.signingSecret)
+		secret := crypto.UUID(32)
+		o.signingSecret = []byte(secret) // 默认随机生成
+		logger.Infof(nil, "new random signing secret: %s", secret)
 	}
 	a.opts = &o
 
@@ -195,7 +195,7 @@ func (a *Auther) GetUserInfo(c context.Context) (auth.UserInfo, error) {
 }
 
 // GenerateToken 生成令牌
-func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.TokenInfo, error) {
+func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.TokenInfo, auth.UserInfo, error) {
 	now := time.Now()
 
 	// 访问令牌
@@ -206,22 +206,22 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 
 	if a.opts.claimsFunc != nil {
 		if err := a.opts.claimsFunc(c, claims); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	tokenString, err := a.opts.signingFunc(c, claims, a.opts.signingMethod, a.opts.signingSecret)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	tokenInfo := &TokenInfo{
 		//TokenType:  "Bearer",
 		AccessToken:  tokenString,
 		ExpiresAt:    claims.ExpiresAt,
-		RefreshToken: claims.GetTokenID() + crypto.UUID(16),
+		RefreshToken: NewRefreshToken(claims.AccountID),
 	}
-	return tokenInfo, nil
+	return tokenInfo, claims, nil
 }
 
 // RefreshToken 刷新令牌
@@ -256,8 +256,9 @@ func (a *Auther) RefreshToken(c context.Context, tokenString string, check func(
 	}
 
 	tokenInfo := &TokenInfo{
-		AccessToken: token,
-		ExpiresAt:   claims.ExpiresAt,
+		AccessToken:  token,
+		ExpiresAt:    claims.ExpiresAt,
+		RefreshToken: NewRefreshToken(claims.AccountID),
 	}
 	return tokenInfo, claims, nil
 }
@@ -369,14 +370,4 @@ func NewWithClaims(c context.Context, claims *UserClaims, method jwt.SigningMeth
 		Method: method,
 	}
 	return token.SignedString(secret)
-}
-
-// NewRandomID new ID
-func NewRandomID(prefix string) string {
-	var builder strings.Builder
-	builder.WriteString(prefix)
-	builder.WriteRune('_')
-	builder.WriteString(crypto.UUID(20))
-	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix()))
-	return builder.String()
 }

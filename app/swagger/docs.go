@@ -194,6 +194,15 @@ var doc = `{
                     "sign"
                 ],
                 "summary": "Refresh",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "刷新令牌",
+                        "name": "refresh_token",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
