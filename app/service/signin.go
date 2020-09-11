@@ -71,9 +71,6 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, last func(c *g
 		if err := o2h.Handle(c, b, &o2p, account); err != nil {
 			return nil, err
 		}
-		if b.Client != "" {
-			helper.SetJwtKid(c, b.Client)
-		}
 		// 获取用户信息
 		return a.GetSignUserByAutoRole(c, account, b.Domain, b.Client, last)
 	}
@@ -134,9 +131,6 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, last func(
 	} else if !b {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
-	if b.Client != "" {
-		helper.SetJwtKid(c, b.Client)
-	}
 	// 获取用户信息
 	return a.GetSignUserByAutoRole(c, &account, b.Domain, b.Client, last)
 }
@@ -163,9 +157,6 @@ func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func
 	} else if captcha != b.Captcha {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-CHECK", Other: "验证码不正确"})
 	}
-	if b.Client != "" {
-		helper.SetJwtKid(c, b.Client)
-	}
 	// 获取用户信息
 	return a.GetSignUserByAutoRole(c, &account, b.Domain, b.Client, last)
 }
@@ -176,7 +167,7 @@ func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func
 func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, bDomain, bClient string, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 登陆用户
 	suser := schema.SigninUser{}
-	suser.AccountID = strconv.Itoa(account.ID)
+	suser.AccountID = strconv.Itoa(account.ID) // SigninUser -> 1
 	// 用户
 	user := schema.SigninGpaUser{}
 	if err := user.QueryByID(a.Sqlx, account.UserID); err != nil {
@@ -185,8 +176,8 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	} else if !user.Status {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
 	}
-	suser.UserName = user.Name
-	suser.UserID = user.KID
+	suser.UserName = user.Name // SigninUser -> 2
+	suser.UserID = user.KID    // SigninUser -> 3
 
 	domain := bDomain // 用户请求域名
 	if domain == "" {
@@ -208,7 +199,19 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 		// 不进行域名验证,但是下文会验证当前请求域名和角色域.
 	}
 	if client.ID > 0 {
-		helper.SetJwtKid(c, client.KID) // 配置客户端
+		helper.SetCtxValue(c, helper.ResJwtKey, client.KID) // 配置客户端, 该内容会影响JWT签名方式
+		if client.Issuer.Valid {
+			suser.Issuer = client.Issuer.String // SigninUser -> 4
+		}
+		if client.Audience.Valid {
+			suser.Audience = client.Audience.String // SigninUser -> 5
+		}
+	}
+	if suser.Issuer == "" {
+		suser.Issuer = c.Request.Host
+	}
+	if suser.Audience == "" {
+		suser.Audience = c.Request.Host
 	}
 
 	if last == nil {
@@ -257,10 +260,8 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
 		}
 	}
-	suser.RoleID = role.KID
-
-	suser.Issuer = c.Request.Host
-	suser.Audience = c.Request.Host
+	suser.RoleID = role.KID                                              // SigninUser -> 6
+	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) // SigninUser -> 7 配置系统给定的TokenID
 	return &suser, nil
 }
 

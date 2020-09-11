@@ -137,6 +137,7 @@ func SelectColumns(obj interface{}, prefix string) string {
 }
 
 // CreateUpdateSQLByNamedAndSkipNil create update sql by named
+// 忽略空字段, 空字段不进行更新, 如果需要前置更新空字段, 直接使用 CreateUpdateSQLByNamed
 func CreateUpdateSQLByNamedAndSkipNil(table, idc string, id IDC, obj interface{}) (string, map[string]interface{}, error) {
 	return CreateUpdateSQLByNamed(table, idc, id, obj, func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool) {
 		value := PickProxy(v)
@@ -152,6 +153,7 @@ func CreateUpdateSQLByNamedAndSkipNil(table, idc string, id IDC, obj interface{}
 }
 
 // CreateUpdateSQLByNamedAndSkipNilAndSet create update sql by named
+// 会处理 "set" 标签的内容 , 比如 `set:"=cloumn + 1"`
 func CreateUpdateSQLByNamedAndSkipNilAndSet(table, idc string, id IDC, obj interface{}) (string, map[string]interface{}, error) {
 	return CreateUpdateSQLByNamed(table, idc, id, obj,
 		func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool) {
@@ -308,4 +310,23 @@ func NewNowTime(t reflect.Type) interface{} {
 		return time.Now().Unix()
 	}
 	return nil // 无法处理
+}
+
+// UpdateAndSaveByIDWithNamed update
+func UpdateAndSaveByIDWithNamed(sqlx *sqlx.DB, id IDC, fn func() (string, map[string]interface{}, error)) error {
+	SQL, params, err := fn()
+	if err != nil {
+		return err
+	}
+	res, err := sqlx.NamedExec(SQL, params)
+	if err != nil {
+		return err
+	}
+	if id.ID == 0 {
+		// 需要执行插入操作, 获取插入的ID
+		if id.ID, err = res.LastInsertId(); err != nil {
+			return err
+		}
+	}
+	return nil
 }

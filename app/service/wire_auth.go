@@ -79,7 +79,7 @@ func (a *AuthOpts) updateFunc(c context.Context) error {
 
 // 修正令牌
 func (a *AuthOpts) claimsFunc(c context.Context, claims *jwt.UserClaims) error {
-	if kid, ok := helper.GetJwtKid(c); ok {
+	if kid, ok := helper.GetCtxValueToString(c, helper.ResJwtKey); ok {
 		opt, ok := a.Jwts[kid]
 		if !ok {
 			return errors.New("signing jwt, kid error")
@@ -104,7 +104,7 @@ func (a *AuthOpts) keyFunc(c context.Context, token *jwtgo.Token, method jwtgo.S
 
 	// 获取处理的密钥
 	if kid, ok := token.Header["kid"]; ok {
-		helper.SetJwtKid(c, kid)
+		helper.SetCtxValue(c, helper.ResJwtKey, kid)
 		if opt, ok := a.Jwts[kid]; ok {
 			return opt.SecretByte, nil
 		}
@@ -116,7 +116,7 @@ func (a *AuthOpts) keyFunc(c context.Context, token *jwtgo.Token, method jwtgo.S
 
 // 签名jwt令牌
 func (a *AuthOpts) signingFunc(c context.Context, claims *jwt.UserClaims, method jwtgo.SigningMethod, secret interface{}) (string, error) {
-	if kid, ok := helper.GetJwtKid(c); ok {
+	if kid, ok := helper.GetCtxValueToString(c, helper.ResJwtKey); ok {
 		// 使用jwt私有密钥
 		if opt, ok := a.Jwts[kid]; ok {
 			token := &jwtgo.Token{

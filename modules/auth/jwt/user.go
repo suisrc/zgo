@@ -11,10 +11,10 @@ import (
 )
 
 // NewTokenID new ID
-func NewTokenID(atistr string) string {
+func NewTokenID(_ati string) string {
 	var builder strings.Builder
-	if ati, err := strconv.Atoi(atistr); err != nil {
-		builder.WriteString(atistr)
+	if ati, err := strconv.Atoi(_ati); err != nil {
+		builder.WriteString(_ati)
 	} else {
 		builder.WriteString(crypto.EncodeBaseX32(int64(ati)))
 	}
@@ -25,10 +25,10 @@ func NewTokenID(atistr string) string {
 }
 
 // NewRefreshToken new refresh token
-func NewRefreshToken(atistr string) string {
+func NewRefreshToken(_ati string) string {
 	var builder strings.Builder
-	if ati, err := strconv.Atoi(atistr); err != nil {
-		builder.WriteString(atistr)
+	if ati, err := strconv.Atoi(_ati); err != nil {
+		builder.WriteString(_ati)
 	} else {
 		builder.WriteString(crypto.EncodeBaseX32(int64(ati)))
 	}

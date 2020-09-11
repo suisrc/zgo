@@ -34,6 +34,7 @@ type SigninOfCaptcha struct {
 type SigninOfOAuth2 struct {
 	Code     string `form:"code"`         // 票据
 	State    string `form:"state"`        // 验签
+	Scope    string `form:"scope"`        // 作用域
 	KID      string `form:"kid"`          // kid
 	Role     string `form:"role"`         // 角色
 	Client   string `form:"client"`       // 子应用ID
@@ -220,6 +221,34 @@ func (a *SigninGpaAccount) UpdateVerifySecret(sqlx *sqlx.DB) error {
 	return err
 }
 
+// SigninGpaAccountOA2 account
+type SigninGpaAccountOA2 struct {
+	ID           int            `db:"id"`
+	AccessToken  sql.NullString `db:"oa2_token"`   // oauth2令牌
+	ExpiresAt    sql.NullTime   `db:"oa2_expired"` // oauth2过期时间
+	RefreshToken sql.NullString `db:"oa2_refresh"` // 刷新令牌
+	Scope        sql.NullString `db:"oa2_scope"`   // 授权作用域
+}
+
+// UpdateOAuth2Info update
+func (a *SigninGpaAccountOA2) UpdateOAuth2Info(sqlx *sqlx.DB) error {
+	IDC := sqlxc.IDC{ID: int64(a.ID)}
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"account", "id", IDC, a)
+	if err != nil {
+		return err
+	}
+
+	res, err := sqlx.NamedExec(SQL, params)
+	if err != nil {
+		return err
+	}
+	if IDC.ID == 0 {
+		ID, _ := res.LastInsertId()
+		a.ID = int(ID)
+	}
+	return nil
+}
+
 //=========================================================================
 //=========================================================================
 //=========================================================================
@@ -326,9 +355,41 @@ func (a *SigninGpaAccountToken) UpdateAndSaveByAccountAndClient(sqlx *sqlx.DB) (
 
 // SigninGpaOAuth2Platfrm 第三方登陆实体
 type SigninGpaOAuth2Platfrm struct {
-	ID       int    `db:"id"`
-	KID      string `db:"kid"`
-	Platform string `db:"platform"`
+	ID           int            `db:"id"`
+	KID          string         `db:"kid"`           // 三方标识
+	Platform     string         `db:"platform"`      // 平台标识, 主要用户识别操作句柄
+	AppID        sql.NullString `db:"app_id"`        // 应用标识
+	AppSecret    sql.NullString `db:"app_secret"`    // 应用密钥
+	Avatar       sql.NullString `db:"avatar"`        // 平台头像
+	Description  sql.NullString `db:"description"`   // 平台描述
+	Status       sql.NullBool   `db:"status"`        // 状态
+	Signin       sql.NullBool   `db:"signin"`        // 可登陆
+	AgentID      sql.NullString `db:"agent_id"`      // 代理商标识
+	AgentSecret  sql.NullString `db:"agent_secret"`  // 代理商密钥
+	SuiteID      sql.NullString `db:"suite_id"`      // 套件标识
+	SuiteSecret  sql.NullString `db:"suite_secret"`  // 套件密钥
+	AuthorizeURL sql.NullString `db:"authorize_url"` // 认证地址
+	TokenURL     sql.NullString `db:"token_url"`     // 令牌地址
+	ProfileURL   sql.NullString `db:"profile_url"`   // 个人资料地址
+	SigninURL    sql.NullString `db:"signin_url"`    // 上游应用无法获取https时候替代方案
+	JsSecret     sql.NullString `db:"js_secret"`     // javascript密钥
+	StateSecret  sql.NullString `db:"state_secret"`  // 回调state密钥
+	Callback     sql.NullBool   `db:"callback"`      // 是否支持回调
+	CbDomain     sql.NullString `db:"cb_domain"`     // 默认域名
+	CbScheme     sql.NullString `db:"cb_scheme"`     // 默认协议
+	CbEncrypt    sql.NullString `db:"cb_encrypt"`    // 回调是否加密
+	CbToken      sql.NullString `db:"cb_token"`      // 加密令牌
+	CbEncoding   sql.NullString `db:"cb_encoding"`   // 加密编码
+	CreatedAt    sql.NullTime   `db:"created_at"`
+	UpdatedAt    sql.NullTime   `db:"updated_at"`
+	Version      sql.NullInt64  `db:"version" set:"=version+1"`
+}
+
+// QueryByID id
+func (a *SigninGpaOAuth2Platfrm) QueryByID(sqlx *sqlx.DB, id int) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_platform where id=?"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, id)
 }
 
 // QueryByKID kid

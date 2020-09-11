@@ -11,15 +11,19 @@ import (
 // 定义上下文中的键
 const (
 	Prefix       = "zgo"
-	UserInfoKey  = Prefix + "/user-info"
-	TraceIDKey   = Prefix + "/tract-id"
-	ReqBodyKey   = Prefix + "/req-body"
-	ResBodyKey   = Prefix + "/res-body"
-	ResJwtKey    = Prefix + "/res-jwt-kid"
-	ResJwtOptKey = Prefix + "/res-jwt-opt"
+	UserInfoKey  = Prefix + "/user-info"     // user info
+	TraceIDKey   = Prefix + "/tract-id"      // trace id
+	ReqBodyKey   = Prefix + "/req-body"      // request body
+	ResBodyKey   = Prefix + "/res-body"      // response body
+	ResJwtKey    = Prefix + "/res-jwt-kid"   // jwt kid
+	ResJwtOptKey = Prefix + "/res-jwt-opt"   // jwt opt
+	ResTokenKey  = Prefix + "/res-token-kid" // token kid -> jwt id
 
 	XReqUserKey = "X-Request-User-KID"
 	XReqRoleKey = "X-Request-Role-KID"
+
+	XReqOriginHostKey = "X-Request-Origin-Host"
+	XReqOriginPathKey = "X-Reqeust-Origin-Path"
 )
 
 // UserInfo 用户信息
@@ -110,18 +114,18 @@ func GetAcceptLanguage(c *gin.Context) string {
 	return ""
 }
 
-// GetJwtKid 获取令牌加密方式
-func GetJwtKid(ctx context.Context) (interface{}, bool) {
+// GetCtxValue 获取令牌加密方式
+func GetCtxValue(ctx context.Context, key string) (interface{}, bool) {
 	if c, ok := ctx.(*gin.Context); ok {
-		return c.Get(ResJwtKey)
+		return c.Get(key)
 	}
 	return "", false
 }
 
-// GetJwtKidStr 获取令牌加密方式
-func GetJwtKidStr(ctx context.Context) (string, bool) {
+// GetCtxValueToString 获取令牌加密方式
+func GetCtxValueToString(ctx context.Context, key string) (string, bool) {
 	if c, ok := ctx.(*gin.Context); ok {
-		if v, ok := c.Get(ResJwtKey); ok {
+		if v, ok := c.Get(key); ok {
 			if s, ok := v.(string); ok {
 				return s, true
 			}
@@ -130,10 +134,10 @@ func GetJwtKidStr(ctx context.Context) (string, bool) {
 	return "", false
 }
 
-// SetJwtKid 配置令牌加密方式
-func SetJwtKid(ctx context.Context, kid interface{}) bool {
+// SetCtxValue 配置令牌加密方式
+func SetCtxValue(ctx context.Context, key string, value interface{}) bool {
 	if c, ok := ctx.(*gin.Context); ok {
-		c.Set(ResJwtKey, kid)
+		c.Set(key, value)
 		return true
 	}
 	return false

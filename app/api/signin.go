@@ -131,7 +131,7 @@ func (a *Signin) last(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountTok
 // 登陆日志
 func (a *Signin) log(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode, refresh string) {
 	aid, _ := strconv.Atoi(u.GetAccountID())
-	cid, cok := helper.GetJwtKidStr(c)
+	cid, cok := helper.GetCtxValueToString(c, helper.ResJwtKey)
 	o2a := schema.SigninGpaAccountToken{
 		AccountID:    aid,
 		TokenID:      u.GetTokenID(),

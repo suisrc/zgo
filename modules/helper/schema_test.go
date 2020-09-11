@@ -11,16 +11,16 @@ func TestIsResponseError(t *testing.T) {
 	res := &Success{
 		Success: true,
 	}
-	b := IsResponseError(res)
+	b := FixResponseError(nil, res)
 	assert.True(t, b)
 
 	err := errors.New("hello")
-	b = IsResponseError(err)
+	b = FixResponseError(nil, err)
 	assert.False(t, b)
 
-	b = IsResponseError(Err403Forbidden)
+	b = FixResponseError(nil, Err403Forbidden)
 	assert.False(t, b)
 
-	b = IsResponseError(ResError(nil, Err403Forbidden))
+	b = FixResponseError(nil, ResError(nil, Err403Forbidden))
 	assert.True(t, b)
 }

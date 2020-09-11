@@ -53,6 +53,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | oa2_token     | oauth2令牌     | 字符串   | 服务器间通信令牌有二种, 用户(用户) VS 服务器        | varchar(1024)                                        |
 | oa2_expired   | oauth2过期时间 | 时间格式 | 令牌过期时间, expired                               | int(11)                                              |
 | oa2_refresh   | 刷新令牌       | 字符串   |                                                     | varchar(2048)                                        |
+| oa2_scope     | 授权作用域     | 字符串   |                                                     | varchar(255)                                         |
 | oa2_fake      | 伪造令牌       | 字符串   | 特殊永生令牌, 备用                                  | varchar(1024)                                        |
 | oa2_client    | 客户端上次     | 数值     | oauth2_account                                      | int(11), idx_account_client                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -93,6 +94,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | authorize_url | 认证地址       | 字符串   |                                                     | varchar(1024)                                        |
 | token_url     | 令牌地址       | 字符串   |                                                     | varchar(1024)                                        |
 | profile_url   | 个人资料地址   | 字符串   |                                                     | varchar(1024)                                        |
+| signin_url    | 重定向回调地址 | 字符串   | 上游应用无法获取https时候替代方案                   | varchar(128)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | js_secret     | javascript密钥 | 字符串   | 需要js签名认证时候,进行认证的key                    | varchar(255)                                         |
 | state_secret  | 回调state密钥  | 字符串   | 缓存处理state,用密钥计算state具有更好的分布式       | varchar(255)                                         |
@@ -119,12 +121,14 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| oauth2_id     | 平台           | 字符串   |                                                     | int(11), fk_oa2_token_id->oauth2_platform.id         |
-| access_token  | 代理商标识     | 字符串   |                                                     | varchar(1024)                                        |
+| oauth2_id     | 平台           | 字符串   |                                                     | int(11), fk_oauth2_token_id->oauth2_platform.id      |
+| token_kid     | 角色标识       | 字符串   |                                                     | varchar(64), idx_oauth2_token_tkid                   |
+| access_token  | 访问令牌       | 字符串   |                                                     | varchar(1024)                                        |
 | expires_in    | 有限期间隔     | 字符串   |                                                     | int(11) DEFAULT 7200                                 |
-| expires_time  | 凭据过期时间   | 字符串   |                                                     | int(11), idx_oa2_exp_time                            |
-| sync_lock     | 同步锁         | 数值     | 同步锁,表示有人在更新令牌                           | tinyint(4) DEFAULT 0                                 |
-| sync_time     | 同步锁时间     | 数值     | 用于同步操作时候,其他应用的刷新间隔, 单位秒, 1~127  | tinyint(4) DEFAULT 1                                 |
+| expires_time  | 凭据过期时间   | 字符串   |                                                     | timestamp, idx_oauth2_token_exp_time                 |
+| refresh_token | 刷新令牌       | 字符串   |                                                     | varchar(1024)                                        |
+| refresh_count | 刷新次数       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+| sync_lock     | 同步锁         | 数值     | 同步锁,使用时间锁,防止死锁                          | timestamp                                            |
 | call_count    | 调用次数       | 数值     | 令牌被使用的次数, 注意开发时需要降低更新频次        | int(11) DEFAULT 0                                    |
 | token_type    | 令牌类型       | 字符串   | 标记令牌的类型, 备用字段                            | varchar(32)                                          |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -195,12 +199,12 @@ C应用:  [Client.kid]        应用ID
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| account_id    | 账户标识       | 数值     |                                                     | int(11) NOT NULL, idx_oauth2_account_aid             |
-| token_kid     | 角色标识       | 字符串   |                                                     | varchar(64), idx_oauth2_account_tkid                 |
-| client_id     | 客户端标识     | 数值     |                                                     | int(11), idx_oauth2_account_cid                      |
-| client_kid    | 客户端标识     | 字符串   |                                                     | varchar(64), idx_oauth2_account_ckid                 |
-| user_kid      | 用户标识       | 字符串   |                                                     | varchar(64), idx_oauth2_account_ukid                 |
-| role_kid      | 角色标识       | 字符串   |                                                     | varchar(64), idx_oauth2_account_rkid                 |
+| account_id    | 账户标识       | 数值     |                                                     | int(11) NOT NULL, idx_account_token_aid              |
+| token_kid     | 角色标识       | 字符串   |                                                     | varchar(64), idx_account_token_tkid                  |
+| client_id     | 客户端标识     | 数值     |                                                     | int(11), idx_account_token_cid                       |
+| client_kid    | 客户端标识     | 字符串   |                                                     | varchar(64), idx_account_token_ckid                  |
+| user_kid      | 用户标识       | 字符串   |                                                     | varchar(64), idx_account_token_ukid                  |
+| role_kid      | 角色标识       | 字符串   |                                                     | varchar(64), idx_account_token_rkid                  |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | last_ip       | 上次登陆IP     | 字符串   |                                                     | varchar(64)                                          |
 | last_at       | 上次登陆时间   | 时间格式 |                                                     | timestamp                                            |
