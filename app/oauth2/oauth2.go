@@ -3,6 +3,7 @@ package oauth2
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/suisrc/zgo/app/model/sqlxc"
@@ -52,8 +53,10 @@ func ExecWithTokenRetry(retry int, fn func(token string) (bool, interface{}, err
 	nac := false
 mark:
 	token, err := ac(nac)
-	if err != nil || token == "" {
+	if err != nil {
 		return nil, err
+	} else if token == "" {
+		return nil, errors.New("token empty")
 	}
 	var res interface{}
 	if nac, res, err = fn(token); err != nil {
@@ -107,8 +110,8 @@ type TokenManager struct {
 
 // FindToken find
 func (a *TokenManager) FindToken(c context.Context) (string, error) {
-	value, ok, _ := a.Storer.Get(c, "access_token:"+a.Key)
-	if ok {
+	value, _, _ := a.Storer.Get(c, "access_token:"+a.Key)
+	if value != "" {
 		// 缓存中存在
 		return value, nil
 	}
@@ -143,13 +146,15 @@ func (a *TokenManager) NewToken(c context.Context) (string, error) {
 	token, err := a.GetNewToken(c, a.PlatformID)
 	if err != nil {
 		return "", err
+	} else if token.AccessToken.String == "" {
+		return "", errors.New("access token empty")
 	}
 	token.SyncLock = sql.NullTime{Valid: true, Time: time.Now()} // 具有解除锁定的功能
 	if err := token.UpdateTokenOAuth2(a.Sqlx); err != nil {
 		return "", err
 	}
-	a.Storer.Set(c, "access_token:"+a.Key, token.AccessToken.String, time.Duration(30)*time.Second)
-	return "", nil
+	a.Storer.Set(c, "access_token:"+a.Key, token.AccessToken.String, time.Duration(a.MinCacheIdle)*time.Second)
+	return token.AccessToken.String, nil
 }
 
 //===================================================================================================AccessToken-END

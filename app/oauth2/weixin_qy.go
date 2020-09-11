@@ -45,6 +45,7 @@ type WeixinQy struct {
 
 // Handle handle
 func (a *WeixinQy) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.SigninGpaOAuth2Platfrm, acc *schema.SigninGpaAccount) error {
+	// 验证
 	if !o2p.AppID.Valid || !o2p.AgentID.Valid || !o2p.AgentSecret.Valid {
 		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-CONFIG", Other: "应用配置异常"})
 	}
@@ -54,24 +55,26 @@ func (a *WeixinQy) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.
 	if !o2p.Signin.Valid || !o2p.Signin.Bool {
 		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOSIGNIN", Other: "应用无法授权"})
 	}
+	// 重定向选择
 	if b.Code == "" {
 		if strings.Contains(c.Request.UserAgent(), "MicroMessenger/") {
 			return a.Connect(c, b, o2p)
 		}
 		return a.QrConnect(c, b, o2p)
 	}
+	// 微信服务器重定向
 	if b.State == "" {
 		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-STATE", Other: "状态码无效"})
 	}
 	if err := a.Storer.Delete(c, b.State); err != nil {
 		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-STATE", Other: "状态码无效"})
 	}
-
+	// 获取当前用户信息
 	user := WeixinQyUserInfo{}
 	if err := WeixinQyExecWithAccessToken(c, a.GPA, a.Storer, o2p.ID, func(token string) error {
 		if err := user.GetUserInfo(token, b.Code); err != nil {
 			return err
-		} else if user.ErrCode != 0 {
+		} else if user.ErrCode != 0 || user.ErrMsg != "ok" {
 			return &user // 微信服务器异常, 当发生42001异常,会直接获取令牌重试一次
 		}
 		return nil
@@ -79,11 +82,13 @@ func (a *WeixinQy) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.
 		return err
 	}
 
-	openid := user.UserID
+	// 获取当前用户的openid
+	openid := user.OpenID
 	if openid == "" {
-		openid = user.OpenID
+		openid = user.UserID
 	}
 
+	// 查询当前登录人员身份
 	if err := acc.QueryByAccount(a.Sqlx, openid, int(schema.ATOpenid), o2p.KID); err != nil {
 		if sqlxc.IsNotFound(err) {
 			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOBIND", Other: "用户未绑定"})
@@ -140,7 +145,7 @@ func (a *WeixinQy) Connect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema
 func (a *WeixinQy) QrConnect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.SigninGpaOAuth2Platfrm) error {
 	// 未取得code内容,需要重定向回到微信服务器
 	state := crypto.UUID(32)
-	a.Storer.Set1(c, state, time.Duration(60)*time.Second)
+	a.Storer.Set1(c, state, time.Duration(300)*time.Second) // 5分钟
 
 	uri := GetRedirectURIByOAuth2Platfrm(c, o2p)
 	uri = url.QueryEscape(uri) // 进行URL编码
@@ -234,6 +239,8 @@ func WeixinQyGetTokenOAuth2(c context.Context, o2p *schema.SigninGpaOAuth2Platfr
 		return nil, err // 网络异常
 	} else if token.ErrCode != 0 {
 		return nil, &token // 微信服务器异常
+	} else if token.AccessToken == "" {
+		return nil, errors.New(token.ErrMsg)
 	}
 	tid, tok := helper.GetCtxValueToString(c, helper.ResTokenKey)
 	return &schema.TokenOAuth2{
@@ -275,7 +282,7 @@ type WeixinQyAccessToken struct {
 // GetAccessToken 获取访问令牌
 // https://work.weixin.qq.com/api/doc/90000/90135/91039
 func (a *WeixinQyAccessToken) GetAccessToken(appid, secret string) error {
-	return gout.GET(WeixinAPI + "/cgi-bin/gettoken").
+	return gout.GET(WeixinQyAPI + "/cgi-bin/gettoken").
 		SetQuery(gout.H{
 			"corpid":     appid,
 			"corpsecret": secret,
@@ -316,7 +323,7 @@ type WeixinQyUserInfo struct {
 跳转的域名须完全匹配access_token对应应用的可信域名，否则会返回50001错误。
 */
 func (a *WeixinQyUserInfo) GetUserInfo(token, code string) error {
-	return gout.GET(WeixinAPI + "/cgi-bin/user/getuserinfo").
+	return gout.GET(WeixinQyAPI + "/cgi-bin/user/getuserinfo").
 		SetQuery(gout.H{
 			"access_token": token,
 			"code":         code,
