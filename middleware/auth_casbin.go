@@ -23,6 +23,13 @@ var (
 
 // UserAuthCasbinMiddleware 用户授权中间件
 func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforcer, skippers ...SkipperFunc) gin.HandlerFunc {
+	return UserAuthCasbinMiddlewareByPathFunc(auther, enforcer, func(c *gin.Context) (string, error) {
+		return c.Request.URL.Path, nil
+	}, skippers...)
+}
+
+// UserAuthCasbinMiddlewareByPathFunc 用户授权中间件
+func UserAuthCasbinMiddlewareByPathFunc(auther auth.Auther, enforcer *casbin.SyncedEnforcer, pathFunc func(*gin.Context) (string, error), skippers ...SkipperFunc) gin.HandlerFunc {
 	if !config.C.JWTAuth.Enable {
 		return EmptyMiddleware()
 	}
@@ -83,8 +90,13 @@ func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforce
 			}
 			aud = user.GetAudience() // jwt授权方
 		}
+
+		pat, err := pathFunc(c) // 请求路径
+		if err != nil {         // 无访问权限
+			helper.ResError(c, erm)
+		}
+
 		dom := c.Request.Host        // 请求域名
-		pat := c.Request.URL.Path    // 请求路径
 		cip := helper.GetClientIP(c) // 客户端IP
 		act := c.Request.Method      // 请求方法
 		if b, err := enforcer.Enforce(sub, usr, dom, aud, pat, cip, act); err != nil {

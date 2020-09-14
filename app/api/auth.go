@@ -1,6 +1,9 @@
 package api
 
 import (
+	"errors"
+	"strings"
+
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	"github.com/suisrc/zgo/middleware"
@@ -16,7 +19,15 @@ type Auth struct {
 
 // RegisterWithUAC 注册路由,认证接口特殊,需要独立注册
 func (a *Auth) RegisterWithUAC(r gin.IRouter) {
-	uac := middleware.UserAuthCasbinMiddleware(a.Auther, a.Enforcer)
+	uac := middleware.UserAuthCasbinMiddlewareByPathFunc(a.Auther, a.Enforcer, func(c *gin.Context) (string, error) {
+		path := c.GetHeader(helper.XReqOriginPathKey)
+		if path == "" {
+			return "", errors.New("invalid " + helper.XReqOriginPathKey)
+		} else if offset := strings.IndexRune(path, '?'); offset > 0 {
+			path = path[:offset]
+		}
+		return path, nil
+	})
 
 	r.GET("authz", uac, a.authorize)
 	// r.GET("authz/signin", uac, a.signin)
