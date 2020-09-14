@@ -145,7 +145,7 @@ func (a *WeixinQy) Connect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema
 func (a *WeixinQy) QrConnect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.SigninGpaOAuth2Platfrm) error {
 	// 未取得code内容,需要重定向回到微信服务器
 	state := crypto.UUID(32)
-	a.Storer.Set1(c, state, time.Duration(300)*time.Second) // 5分钟
+	a.Storer.Set1(c, state, time.Duration(300)*time.Second) // 5分钟等待,如果5分钟没有进行扫描登陆,直接拒绝
 
 	uri := GetRedirectURIByOAuth2Platfrm(c, o2p)
 	uri = url.QueryEscape(uri) // 进行URL编码
@@ -193,12 +193,35 @@ func GetRedirectURIByOAuth2Platfrm(c *gin.Context, o2p *schema.SigninGpaOAuth2Pl
 
 // WeixinQyExecWithAccessToken 执行访问, 带有token
 func WeixinQyExecWithAccessToken(c context.Context, GPA gpa.GPA, Storer store.Storer, PlatformID int, fn func(token string) error) error {
-	newTokenFunc := func(c context.Context, p int) (*schema.TokenOAuth2, error) {
+	tokenFunc := func(c context.Context, plid int) (*schema.TokenOAuth2, error) {
 		o2p := &schema.SigninGpaOAuth2Platfrm{}
-		if err := o2p.QueryByID(GPA.Sqlx, PlatformID); err != nil {
+		if err := o2p.QueryByID(GPA.Sqlx, plid); err != nil {
 			return nil, err
 		}
-		return WeixinQyGetTokenOAuth2(c, o2p, p)
+		// 检查配置
+		if !o2p.AppID.Valid || !o2p.AgentID.Valid || !o2p.AgentSecret.Valid {
+			if ctx, ok := c.(*gin.Context); ok {
+				return nil, helper.New0Error(ctx, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-CONFIG", Other: "应用配置异常"})
+			}
+			return nil, errors.New("oauth2 config error: id_" + strconv.Itoa(PlatformID))
+		}
+		//  获取令牌
+		token := WeixinQyAccessToken{}
+		if err := token.GetAccessToken(o2p.AppID.String, o2p.AgentSecret.String); err != nil {
+			return nil, err // 网络异常
+		} else if token.ErrCode != 0 {
+			return nil, &token // 微信服务器异常
+		} else if token.AccessToken == "" {
+			return nil, errors.New(token.ErrMsg)
+		}
+		tid, tok := helper.GetCtxValueToString(c, helper.ResTokenKey)
+		return &schema.TokenOAuth2{
+			PlatformID:  PlatformID,
+			TokenID:     sql.NullString{Valid: tok, String: tid},
+			AccessToken: sql.NullString{Valid: true, String: token.AccessToken},
+			ExpiresIn:   sql.NullInt64{Valid: true, Int64: int64(token.ExpiresIn)},
+			ExpiresTime: sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-30) * time.Second)}, // 有效期缩短30秒
+		}, nil
 	}
 	manager := &TokenManager{
 		GPA:          GPA,
@@ -207,9 +230,10 @@ func WeixinQyExecWithAccessToken(c context.Context, GPA gpa.GPA, Storer store.St
 		Storer:       Storer,
 		MaxCacheIdle: 300,
 		MinCacheIdle: 60,
-		GetNewToken:  newTokenFunc,
+		NewTokenFunc: tokenFunc,
 	}
-	_, err := ExecWithAccessTokenX(c, func(token string) (bool, interface{}, error) {
+	// 执行内容
+	execFunc := func(token string) (bool, interface{}, error) {
 		if err := fn(token); err != nil {
 			if token, ok := err.(*WeixinQyAccessToken); ok {
 				if token.ErrCode == 42001 {
@@ -220,36 +244,10 @@ func WeixinQyExecWithAccessToken(c context.Context, GPA gpa.GPA, Storer store.St
 			return false, nil, err
 		}
 		return false, nil, nil
-	}, manager)
+	}
+	// 执行
+	_, err := ExecWithAccessTokenX(c, execFunc, manager)
 	return err
-}
-
-// WeixinQyGetTokenOAuth2 获取令牌控制器
-func WeixinQyGetTokenOAuth2(c context.Context, o2p *schema.SigninGpaOAuth2Platfrm, PlatformID int) (*schema.TokenOAuth2, error) {
-	// 检查配置
-	if !o2p.AppID.Valid || !o2p.AgentID.Valid || !o2p.AgentSecret.Valid {
-		if ctx, ok := c.(*gin.Context); ok {
-			return nil, helper.New0Error(ctx, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-CONFIG", Other: "应用配置异常"})
-		}
-		return nil, errors.New("oauth2 config error: id_" + strconv.Itoa(PlatformID))
-	}
-	//  获取令牌
-	token := WeixinQyAccessToken{}
-	if err := token.GetAccessToken(o2p.AppID.String, o2p.AgentSecret.String); err != nil {
-		return nil, err // 网络异常
-	} else if token.ErrCode != 0 {
-		return nil, &token // 微信服务器异常
-	} else if token.AccessToken == "" {
-		return nil, errors.New(token.ErrMsg)
-	}
-	tid, tok := helper.GetCtxValueToString(c, helper.ResTokenKey)
-	return &schema.TokenOAuth2{
-		PlatformID:  PlatformID,
-		TokenID:     sql.NullString{Valid: tok, String: tid},
-		AccessToken: sql.NullString{Valid: true, String: token.AccessToken},
-		ExpiresIn:   sql.NullInt64{Valid: true, Int64: int64(token.ExpiresIn)},
-		ExpiresTime: sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-30) * time.Second)}, // 有效期缩短30秒
-	}, nil
 }
 
 //===================================================================================================AccessToken-END

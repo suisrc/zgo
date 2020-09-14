@@ -88,7 +88,7 @@ func (a *WeixinQm) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.
 	token := WeixinQmAccessToken{}
 	if err := token.GetAccessToken(o2p.AppID.String, o2p.AppSecret.String, b.Code); err != nil {
 		return err // 网络异常
-	} else if token.ErrCode != 0 {
+	} else if token.ErrCode != 0 || token.ErrMsg != "ok" {
 		return &token // 微信服务器异常
 	}
 	// 查询当前用户
@@ -168,8 +168,41 @@ func (a *WeixinQm) Connect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema
 }
 
 // QrConnect 扫码认证
+// https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
 func (a *WeixinQm) QrConnect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.SigninGpaOAuth2Platfrm) error {
-	return nil
+	// 未取得code内容,需要重定向回到微信服务器
+	state := crypto.UUID(32)
+	a.Storer.Set1(c, state, time.Duration(300)*time.Second) // 5分钟等待,如果5分钟没有进行扫描登陆,直接拒绝
+
+	uri := GetRedirectURIByOAuth2Platfrm(c, o2p)
+	uri = url.QueryEscape(uri) // 进行URL编码
+	appid := o2p.AppID.String
+	// 参数
+	params := helper.H{
+		"appid":         appid,          // 公众号的唯一标识
+		"redirect_uri":  uri,            // 授权后重定向的回调链接地址， 请使用 urlEncode 对链接进行处理
+		"response_type": "code",         // 返回类型，请填写code
+		"scope":         "snsapi_login", // 应用授权作用域，拥有多个作用域用逗号（,）分隔，网页应用目前仅填写snsapi_login
+		"state":         state,          // 重定向后会带上state参数，开发者可以填写a-zA-Z0-9的参数值，最多128字节
+	}
+
+	a.parseOnce.Do(func() {
+		// 只加载一次, 该内容是模板 解析一次即可
+		url := "https://open.weixin.qq.com/connect/qrconnect?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type={{.code}}&scope={{.scope}}&state={{.state}}#wechat_redirect"
+		a.parseTemplate, a.parseError = gotemplate.New("").Parse(url)
+	})
+
+	var buf bytes.Buffer
+	if gt, err := a.parseTemplate, a.parseError; err != nil {
+		return err
+	} else if err2 := gt.Execute(&buf, params); err2 != nil {
+		return err2
+	}
+	localtion := buf.String()
+
+	return &helper.ErrorRedirect{
+		Location: localtion,
+	}
 }
 
 // WeixinQmError {"errcode":40029,"errmsg":"invalid code"}

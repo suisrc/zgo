@@ -103,7 +103,7 @@ type TokenManager struct {
 	Key          string                                                  // 令牌Key, 注意不能未空,且必须全局唯一
 	PlatformID   int                                                     // 平台ID
 	Storer       store.Storer                                            // 缓存
-	GetNewToken  func(context.Context, int) (*schema.TokenOAuth2, error) // 获取新令牌
+	NewTokenFunc func(context.Context, int) (*schema.TokenOAuth2, error) // 获取新令牌
 	MaxCacheIdle int                                                     // 使用缓存的临界值, 达到临界值会被动更新令牌, 如果Token是2个小时,推荐使用300秒
 	MinCacheIdle int                                                     // 使用缓存的TTL值, 不要高于MaxCacheIdle,推荐使用60秒
 }
@@ -143,7 +143,7 @@ func (a *TokenManager) FindToken(c context.Context) (string, error) {
 
 // NewToken new
 func (a *TokenManager) NewToken(c context.Context) (string, error) {
-	token, err := a.GetNewToken(c, a.PlatformID)
+	token, err := a.NewTokenFunc(c, a.PlatformID)
 	if err != nil {
 		return "", err
 	} else if token.AccessToken.String == "" {
