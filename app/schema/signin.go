@@ -179,19 +179,19 @@ func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, user
 // SigninGpaAccount account
 type SigninGpaAccount struct {
 	ID           int            `db:"id"`
-	PID          sql.NullInt64  `db:"pid"`
-	Account      string         `db:"account"`
-	AccountType  int            `db:"account_typ"`
-	AccountKind  sql.NullString `db:"account_kid"`
-	Password     sql.NullString `db:"password"`
-	PasswordSalt sql.NullString `db:"password_salt"`
-	PasswordType sql.NullString `db:"password_type"`
-	VerifySecret sql.NullString `db:"verify_secret"`
-	UserID       int            `db:"user_id"`
-	RoleID       sql.NullInt64  `db:"role_id"`
-
-	// SQLX1 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
-	// SQLX2 int `sqlx:"from account where account=? and account_type='user' and platform='ZGO' and status=1"`
+	PID          sql.NullInt64  `db:"pid"`           // 上级账户
+	Account      string         `db:"account"`       // 账户
+	AccountType  int            `db:"account_typ"`   // 账户类型 1:name 2:mobile 3:email 4:openid 5:unionid 6:token
+	AccountKind  sql.NullString `db:"account_kid"`   // 账户归属平台
+	Password     sql.NullString `db:"password"`      // 登录密码
+	PasswordSalt sql.NullString `db:"password_salt"` // 密码盐值
+	PasswordType sql.NullString `db:"password_type"` // 密码方式
+	VerifySecret sql.NullString `db:"verify_secret"` // 校验密钥
+	UserID       int            `db:"user_id"`       // 用户标识
+	RoleID       sql.NullInt64  `db:"role_id"`       // 角色标识
+	CreatedAt    sql.NullTime   `db:"created_at"`    // 创建时间
+	UpdatedAt    sql.NullTime   `db:"updated_at"`    // 更新时间
+	Version      sql.NullInt64  `db:"version" set:"=version+1"`
 }
 
 // QueryByID 查询

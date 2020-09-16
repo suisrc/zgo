@@ -20,6 +20,9 @@ type Auth struct {
 // RegisterWithUAC 注册路由,认证接口特殊,需要独立注册
 func (a *Auth) RegisterWithUAC(r gin.IRouter) {
 	uac := middleware.UserAuthCasbinMiddlewareByPathFunc(a.Auther, a.Enforcer, func(c *gin.Context) (string, error) {
+		// X-Reqeust-Origin-Path
+		// nginx.ingress.kubernetes.io/configuration-snippet: |
+		//   proxy_set_header X-Request-Origin-Path   $request_uri;
 		path := c.GetHeader(helper.XReqOriginPathKey)
 		if path == "" {
 			return "", errors.New("invalid " + helper.XReqOriginPathKey)

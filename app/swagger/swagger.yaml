@@ -294,10 +294,6 @@ paths:
         name: kid
         required: true
         type: string
-      - description: '返回值类型, 比如: json'
-        in: query
-        name: result
-        type: string
       produces:
       - application/json
       responses:

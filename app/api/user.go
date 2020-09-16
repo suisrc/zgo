@@ -117,7 +117,6 @@ func (a *User) bindOAuth2Account(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param kid query string true "平台KID"
-// @Param result query string false "返回值类型, 比如: json"
 // @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
 // @Router /user/oauth2/unbind [get]

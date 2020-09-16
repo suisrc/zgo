@@ -423,12 +423,6 @@ var doc = `{
                         "name": "kid",
                         "in": "query",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "返回值类型, 比如: json",
-                        "name": "result",
-                        "in": "query"
                     }
                 ],
                 "responses": {
