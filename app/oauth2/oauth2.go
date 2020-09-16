@@ -35,11 +35,10 @@ func NewSelector(GPA gpa.GPA, Storer store.Storer) (Selector, error) {
 
 // Handler 认证接口
 type Handler interface {
-	// Handle 处理OAuth2认证
-	// account 用户账户
-	// domain 请求域, 如果不存在,直接指定"", 其作用是在多应用授权时候,准确定位子应用
-	// client 请求端, 定位子应用
-	Handle(*gin.Context, *schema.SigninOfOAuth2, *schema.SigninGpaOAuth2Platfrm, *schema.SigninGpaAccount) error
+	// Handle 处理OAuth2认证, 被动函数回调得到用户的openid
+	// bool 必须是成员,我们在平台的OAuth2认证时候,可能非成员用户扫码,是否将非成员的openid带入被动处理函数中
+	// func (openid string) (accountid int, err error)
+	Handle(*gin.Context, *schema.SigninOfOAuth2, *schema.SigninGpaOAuth2Platfrm, bool, func(string) (int, error)) error
 }
 
 //===================================================================================================AccessToken-START

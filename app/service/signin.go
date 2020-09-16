@@ -61,14 +61,39 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, last func(c *g
 		}
 		o2h, ok := a.OAuth2Selector[o2p.Platform]
 		if !ok {
-			return nil, helper.NewError(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOHL",
+			return nil, helper.NewError(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOP6M",
 				Other: "无有效登陆控制器: [{{.platfrom}}]"}, helper.H{
 				"platfrom": o2p.Platform,
 			})
 		}
 
+		// 当前用户
 		account := &schema.SigninGpaAccount{}
-		if err := o2h.Handle(c, b, &o2p, account); err != nil {
+		if err := o2h.Handle(c, b, &o2p, true, func(openid string) (int, error) {
+			// 查询当前登录人员身份
+			if err := account.QueryByAccount(a.Sqlx, openid, int(schema.ATOpenid), o2p.KID); err != nil {
+				if sqlxc.IsNotFound(err) {
+					return 0, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOBIND", Other: "用户未绑定"})
+				}
+				return 0, err
+			}
+			if account.ID == 0 {
+				return 0, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOBIND", Other: "用户未绑定"})
+			}
+			return account.ID, nil
+		}); err != nil {
+			if redirect, ok := err.(*helper.ErrorRedirect); ok {
+				if result := c.Query("result"); result == "json" {
+					code := redirect.Code
+					if code == 0 {
+						code = 303
+					}
+					return nil, helper.NewSuccess(c, helper.H{
+						"code":     code,
+						"location": redirect.Location,
+					})
+				}
+			}
 			return nil, err
 		}
 		// 获取用户信息

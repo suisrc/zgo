@@ -330,3 +330,29 @@ func UpdateAndSaveByIDWithNamed(sqlx *sqlx.DB, id IDC, fn func() (string, map[st
 	}
 	return nil
 }
+
+// DeleteOne delete 1
+func DeleteOne(sqlx *sqlx.DB, sql string, params ...interface{}) error {
+	tx, err := sqlx.Begin()
+	if err != nil {
+		return err
+	}
+	res, err := tx.Exec(sql, params...)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	rcc, err := res.RowsAffected()
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+	if rcc != 1 {
+		tx.Rollback()
+		return errors.New("expected rows is one")
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}

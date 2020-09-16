@@ -26,7 +26,8 @@ var ServiceSet = wire.NewSet(
 	wire.Struct(new(EmailSender), "*"),  // 邮件发送器
 	wire.Struct(new(ThreeSender), "*"),  // 第三方平台发送器
 
-	wire.Struct(new(Signin), "*"), // 服务
+	wire.Struct(new(Signin), "*"), // 登陆服务
+	wire.Struct(new(User), "*"),   // 用户服务
 )
 
 //======================================

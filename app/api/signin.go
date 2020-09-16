@@ -300,7 +300,8 @@ func (a *Signin) captcha(c *gin.Context) {
 // @Description 第三方授权登陆
 // @Accept  json
 // @Produce  json
-// @Param kid path string true "kid"
+// @Param kid path string true "平台KID"
+// @Param result query string false "返回值类型, 比如: json"
 // @Param redirect_uri query string false "redirect_uri"
 // @Success 200 {object} helper.Success
 // @Router /signin/oauth2/{kid} [get]

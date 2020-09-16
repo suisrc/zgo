@@ -92,7 +92,7 @@ func (a *Store) Check(ctx context.Context, key string) (bool, error) {
 		if err != nil && err != buntdb.ErrNotFound {
 			return err
 		}
-		exists = val == "1"
+		exists = val != ""
 		return nil
 	})
 	return exists, err

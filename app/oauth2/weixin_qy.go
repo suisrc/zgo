@@ -16,7 +16,6 @@ import (
 	"github.com/guonaihong/gout"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/app/model/gpa"
-	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/modules/crypto"
 	"github.com/suisrc/zgo/modules/helper"
@@ -44,16 +43,9 @@ type WeixinQy struct {
 }
 
 // Handle handle
-func (a *WeixinQy) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.SigninGpaOAuth2Platfrm, acc *schema.SigninGpaAccount) error {
-	// 验证
-	if !o2p.AppID.Valid || !o2p.AgentID.Valid || !o2p.AgentSecret.Valid {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-CONFIG", Other: "应用配置异常"})
-	}
-	if !o2p.Status.Valid || !o2p.Status.Bool {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-DISABLE", Other: "应用被禁用"})
-	}
-	if !o2p.Signin.Valid || !o2p.Signin.Bool {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOSIGNIN", Other: "应用无法授权"})
+func (a *WeixinQy) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.SigninGpaOAuth2Platfrm, member bool, fn func(string) (int, error)) error {
+	if err := a.CheckPlatfrmConfig(c, o2p); err != nil {
+		return err
 	}
 	// 重定向选择
 	if b.Code == "" {
@@ -64,11 +56,13 @@ func (a *WeixinQy) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.
 	}
 	// 微信服务器重定向
 	if b.State == "" {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-STATE", Other: "状态码无效"})
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-STATE", Other: "状态码无效"})
 	}
-	if err := a.Storer.Delete(c, b.State); err != nil {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-STATE", Other: "状态码无效"})
+	if ok, err := a.Storer.Check(c, b.State); err != nil || !ok {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-STATE", Other: "状态码无效"})
 	}
+	a.Storer.Delete(c, b.State) // 删除缓存
+
 	// 获取当前用户信息
 	user := WeixinQyUserInfo{}
 	if err := WeixinQyExecWithAccessToken(c, a.GPA, a.Storer, o2p.ID, func(token string) error {
@@ -82,23 +76,32 @@ func (a *WeixinQy) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.
 		return err
 	}
 
-	// 获取当前用户的openid
-	openid := user.OpenID
-	if openid == "" {
-		openid = user.UserID
-	}
-
-	// 查询当前登录人员身份
-	if err := acc.QueryByAccount(a.Sqlx, openid, int(schema.ATOpenid), o2p.KID); err != nil {
-		if sqlxc.IsNotFound(err) {
-			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOBIND", Other: "用户未绑定"})
-		}
+	if user.UserID != "" {
+		_, err := fn(user.UserID)
 		return err
 	}
-	if acc.ID == 0 {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOBIND", Other: "用户未绑定"})
+	if user.OpenID != "" {
+		if member {
+			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-MEMBER", Other: "非成员用户"})
+		}
+		_, err := fn(user.OpenID)
+		return err
 	}
+	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-OPENID", Other: "无法获取用户的OPEN-ID"})
+}
 
+// CheckPlatfrmConfig check Config
+func (a *WeixinQy) CheckPlatfrmConfig(c *gin.Context, o2p *schema.SigninGpaOAuth2Platfrm) error {
+	// 验证
+	if !o2p.AppID.Valid || !o2p.AgentID.Valid || !o2p.AgentSecret.Valid {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONFIG", Other: "应用配置异常"})
+	}
+	if !o2p.Status.Valid || !o2p.Status.Bool {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-DISABLE", Other: "应用被禁用"})
+	}
+	if !o2p.Signin.Valid || !o2p.Signin.Bool {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOSIGNIN", Other: "应用无法授权"})
+	}
 	return nil
 }
 
@@ -137,6 +140,7 @@ func (a *WeixinQy) Connect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema
 	localtion := buf.String()
 
 	return &helper.ErrorRedirect{
+		State:    state,
 		Location: localtion,
 	}
 }
@@ -175,6 +179,7 @@ func (a *WeixinQy) QrConnect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *sche
 	localtion := buf.String()
 
 	return &helper.ErrorRedirect{
+		State:    state,
 		Location: localtion,
 	}
 }
@@ -201,7 +206,7 @@ func WeixinQyExecWithAccessToken(c context.Context, GPA gpa.GPA, Storer store.St
 		// 检查配置
 		if !o2p.AppID.Valid || !o2p.AgentID.Valid || !o2p.AgentSecret.Valid {
 			if ctx, ok := c.(*gin.Context); ok {
-				return nil, helper.New0Error(ctx, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-CONFIG", Other: "应用配置异常"})
+				return nil, helper.New0Error(ctx, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONFIG", Other: "应用配置异常"})
 			}
 			return nil, errors.New("oauth2 config error: id_" + strconv.Itoa(PlatformID))
 		}

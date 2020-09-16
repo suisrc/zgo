@@ -98,8 +98,14 @@ func BuildInjector() (*Injector, func(), error) {
 		Auther:        auther,
 		SigninService: signin,
 	}
-	user := &api.User{
-		GPA: gpaGPA,
+	user := service.User{
+		GPA:            gpaGPA,
+		Store:          storer,
+		OAuth2Selector: selector,
+	}
+	apiUser := &api.User{
+		GPA:         gpaGPA,
+		UserService: user,
 	}
 	options := &api.Options{
 		Engine:   engine,
@@ -109,7 +115,7 @@ func BuildInjector() (*Injector, func(), error) {
 		Demo:     demo,
 		Auth:     auth,
 		Signin:   apiSignin,
-		User:     user,
+		User:     apiUser,
 	}
 	endpoints := api.InitEndpoints(options)
 	watcher, cleanup5, err := casbinmem.NewCasbinWatcher(casbinAdapter, syncedEnforcer)

@@ -97,7 +97,7 @@ func (s *Store) Expire(ctx context.Context, key string, expiration time.Duration
 
 // Delete ...
 func (s *Store) Delete(ctx context.Context, key string) error {
-	cmd := s.cli.Del(key)
+	cmd := s.cli.Del(s.wrapperKey(key))
 	if err := cmd.Err(); err != nil {
 		return err
 	}

@@ -3,9 +3,11 @@ package service
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	jwtgo "github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/modules/auth"
@@ -50,6 +52,7 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 		jwt.SetNewClaims(opts.signingFunc),
 		jwt.SetFixClaimsFunc(opts.claimsFunc),
 		jwt.SetUpdateFunc(opts.updateFunc),
+		jwt.SetTokenFunc(opts.tokenFunc),
 		jwt.SetSigningSecret(secret),                  // 注册令牌签名密钥
 		jwt.SetExpired(config.C.JWTAuth.LimitExpired), // 访问令牌生命周期
 		jwt.SetRefresh(config.C.JWTAuth.LimitRefresh), // 刷新令牌声明周期
@@ -57,6 +60,23 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 	// 触发updateFunc方法
 	go auther.UpdateAuther(nil)
 	return auther
+}
+
+// 获取令牌的方式
+func (a *AuthOpts) tokenFunc(ctx context.Context) (string, error) {
+	if c, ok := ctx.(*gin.Context); ok {
+		if state := c.Query("state"); state != "" {
+			// 使用state隐藏令牌,一般用于重定向回调上
+			if token, _, _ := a.Store.Get(ctx, state); token != "" {
+				return token, nil
+			}
+		}
+		prefix := "Bearer "
+		if auth := c.GetHeader("Authorization"); auth != "" && strings.HasPrefix(auth, prefix) {
+			return auth[len(prefix):], nil
+		}
+	}
+	return "", auth.ErrNoneToken
 }
 
 // 更新认证

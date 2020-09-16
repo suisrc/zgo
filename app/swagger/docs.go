@@ -155,10 +155,16 @@ var doc = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "kid",
+                        "description": "平台KID",
                         "name": "kid",
                         "in": "path",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "返回值类型, 比如: json",
+                        "name": "result",
+                        "in": "query"
                     },
                     {
                         "type": "string",
@@ -339,6 +345,92 @@ var doc = `{
                     "user"
                 ],
                 "summary": "查询当前用户信息",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/oauth2/bind": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "绑定第三方账户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Bind",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "平台KID",
+                        "name": "kid",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "返回值类型, 比如: json",
+                        "name": "result",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/oauth2/unbind": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "解绑第三方账户",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Unbind",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "平台KID",
+                        "name": "kid",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "返回值类型, 比如: json",
+                        "name": "result",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

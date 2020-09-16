@@ -127,10 +127,14 @@ paths:
       - application/json
       description: 第三方授权登陆
       parameters:
-      - description: kid
+      - description: 平台KID
         in: path
         name: kid
         required: true
+        type: string
+      - description: '返回值类型, 比如: json'
+        in: query
+        name: result
         type: string
       - description: redirect_uri
         in: query
@@ -250,6 +254,60 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 查询当前用户信息
+      tags:
+      - user
+  /user/oauth2/bind:
+    get:
+      consumes:
+      - application/json
+      description: 绑定第三方账户
+      parameters:
+      - description: 平台KID
+        in: query
+        name: kid
+        required: true
+        type: string
+      - description: '返回值类型, 比如: json'
+        in: query
+        name: result
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: Bind
+      tags:
+      - user
+  /user/oauth2/unbind:
+    get:
+      consumes:
+      - application/json
+      description: 解绑第三方账户
+      parameters:
+      - description: 平台KID
+        in: query
+        name: kid
+        required: true
+        type: string
+      - description: '返回值类型, 比如: json'
+        in: query
+        name: result
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: Unbind
       tags:
       - user
 schemes:

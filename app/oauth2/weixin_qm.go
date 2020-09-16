@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/suisrc/zgo/app/model/sqlxc"
-
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/modules/crypto"
 	"github.com/suisrc/zgo/modules/helper"
@@ -46,17 +44,11 @@ type WeixinQm struct {
 }
 
 // Handle handle
-func (a *WeixinQm) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.SigninGpaOAuth2Platfrm, acc *schema.SigninGpaAccount) error {
-	// 验证配置
-	if !o2p.AppID.Valid || !o2p.AppSecret.Valid {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-CONFIG", Other: "应用配置异常"})
+func (a *WeixinQm) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.SigninGpaOAuth2Platfrm, member bool, fn func(string) (int, error)) error {
+	if err := a.CheckPlatfrmConfig(c, o2p); err != nil {
+		return err
 	}
-	if !o2p.Status.Valid || !o2p.Status.Bool {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-DISABLE", Other: "应用被禁用"})
-	}
-	if !o2p.Signin.Valid || !o2p.Signin.Bool {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOSIGNIN", Other: "应用无法授权"})
-	}
+
 	// 重定向到微信服务器
 	if b.Code == "" {
 		if strings.Contains(c.Request.UserAgent(), "MicroMessenger/") {
@@ -66,23 +58,12 @@ func (a *WeixinQm) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.
 	}
 	// 通过微信服务器回调
 	if b.State == "" {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-STATE", Other: "状态码无效"})
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-STATE", Other: "状态码无效"})
 	}
-	if err := a.Storer.Delete(c, b.State); err != nil {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-STATE", Other: "状态码无效"})
+	if ok, err := a.Storer.Check(c, b.State); err != nil || !ok {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-STATE", Other: "状态码无效"})
 	}
-	// o2d := WeixinOAuth2Data{}
-	// if data, ok, err := a.Storer.Get(c, b.State); err != nil {
-	// 	return err
-	// } else if !ok {
-	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-STATE", Other: "状态码无效"})
-	// } else if err2 := helper.JSONUnmarshal([]byte(data), &o2d); err2 != nil {
-	// 	return err2
-	// }
-	// b.Role = o2d.Role
-	// b.Client = o2d.Client
-	// b.Domain = o2d.Domain
-	// b.Redirect = o2d.Redirect
+	a.Storer.Delete(c, b.State) // 删除缓存
 
 	// 获取用户令牌（注意，这里是用户令牌， 不是应用令牌）
 	token := WeixinQmAccessToken{}
@@ -91,29 +72,41 @@ func (a *WeixinQm) Handle(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.
 	} else if token.ErrCode != 0 || token.ErrMsg != "ok" {
 		return &token // 微信服务器异常
 	}
-	// 查询当前用户
-	if err := acc.QueryByAccount(a.Sqlx, token.OpenID, int(schema.ATOpenid), o2p.KID); err != nil {
-		if sqlxc.IsNotFound(err) {
-			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOBIND", Other: "用户未绑定"})
-		}
+
+	acc, err := fn(token.OpenID)
+	if err != nil {
 		return err
 	}
-	if acc.ID == 0 {
-		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NOBIND", Other: "用户未绑定"})
-	}
-	// 更新Account内容
-	oa2 := &schema.SigninGpaAccountOA2{
-		ID:           acc.ID,
-		AccessToken:  sql.NullString{Valid: true, String: token.AccessToken},
-		ExpiresAt:    sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-30) * time.Second)},
-		RefreshToken: sql.NullString{Valid: true, String: token.RefreshToken},
-		Scope:        sql.NullString{Valid: true, String: token.Scope},
-	}
-	if err := oa2.UpdateOAuth2Info(a.Sqlx); err != nil {
-		// do nothing
-		logger.Errorf(c, logger.ErrorWW(err))
-	}
 
+	if acc > 0 {
+		// 更新Account内容
+		oa2 := &schema.SigninGpaAccountOA2{
+			ID:           acc,
+			AccessToken:  sql.NullString{Valid: true, String: token.AccessToken},
+			ExpiresAt:    sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-30) * time.Second)},
+			RefreshToken: sql.NullString{Valid: true, String: token.RefreshToken},
+			Scope:        sql.NullString{Valid: true, String: token.Scope},
+		}
+		if err := oa2.UpdateOAuth2Info(a.Sqlx); err != nil {
+			// do nothing
+			logger.Errorf(c, logger.ErrorWW(err))
+		}
+	}
+	return nil
+}
+
+// CheckPlatfrmConfig check Config
+func (a *WeixinQm) CheckPlatfrmConfig(c *gin.Context, o2p *schema.SigninGpaOAuth2Platfrm) error {
+	// 验证配置
+	if !o2p.AppID.Valid || !o2p.AppSecret.Valid {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONFIG", Other: "应用配置异常"})
+	}
+	if !o2p.Status.Valid || !o2p.Status.Bool {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-DISABLE", Other: "应用被禁用"})
+	}
+	if !o2p.Signin.Valid || !o2p.Signin.Bool {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOSIGNIN", Other: "应用无法授权"})
+	}
 	return nil
 }
 
@@ -123,14 +116,7 @@ func (a *WeixinQm) Connect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema
 	// 未取得code内容,需要重定向回到微信服务器
 	state := crypto.UUID(32)
 	a.Storer.Set1(c, state, time.Duration(60)*time.Second)
-	// o2d := WeixinOAuth2Data{
-	// 	SigninOfOAuth2: *b,
-	// }
-	// if data, err := helper.JSONMarshal(&o2d); err == nil {
-	// 	a.Storer.Set(c, state, string(data), time.Duration(30)*time.Second)
-	// } else {
-	// 	return err
-	// }
+
 	uri := GetRedirectURIByOAuth2Platfrm(c, o2p)
 	uri = url.QueryEscape(uri) // 进行URL编码
 	scope := b.Scope
@@ -163,6 +149,7 @@ func (a *WeixinQm) Connect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema
 	localtion := buf.String()
 
 	return &helper.ErrorRedirect{
+		State:    state,
 		Location: localtion,
 	}
 }
@@ -201,9 +188,13 @@ func (a *WeixinQm) QrConnect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *sche
 	localtion := buf.String()
 
 	return &helper.ErrorRedirect{
+		State:    state,
 		Location: localtion,
 	}
 }
+
+//======================================================================
+//======================================================================
 
 // WeixinQmError {"errcode":40029,"errmsg":"invalid code"}
 type WeixinQmError struct {

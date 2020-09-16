@@ -135,6 +135,13 @@ func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int) error {
 	return sqlx.Get(a, SQL, id)
 }
 
+// QueryByKID sql select
+func (a *SigninGpaUser) QueryByKID(sqlx *sqlx.DB, kid string) error {
+	SQL := "select id, kid, name, status from {{TP}}user where kid=?"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, kid)
+}
+
 // SigninGpaRole role
 type SigninGpaRole struct {
 	ID     int     `db:"id" json:"-"`
@@ -213,12 +220,85 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 	return sqlx.Get(a, SQL, params...)
 }
 
+// QueryByAccountSkipStatus sql select
+func (a *SigninGpaAccount) QueryByAccountSkipStatus(sqlx *sqlx.DB, acc string, typ int, kid string) error {
+	sqr := strings.Builder{}
+	sqr.WriteString("select " + sqlxc.SelectColumns(a, ""))
+	sqr.WriteString(" from {{TP}}account")
+	sqr.WriteString(" where account=? and account_typ=?")
+
+	params := []interface{}{acc, typ}
+	if kid != "" {
+		sqr.WriteString(" and account_kid=?")
+		params = append(params, kid)
+	} else {
+		sqr.WriteString(" and account_kid is null")
+	}
+	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, params...)
+}
+
+// QueryByUserAndKind user and kid
+func (a *SigninGpaAccount) QueryByUserAndKind(sqlx *sqlx.DB, uid int, typ int, kid string) error {
+	sqr := strings.Builder{}
+	sqr.WriteString("select " + sqlxc.SelectColumns(a, ""))
+	sqr.WriteString(" from {{TP}}account")
+	sqr.WriteString(" where user_id=? and account_typ=?")
+
+	params := []interface{}{uid, typ}
+	if kid != "" {
+		sqr.WriteString(" and account_kid=?")
+		params = append(params, kid)
+	} else {
+		sqr.WriteString(" and account_kid is null")
+	}
+	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, params...)
+}
+
+// DeleteByUserAndKind user and kid
+func (a *SigninGpaAccount) DeleteByUserAndKind(sqlx *sqlx.DB, uid int, typ int, kid string) error {
+	sqr := strings.Builder{}
+	sqr.WriteString("delete from {{TP}}account")
+	sqr.WriteString(" where user_id=? and account_typ=?")
+
+	params := []interface{}{uid, typ}
+	if kid != "" {
+		sqr.WriteString(" and account_kid=?")
+		params = append(params, kid)
+	} else {
+		sqr.WriteString(" and account_kid is null")
+	}
+	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
+
+	return sqlxc.DeleteOne(sqlx, SQL, params...)
+}
+
 // UpdateVerifySecret update verify secret
 func (a *SigninGpaAccount) UpdateVerifySecret(sqlx *sqlx.DB) error {
 	SQL := "update {{TP}}account set verify_secret=? where id=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	_, err := sqlx.Exec(SQL, a.VerifySecret.String, a.ID)
 	return err
+}
+
+// UpdateAndSaveX update and save
+func (a *SigninGpaAccount) UpdateAndSaveX(sqlx *sqlx.DB) error {
+	IDC := sqlxc.IDC{ID: int64(a.ID)}
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"account", "id", IDC, a)
+	if err != nil {
+		return err
+	}
+
+	res, err := sqlx.NamedExec(SQL, params)
+	if err != nil {
+		return err
+	}
+	if IDC.ID == 0 {
+		ID, _ := res.LastInsertId()
+		a.ID = int(ID)
+	}
+	return nil
 }
 
 // SigninGpaAccountOA2 account
