@@ -70,7 +70,7 @@ func UserAuthCasbinMiddlewareByPathFunc(auther auth.Auther, enforcer *casbin.Syn
 				helper.ResError(c, helper.Err401Unauthorized) // 无有效登陆用户
 				return
 			} else {
-				helper.ResError(c, helper.Err400BadRequest) // 解析jwt令牌出现未知错误
+				helper.ResError(c, helper.Err500InternalServer) // 解析jwt令牌出现未知错误
 				return
 			}
 		} else {

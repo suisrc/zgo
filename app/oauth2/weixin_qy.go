@@ -111,8 +111,13 @@ func (a *WeixinQy) Connect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema
 	state := crypto.UUID(32)
 	a.Storer.Set1(c, state, time.Duration(60)*time.Second)
 
-	uri := GetRedirectURIByOAuth2Platfrm(c, o2p)
-	uri = url.QueryEscape(uri) // 进行URL编码
+	uri := c.Query("redirect_uri")
+	if uri == "" {
+		uri = GetRedirectURIByOAuth2Platfrm(c, o2p)
+		uri = url.QueryEscape(uri) // 进行URL编码
+	} else if uri[:4] != "http" {
+		uri = url.PathEscape("https://"+c.Request.Host) + uri
+	}
 	scope := "snsapi_base"
 	appid := o2p.AppID.String
 	// 参数
@@ -151,8 +156,13 @@ func (a *WeixinQy) QrConnect(c *gin.Context, b *schema.SigninOfOAuth2, o2p *sche
 	state := crypto.UUID(32)
 	a.Storer.Set1(c, state, time.Duration(300)*time.Second) // 5分钟等待,如果5分钟没有进行扫描登陆,直接拒绝
 
-	uri := GetRedirectURIByOAuth2Platfrm(c, o2p)
-	uri = url.QueryEscape(uri) // 进行URL编码
+	uri := c.Query("redirect_uri")
+	if uri == "" {
+		uri = GetRedirectURIByOAuth2Platfrm(c, o2p)
+		uri = url.QueryEscape(uri) // 进行URL编码
+	} else if uri[:4] != "http" {
+		uri = url.PathEscape("https://"+c.Request.Host) + uri
+	}
 	appid := o2p.AppID.String
 	agentid := o2p.AgentID.String
 	// 参数

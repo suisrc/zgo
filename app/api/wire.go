@@ -61,6 +61,14 @@ func InitEndpoints(o *Options) *Endpoints {
 	// 国际化，根路由国际化
 	// r.Use(middleware.I18nMiddleware(o.Bundle))
 
+	//router.LoadHTMLGlob("templates/*")
+	//router.LoadHTMLFiles("templates/template1.html", "templates/template2.html")
+	//router.GET("/index", func(c *gin.Context) {
+	//	c.HTML(http.StatusOK, "index.tmpl", gin.H{
+	//		"title": "Main website",
+	//	})
+	//})
+
 	// 服务器授权控制器
 	// 增加权限认证
 	uac := middleware.UserAuthCasbinMiddleware(

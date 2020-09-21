@@ -114,10 +114,10 @@ func (a *User) bindOAuth2Account(c *gin.Context) {
 // @Tags user
 // @Summary Unbind
 // @Description 解绑第三方账户
+// @Security ApiKeyAuth
 // @Accept  json
 // @Produce  json
 // @Param kid query string true "平台KID"
-// @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
 // @Router /user/oauth2/unbind [get]
 func (a *User) unbindOAuth2Account(c *gin.Context) {
@@ -140,3 +140,13 @@ func (a *User) unbindOAuth2Account(c *gin.Context) {
 	}
 	helper.ResSuccess(c, "ok")
 }
+
+// @Tags user
+// @Summary passwd
+// @Description 修改密码
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce  json
+// @Param kid query string true "平台KID"
+// @Success 200 {object} helper.Success
+// @Router /user/oauth2/unbind [get]

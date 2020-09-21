@@ -11,6 +11,12 @@ type UserCurrent struct {
 	CreateAt    uint64        `json:"createAt,omitempty"`    // 获取时间
 }
 
+// UserPasswd 用户密钥修改
+type UserPasswd struct {
+	OldPasswd string `json:"old_passwd"` // 旧密码
+	NewPasswd string `json:"new_passed"` // 新密码
+}
+
 // UserGpaCurrent 用户基本信息
 type UserGpaCurrent struct {
 	ID     int    `db:"id" json:"-"`                    // 用户id

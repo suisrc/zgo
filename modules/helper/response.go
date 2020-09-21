@@ -64,7 +64,18 @@ func FixResponseError(c *gin.Context, err error) bool {
 	}
 }
 
-// FixResponse401Error 修复返回的异常
+// FixResponse400Error 修复返回的异常
+func FixResponse400Error(c *gin.Context, err error, errfunc func()) {
+	if FixResponseError(c, err) {
+		return
+	}
+	if errfunc != nil {
+		errfunc()
+	}
+	ResError(c, Err400BadRequest)
+}
+
+// FixResponse401Error 修复返回的异常, 注意, 401异常会导致系统重定向到登陆页面
 func FixResponse401Error(c *gin.Context, err error, errfunc func()) {
 	if FixResponseError(c, err) {
 		return

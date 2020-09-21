@@ -32,14 +32,14 @@ type SigninOfCaptcha struct {
 
 // SigninOfOAuth2 登陆参数
 type SigninOfOAuth2 struct {
-	Code     string `form:"code"`         // 票据
-	State    string `form:"state"`        // 验签
-	Scope    string `form:"scope"`        // 作用域
-	KID      string `form:"kid"`          // kid
-	Role     string `form:"role"`         // 角色
-	Client   string `form:"client"`       // 子应用ID
-	Domain   string `form:"host"`         // 域, 如果无,使用c.Reqest.Host代替
-	Redirect string `form:"redirect_uri"` // redirect_uri
+	Code     string `form:"code"`     // 票据
+	State    string `form:"state"`    // 验签
+	Scope    string `form:"scope"`    // 作用域
+	KID      string `form:"kid"`      // kid
+	Role     string `form:"role"`     // 角色
+	Client   string `form:"client"`   // 子应用ID
+	Domain   string `form:"host"`     // 域, 如果无,使用c.Reqest.Host代替
+	Redirect string `form:"redirect"` // redirect
 }
 
 // SigninResult 登陆返回值
@@ -404,8 +404,8 @@ func (a *SigninGpaAccountToken) QueryByRefreshToken(sqlx *sqlx.DB, token string)
 	return sqlx.Get(a, SQL, token)
 }
 
-// UpdateAndSaveByAccountAndClient 更新
-func (a *SigninGpaAccountToken) UpdateAndSaveByAccountAndClient(sqlx *sqlx.DB) (int64, error) {
+// UpdateAndSaveByTokenKID 更新
+func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB) (int64, error) {
 	IDC := sqlxc.IDC{}
 	if a.TokenID != "" {
 		SQL := "select id from {{TP}}account_token where token_kid=?"
