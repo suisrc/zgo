@@ -324,7 +324,9 @@ C应用:  [Client.kid]        应用ID
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| kid           | 唯一标识       | 字符串   |                                                     | varchar(64), idx_resource_kid                        |
 | resource      | 资源名         | 字符串   | 资源名可以重复, 即该资源标识一类资源而不是单独      | varchar(64), idx_resource_name                       |
+| type          | 资源类型       | 字符串   |                                                     | varchar(32), idx_resource_type                       |
 | domain        | 域名           | 字符串   | api.io                                              | varchar(255)                                         |
 | methods       | 方法           | 字符串   | (GET)(POST)(PUT)(DELETE)                            | varchar(64)                                          |
 | path          | 路径           | 字符串   | /api/*                                              | varchar(255)                                         |

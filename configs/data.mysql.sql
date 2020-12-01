@@ -6,12 +6,13 @@ INSERT INTO `zgo_user`(`id`, `kid`, `name`) VALUES
 (4, "100004", "user");
 
 -- 账户
-INSERT INTO `zgo_account`(`id`, `account`, `password`, `password_salt`, `password_type`, `user_id`, `role_id`) VALUES 
-(1, "zgo",  "c557193f596ccf70b8cbc5ca306557b3", "uoqacs2t699ybv8tc42hz8z1shny6ups", "MD5", 1, null),
-(2, "zgo2", "654321", null, null, 1, null),
-(3, "icg",  "123456", null, null, 2, null),
-(4, "ss",   "uBnKfXylWRdUFqVM424ERH.tISbfJbWq", "J3Apb1ZhNgtuBx4ifhg9F0MBVhI3bH9ELjJRQg==", "BCR3", 3, null),
-(5, "user", "123456", null, null, 4, null);
+INSERT INTO `zgo_account`(`id`, `account`, `account_typ`, `password`, `password_salt`, `password_type`, `user_id`, `role_id`) VALUES 
+(1, "zgo",         1, "c557193f596ccf70b8cbc5ca306557b3", "uoqacs2t699ybv8tc42hz8z1shny6ups", "MD5", 1, null),
+(2, "zgo2",        1, "654321", null, null, 1, null),
+(3, "icg",         1, "123456", null, null, 2, null),
+(4, "ss",          1, "uBnKfXylWRdUFqVM424ERH.tISbfJbWq", "J3Apb1ZhNgtuBx4ifhg9F0MBVhI3bH9ELjJRQg==", "BCR3", 3, null),
+(5, "user",        1, "123456", null, null, 4, null);
+(6, "12311111111", 2, null,     null, null, 4, null);
 
 -- domain=jwt代表特殊含义, 系统需要访问的domain和jwt中的aud是否相等
 INSERT INTO `zgo_resource`(`id`, `resource`, `domain`, `methods`, `path`, `netmask`, `allow`, `status`) VALUES 
