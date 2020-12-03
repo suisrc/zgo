@@ -120,7 +120,7 @@ steps:
         from_secret: k8s_ali_token
     namespace: test
     deployment: end-zgo
-    container: end-zgo
+    container: zgo
     repo: registry-vpc.cn-shanghai.aliyuncs.com/fmes/zgo
     tag: v2.0.${DRONE_BUILD_PARENT}
   when:
