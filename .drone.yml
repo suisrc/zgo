@@ -26,8 +26,9 @@ steps:
   image: golang:1.14.12-buster
   commands:
   - go env -w GO111MODULE=on &&
-    go env -w GOPROXY=https://goproxy.io,direct &&
+    go env -w GOPROXY=http://mvn.res.local/repository/go,direct &&
     go build -ldflags "-w -s" -o ./docker/zgo ./cmd/app
+    #go env -w GOPROXY=https://goproxy.io,direct &&
   when:
     branch:
     - deploy-auto
