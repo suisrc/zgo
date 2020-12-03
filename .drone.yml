@@ -73,7 +73,7 @@ steps:
         from_secret: k8s_token
     namespace: test
     deployment: end-zgo
-    container: end-zgo
+    container: zgo
     repo: dcr.dev.sims-cn.com/plus/zgo
     tag: v2.0.${DRONE_BUILD_NUMBER}
   when:
