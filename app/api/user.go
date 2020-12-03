@@ -2,6 +2,7 @@ package api
 
 import (
 	"github.com/gin-gonic/gin"
+	i18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
@@ -21,14 +22,18 @@ func (a *User) Register(r gin.IRouter) {
 
 	current := user.Group("current")
 	{
-		current.GET("", a.userCurrent)
-		current.GET("access", a.userCurrentAccess)
-		current.GET("notices", a.userCurrentNotices)
+		current.GET("", a.current)
+		current.GET("access", a.access)
+		current.GET("notices", a.notices)
 	}
 	oauth2 := user.Group("oauth2")
 	{
-		oauth2.GET("bind", a.bindOAuth2Account)
-		oauth2.GET("unbind", a.unbindOAuth2Account)
+		oauth2.GET("bind", a.bindOAuth2)
+		oauth2.GET("unbind", a.unbindOAuth2)
+	}
+	passwd := user.Group("passwd")
+	{
+		passwd.POST("change", a.changePasswd)
 	}
 }
 
@@ -45,39 +50,65 @@ func (a *User) Register(r gin.IRouter) {
 // @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
 // @Router /user/current [get]
-func (a *User) userCurrent(c *gin.Context) {
-	helper.ResSuccess(c, "ok")
+func (a *User) current(c *gin.Context) {
+	// helper.ResSuccess(c, "ok")
+
+	helper.ResError(c, &helper.ErrorModel{
+		Status:   200,
+		ShowType: helper.ShowWarn,
+		ErrorMessage: &i18n.Message{
+			ID:    "ERR-INTERFACE-NOTOPEN",
+			Other: "功能接口为开放",
+		},
+	})
 }
 
 /**
  * 动态验证用户权限问题
  */
 // @Tags user
-// @Summary 查询当前用户信息
-// @Description 查询当前用户信息
+// @Summary 动态验证用户权限问题
+// @Description 动态验证用户权限问题
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
 // @Router /user/current/access [get]
-func (a *User) userCurrentAccess(c *gin.Context) {
+func (a *User) access(c *gin.Context) {
+	// helper.ResSuccess(c, "ok")
 
-	helper.ResSuccess(c, "ok")
+	helper.ResError(c, &helper.ErrorModel{
+		Status:   200,
+		ShowType: helper.ShowWarn,
+		ErrorMessage: &i18n.Message{
+			ID:    "ERR-INTERFACE-NOTOPEN",
+			Other: "功能接口为开放",
+		},
+	})
 }
 
 /**
- * 查询当前用户信息
+ * 查询当前用户消息
  */
 // @Tags user
-// @Summary 查询当前用户信息
-// @Description 查询当前用户信息
+// @Summary 查询当前用户消息
+// @Description 查询当前用户消息
 // @Accept  json
 // @Produce  json
 // @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
 // @Router /user/current/notices [get]
-func (a *User) userCurrentNotices(c *gin.Context) {
-	helper.ResSuccess(c, "ok")
+func (a *User) notices(c *gin.Context) {
+	// helper.ResSuccess(c, "ok")
+
+	helper.ResError(c, &helper.ErrorModel{
+		Status:   200,
+		ShowType: helper.ShowWarn,
+		ErrorMessage: &i18n.Message{
+			ID:    "ERR-INTERFACE-NOTOPEN",
+			Other: "功能接口为开放",
+		},
+	})
 }
 
 // @Tags user
@@ -90,7 +121,7 @@ func (a *User) userCurrentNotices(c *gin.Context) {
 // @Security ApiKeyAuth
 // @Success 200 {object} helper.Success
 // @Router /user/oauth2/bind [get]
-func (a *User) bindOAuth2Account(c *gin.Context) {
+func (a *User) bindOAuth2(c *gin.Context) {
 	// 解析参数
 	body := schema.SigninOfOAuth2{}
 	if err := helper.ParseQuery(c, &body); err != nil {
@@ -120,7 +151,7 @@ func (a *User) bindOAuth2Account(c *gin.Context) {
 // @Param kid query string true "平台KID"
 // @Success 200 {object} helper.Success
 // @Router /user/oauth2/unbind [get]
-func (a *User) unbindOAuth2Account(c *gin.Context) {
+func (a *User) unbindOAuth2(c *gin.Context) {
 	// 解析参数
 	body := schema.SigninOfOAuth2{}
 	if err := helper.ParseQuery(c, &body); err != nil {
@@ -149,4 +180,16 @@ func (a *User) unbindOAuth2Account(c *gin.Context) {
 // @Produce  json
 // @Param kid query string true "平台KID"
 // @Success 200 {object} helper.Success
-// @Router /user/oauth2/unbind [get]
+// @Router /user/passwd/change [post]
+func (a *User) changePasswd(c *gin.Context) {
+	// helper.ResSuccess(c, "ok")
+
+	helper.ResError(c, &helper.ErrorModel{
+		Status:   200,
+		ShowType: helper.ShowWarn,
+		ErrorMessage: &i18n.Message{
+			ID:    "ERR-INTERFACE-NOTOPEN",
+			Other: "功能接口为开放",
+		},
+	})
+}

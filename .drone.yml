@@ -1,0 +1,136 @@
+# 配置说明： https://docs.drone.io/pipeline/kubernetes/
+# 
+# 需要的内容：
+# docker_username, docker_password, k8s_token
+# 
+# drone-sftp-svc/maven/settings.xml
+# drone-sftp-svc, drone:drone
+# docker:2375 (和kaniko选用)
+# 
+kind: pipeline
+type: kubernetes
+name: zgo
+
+# metadata:
+#   namespace: default
+
+platform:
+  os: linux
+  arch: amd64
+
+steps:
+###########################################################################################
+# 构建应用
+
+- name: build
+  image: golang:1.14.12-buster
+  commands:
+  - go build -ldflags "-w -s" -o ./docker/zgo ./cmd/app
+  when:
+    branch:
+    - deploy-auto
+    event:
+    - push
+
+
+# 构建镜像并推送
+- name: publish
+  image: docker:19.03.6
+  pull: always
+  environment:
+    PLUGIN_USERNAME:
+      from_secret: docker_username
+    PLUGIN_PASSWORD:
+      from_secret: docker_password
+    DOCKER_HOST: tcp://docker:2375
+    PLUGIN_REGISTRY: dcr.dev.sims-cn.com
+    PLUGIN_REPO: plus/zgo:v2.0.${DRONE_BUILD_NUMBER}
+  commands: 
+    - docker version &&
+      docker build --rm=true -f docker/Dockerfile -t $PLUGIN_REGISTRY/$PLUGIN_REPO ./docker &&
+      docker login -u $PLUGIN_USERNAME -p $PLUGIN_PASSWORD $PLUGIN_REGISTRY &&
+      docker push $PLUGIN_REGISTRY/$PLUGIN_REPO &&
+      docker rmi  $PLUGIN_REGISTRY/$PLUGIN_REPO
+      # docker system prune -f
+  when:
+    branch:
+    - deploy-auto
+    event:
+    - push
+
+# 集群环境部署更新
+- name: deploy
+  # https://github.com/honestbee/drone-kubernetes
+  # kubectl set image deployment/zzzzz xxxxx=yyyyy:version -n namespace
+  image: quay.io/honestbee/drone-kubernetes
+  pull: always
+  settings:
+    kubernetes_server: https://kubernetes.default.svc
+    kubernetes_token: 
+        from_secret: k8s_token
+    namespace: test
+    deployment: end-zgo
+    container: end-zgo
+    repo: dcr.dev.sims-cn.com/plus/zgo
+    tag: v2.0.${DRONE_BUILD_NUMBER}
+  when:
+    branch:
+    - deploy-auto
+    event:
+    - push
+
+###########################################################################################
+# 构建镜像并推送
+- name: publish-production
+  image: ananace/skopeo
+  pull: always
+  environment:
+    PLUGIN_USERNAME:
+      from_secret: docker_username
+    PLUGIN_PASSWORD:
+      from_secret: docker_password
+    PLUGIN_REGISTRY: dcr.dev.sims-cn.com
+    PLUGIN_REPO: plus/zgo:v2.0.${DRONE_BUILD_PARENT}
+    PLUGIN_USERNAME_ALI:
+      from_secret: docker_ali_username
+    PLUGIN_PASSWORD_ALI:
+      from_secret: docker_ali_password
+    PLUGIN_REGISTRY_ALI: registry.cn-shanghai.aliyuncs.com
+    PLUGIN_REPO_ALI: fmes/zgo:v2.0.${DRONE_BUILD_PARENT}
+  commands: 
+  - skopeo copy
+    --src-creds $PLUGIN_USERNAME:$PLUGIN_PASSWORD
+    --dest-creds $PLUGIN_USERNAME_ALI:$PLUGIN_PASSWORD_ALI
+    docker://$PLUGIN_REGISTRY/$PLUGIN_REPO 
+    docker://$PLUGIN_REGISTRY_ALI/$PLUGIN_REPO_ALI
+  when:
+    target:
+    - production
+    event:
+    - promote
+- name: deploy-production
+  image: quay.io/honestbee/drone-kubernetes
+  pull: always
+  settings:
+    kubernetes_server: https://production.k8s.local:56443
+    kubernetes_token: 
+        from_secret: k8s_ali_token
+    namespace: test
+    deployment: end-zgo
+    container: end-zgo
+    repo: registry-vpc.cn-shanghai.aliyuncs.com/fmes/zgo
+    tag: v2.0.${DRONE_BUILD_PARENT}
+  when:
+    target:
+    - production
+    event:
+    - promote
+
+###########################################################################################
+#https://docs.drone.io/pipeline/kubernetes/syntax/trigger/
+trigger:
+  branch:
+  - deploy-auto
+  event:
+  - push
+  - promote

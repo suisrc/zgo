@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/suisrc/zgo/modules/logger"
 	"github.com/urfave/cli/v2"
 )
 

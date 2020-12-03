@@ -36,7 +36,7 @@ type CasbinGpaResourceRole struct {
 
 // QueryAll sql select
 func (*CasbinGpaResourceRole) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaResourceRole) error {
-	SQL := "select rr.id, rr.resource, r.kid as role from {{TP}}resource_role rr inner join {{TP}}role r on r.id = rr.role_id where r.status=1"
+	SQL := "select rr.id, r.kid, rr.resource as role from {{TP}}resource_role rr inner join {{TP}}role r on r.id = rr.role_id where r.status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Select(dest, SQL)
 }
@@ -50,7 +50,7 @@ type CasbinGpaResourceUser struct {
 
 // QueryAll sql select
 func (*CasbinGpaResourceUser) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaResourceUser) error {
-	SQL := "select ru.id, ru.resource, r.kid as user from {{TP}}resource_user ru inner join {{TP}}role r on r.id = rr.role_id where r.status=1"
+	SQL := "select ru.id, u.kid as user, ru.resource from {{TP}}resource_user ru inner join {{TP}}user u on u.id = ru.user_id where u.status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Select(dest, SQL)
 }

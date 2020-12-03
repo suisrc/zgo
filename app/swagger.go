@@ -8,6 +8,7 @@ Package app 生成swagger文档
 	go get -u github.com/swaggo/swag/cmd/swag
 	make swagger
 
+	https://xxx.com/swagger/index.html
 */
 package app
 

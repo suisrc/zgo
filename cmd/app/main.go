@@ -38,7 +38,7 @@ func runWebCmd(ctx context.Context) *cli.Command {
 				Name:        "conf",
 				Aliases:     []string{"c"},
 				Usage:       "配置文件(.json,.yaml,.toml)",
-				DefaultText: "zgo.toml",
+				DefaultText: "config.toml",
 				//Required:   true,
 			},
 		},

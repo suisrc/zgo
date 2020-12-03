@@ -42,3 +42,4 @@ runtime/*
 */vendor
 logs/*
 __*
+docker/zgo

@@ -1,0 +1,32 @@
+#配置文件
+# 运行模式(debug:调试,test:测试,release:正式)
+runmode = "debug"
+
+# 是否启用swagger
+# swagger = true
+
+# 启动时是否打印配置参数
+printconfig = false
+
+[casbin]
+enable = true
+model = "./rbac_restful.conf"
+policysource = "./rbac_policy.json"
+
+[http]
+port = 80
+
+[jwtauth]
+signingsecret = "J928KDD837C8CLQPZIEC"
+limittime = 5
+
+[mysql]
+host = "192.168.3.35"
+port = 33006
+user = "plus"
+password = "LdkxiD938Sdc"
+dbname = "zgo"
+parameters = "charset=utf8&parseTime=True&loc=Asia%2FShanghai"
+
+[i18n]
+dbenable = false

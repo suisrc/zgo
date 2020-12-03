@@ -3,7 +3,7 @@
 NOW = $(shell date -u '+%Y%m%d%I%M%S')
 
 APP = zgo
-SERVER_BIN = ./cmd/app/${APP}
+SERVER_BIN = ./docker/${APP}
 RELEASE_ROOT = release
 RELEASE_SERVER = release/${APP}
 
