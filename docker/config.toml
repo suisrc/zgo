@@ -15,6 +15,7 @@ policysource = "./rbac_policy.json"
 
 [http]
 port = 80
+contextpath = "/api/v1"
 
 [jwtauth]
 signingsecret = "J928KDD837C8CLQPZIEC"
