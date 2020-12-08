@@ -137,3 +137,68 @@ trigger:
   event:
   - push
   - promote
+
+---
+kind: secret
+name: sftp_username
+get:
+  path: drone-sftp
+  name: username
+
+---
+kind: secret
+name: sftp_password
+get:
+  path: drone-sftp
+  name: password
+
+---
+kind: secret
+name: docker_username
+get:
+  path: drone-docker
+  name: username
+
+---
+kind: secret
+name: docker_password
+get:
+  path: drone-docker
+  name: password
+
+---
+kind: secret
+name: k8s_token
+get:
+  path: drone-k8s
+  name: token
+
+#---
+#kind: secret
+#name: docker_ali_username
+#get:
+#  path: drone-docker-ali
+#  name: username
+#
+#---
+#kind: secret
+#name: docker_ali_password
+#get:
+#  path: drone-docker-ali
+#  name: password
+#
+#---
+#kind: secret
+#name: k8s_ali_token
+#get:
+#  path: drone-k8s-ali
+#  name: token
+#
+#---
+#kind: secret
+#name: sonar_token
+#get:
+#  path: drone-sonar
+#  name: token
+
+...
