@@ -22,8 +22,9 @@ const (
 	XReqUserKey = "X-Request-User-KID"
 	XReqRoleKey = "X-Request-Role-KID"
 
-	XReqOriginHostKey = "X-Request-Origin-Host"
-	XReqOriginPathKey = "X-Reqeust-Origin-Path"
+	XReqOriginHostKey   = "X-Request-Origin-Host"
+	XReqOriginPathKey   = "X-Request-Origin-Path"
+	XReqOriginMethodKey = "X-Request-Origin-Method"
 )
 
 // UserInfo 用户信息
@@ -77,6 +78,7 @@ func GetTraceID(c *gin.Context) string {
 
 	// 优先从请求头中获取请求ID
 	traceID := c.GetHeader("X-Request-Id")
+	// log.Println(traceID)
 	if traceID == "" {
 		// 没有自建
 		v, err := uuid.NewRandom()

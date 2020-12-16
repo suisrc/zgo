@@ -80,8 +80,8 @@ cli:
 
 # database
 db-mysql:
-	go run cmd/db/main.go mysql -m doc/model.md -o configs/model.mysql.sql
+	go run cmd/db/main.go mysql -m configs/model.md -o configs/model.mysql.sql
 db-entc:
-	go run cmd/db/main.go entc -m doc/model.md -o app/model/ent/schema
+	go run cmd/db/main.go entc  -m configs/model.md -o app/model/ent/schema
 db-entc-del:
 	go run cmd/db/main.go entc-del -o app/model/ent -es $(es)
