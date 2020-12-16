@@ -323,13 +323,13 @@ C应用:  [Client.kid]        应用ID
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
 ---
-## 资源实体(`resource`)
+## 资源实体(`gateway`)
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| kid           | 唯一标识       | 字符串   |                                                     | varchar(64), idx_resource_kid                        |
-| resource      | 资源名         | 字符串   | 资源名可以重复, 即该资源标识一类资源而不是单独      | varchar(64), idx_resource_name                       |
+| kid           | 唯一标识       | 字符串   |                                                     | varchar(64), idx_gateway_kid                         |
+| name          | 资源名         | 字符串   | 资源名可以重复, 即该资源标识一类资源而不是单独      | varchar(64), idx_gateway_name                        |
 | domain        | 域名           | 字符串   | api.io                                              | varchar(255)                                         |
 | methods       | 方法           | 字符串   | (GET)(POST)(PUT)(DELETE)                            | varchar(64)                                          |
 | path          | 路径           | 字符串   | /api/*                                              | varchar(255)                                         |
@@ -349,7 +349,7 @@ C应用:  [Client.kid]        应用ID
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
-## 资源角色实体(`role_resource`)
+## 资源角色实体(`role_gateway`)
 
 这里使用资源角色而非角色资源,是为了兼容casbin方式,我们对资源如下定义:
 资源是一类请求资源的合集,而非一个.请求资源有唯一标识,但是资源没有,角色和资源绑定.
@@ -357,8 +357,8 @@ C应用:  [Client.kid]        应用ID
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| role_id       | 角色           | 数值     |                                                     | int(11), fk_resource_role_id->role.id                |
-| resource      | 资源名         | 字符串   |                                                     | varchar(64), fk_resource_role_res->resource.resource |
+| role_id       | 角色           | 数值     |                                                     | int(11), fk_gateway_role_id->role.id                 |
+| gateway       | 资源名         | 字符串   |                                                     | varchar(64), fk_role_gateway_name->gateway.name      |
 | expired       | 授权有效期     | 时间格式 |                                                     | int(11)                                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -367,15 +367,15 @@ C应用:  [Client.kid]        应用ID
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
 ---
-## 资源角色实体(`user_resource`)
+## 资源角色实体(`user_gateway`)
 
 用于对某一个用户进行单独屏蔽操作, 非特殊情况下不推荐使用
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| user_id       | 用户           | 数值     |                                                     | int(11), fk_resource_user_id->user.id                |
-| resource      | 资源名         | 字符串   |                                                     | varchar(64), fk_resource_user_res->resource.resource |
+| user_id       | 用户           | 数值     |                                                     | int(11), fk_gateway_user_id->user.id                 |
+| gateway       | 资源名         | 字符串   |                                                     | varchar(64), fk_user_gateway_name->gateway.name      |
 | expired       | 授权有效期     | 时间格式 |                                                     | int(11)                                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -634,7 +634,7 @@ C应用:  [Client.kid]        应用ID
 ---
 ## 菜单事件实体(`menu_action`)
 
-主要用户系统中对操作的隐藏,如果需要禁用,需要配合resource使用,默认权限为启用
+主要用户系统中对操作的隐藏,如果需要禁用,需要配合gateway使用,默认权限为启用
 该内容一般用户初始化前端页面,用于对低权限的人屏蔽修改操作
 由于casbin在系统中是由否定优先规则,即当系统中角色具有一票否决,通过role的向下遍历,确定角色上是否有操作的否决即可
 

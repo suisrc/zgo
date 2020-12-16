@@ -1,4 +1,4 @@
-basePath: /api
+basePath: /api/v1
 definitions:
   helper.Success:
     properties:
@@ -46,7 +46,6 @@ info:
     email: susirc@outlook.com
     name: suisrc
   description: GIN + ENT/SQLX + CASBIN + WIRE
-  license: {}
   title: zgo
   version: 0.0.1
 paths:
@@ -136,9 +135,9 @@ paths:
         in: query
         name: result
         type: string
-      - description: redirect_uri
+      - description: redirect
         in: query
-        name: redirect_uri
+        name: redirect
         type: string
       produces:
       - application/json
@@ -226,7 +225,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: 查询当前用户信息
+      description: 动态验证用户权限问题
       produces:
       - application/json
       responses:
@@ -236,14 +235,14 @@ paths:
             $ref: '#/definitions/helper.Success'
       security:
       - ApiKeyAuth: []
-      summary: 查询当前用户信息
+      summary: 动态验证用户权限问题
       tags:
       - user
   /user/current/notices:
     get:
       consumes:
       - application/json
-      description: 查询当前用户信息
+      description: 查询当前用户消息
       produces:
       - application/json
       responses:
@@ -253,7 +252,7 @@ paths:
             $ref: '#/definitions/helper.Success'
       security:
       - ApiKeyAuth: []
-      summary: 查询当前用户信息
+      summary: 查询当前用户消息
       tags:
       - user
   /user/oauth2/bind:
@@ -304,6 +303,29 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Unbind
+      tags:
+      - user
+  /user/passwd/change:
+    post:
+      consumes:
+      - application/json
+      description: 修改密码
+      parameters:
+      - description: 平台KID
+        in: query
+        name: kid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: passwd
       tags:
       - user
 schemes:

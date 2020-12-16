@@ -2,6 +2,7 @@ package schema
 
 import (
 	"database/sql"
+	"log"
 	"strings"
 
 	"github.com/suisrc/zgo/app/model/sqlxc"
@@ -169,6 +170,7 @@ func (a *SigninGpaRole) QueryByKID(sqlx *sqlx.DB, kid string) error {
 func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, userid int) error {
 	SQL := "select r.id, r.kid, r.name, r.domain from {{TP}}user_role ur inner join {{TP}}role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	log.Println(SQL)
 	return sqlx.Select(dest, SQL, userid)
 }
 
@@ -179,7 +181,7 @@ func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, user
 // SigninGpaAccount account
 type SigninGpaAccount struct {
 	ID           int            `db:"id"`
-	PID          sql.NullInt64  `db:"pid"`           // 上级账户
+	PID          sql.NullInt64  `db:"account_pid"`   // 上级账户
 	Account      string         `db:"account"`       // 账户
 	AccountType  int            `db:"account_typ"`   // 账户类型 1:name 2:mobile 3:email 4:openid 5:unionid 6:token
 	AccountKind  sql.NullString `db:"account_kid"`   // 账户归属平台
@@ -217,6 +219,7 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 	}
 	sqr.WriteString(" and status=1")
 	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
+	// log.Println(SQL)
 	return sqlx.Get(a, SQL, params...)
 }
 

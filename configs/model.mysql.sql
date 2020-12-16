@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2020-12-15 14:06:18 CST
+-- time: 2020-12-16 15:31:24 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -152,14 +152,14 @@ CREATE TABLE `zgo_account_token` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
+  INDEX idx_account_token_cid(`client_id`),
+  INDEX idx_account_token_ckid(`client_kid`),
+  INDEX idx_account_token_ukid(`user_kid`),
   INDEX idx_account_token_rkid(`role_kid`),
   INDEX idx_oauth2_account_expires(`expires_at`),
   INDEX idx_oauth2_account_rtid(`refresh_token`),
   INDEX idx_account_token_aid(`account_id`),
   INDEX idx_account_token_tkid(`token_kid`),
-  INDEX idx_account_token_cid(`client_id`),
-  INDEX idx_account_token_ckid(`client_kid`),
-  INDEX idx_account_token_ukid(`user_kid`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -234,10 +234,10 @@ CREATE TABLE `zgo_user_role` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
 -- 资源实体
-CREATE TABLE `zgo_resource` (
+CREATE TABLE `zgo_gateway` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `kid` varchar(64) DEFAULT NULL COMMENT '唯一标识',
-  `resource` varchar(64) DEFAULT NULL COMMENT '资源名',
+  `name` varchar(64) DEFAULT NULL COMMENT '资源名',
   `domain` varchar(255) DEFAULT NULL COMMENT '域名',
   `methods` varchar(64) DEFAULT NULL COMMENT '方法',
   `path` varchar(255) DEFAULT NULL COMMENT '路径',
@@ -252,16 +252,16 @@ CREATE TABLE `zgo_resource` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
-  INDEX idx_resource_kid(`kid`),
-  INDEX idx_resource_name(`resource`),
+  INDEX idx_gateway_kid(`kid`),
+  INDEX idx_gateway_name(`name`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
 -- 资源角色实体
-CREATE TABLE `zgo_role_resource` (
+CREATE TABLE `zgo_role_gateway` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `role_id` int(11) DEFAULT NULL COMMENT '角色',
-  `resource` varchar(64) DEFAULT NULL COMMENT '资源名',
+  `gateway` varchar(64) DEFAULT NULL COMMENT '资源名',
   `expired` int(11) DEFAULT NULL COMMENT '授权有效期',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
@@ -271,10 +271,10 @@ CREATE TABLE `zgo_role_resource` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
 -- 资源角色实体
-CREATE TABLE `zgo_user_resource` (
+CREATE TABLE `zgo_user_gateway` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
   `user_id` int(11) DEFAULT NULL COMMENT '用户',
-  `resource` varchar(64) DEFAULT NULL COMMENT '资源名',
+  `gateway` varchar(64) DEFAULT NULL COMMENT '资源名',
   `expired` int(11) DEFAULT NULL COMMENT '授权有效期',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
@@ -463,8 +463,8 @@ CREATE TABLE `zgo_role_menu` (
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   UNIQUE udx_menu_role_kid(`kid`),
-  INDEX idx_parent_id(`pid`),
   INDEX idx_role_kid(`role_kid`),
+  INDEX idx_parent_id(`pid`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
@@ -485,9 +485,9 @@ CREATE TABLE `zgo_user_menu` (
 -- 表外键
 -- -------------------------------------------------------
 ALTER TABLE `zgo_account`
+ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `zgo_user_role` (`id`),
 ADD CONSTRAINT `fk_account_kid` FOREIGN KEY (`account_kid`)  REFERENCES `zgo_oauth2_platform` (`kid`),
-ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
-ADD CONSTRAINT `fk_account_role` FOREIGN KEY (`role_id`)  REFERENCES `zgo_user_role` (`id`);
+ADD CONSTRAINT `fk_account_user` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`);
 
 ALTER TABLE `zgo_oauth2_token`
 ADD CONSTRAINT `fk_oauth2_token_id` FOREIGN KEY (`oauth2_id`)  REFERENCES `zgo_oauth2_platform` (`id`);
@@ -500,16 +500,16 @@ ADD CONSTRAINT `fk_role_owner_id` FOREIGN KEY (`owner_id`)  REFERENCES `zgo_role
 ADD CONSTRAINT `fk_role_child_id` FOREIGN KEY (`child_id`)  REFERENCES `zgo_role` (`id`);
 
 ALTER TABLE `zgo_user_role`
-ADD CONSTRAINT `fk_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
-ADD CONSTRAINT `fk_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`);
+ADD CONSTRAINT `fk_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
+ADD CONSTRAINT `fk_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`);
 
-ALTER TABLE `zgo_role_resource`
-ADD CONSTRAINT `fk_resource_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_resource_role_res` FOREIGN KEY (`resource`)  REFERENCES `zgo_resource` (`resource`);
+ALTER TABLE `zgo_role_gateway`
+ADD CONSTRAINT `fk_gateway_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
+ADD CONSTRAINT `fk_role_gateway_name` FOREIGN KEY (`gateway`)  REFERENCES `zgo_gateway` (`name`);
 
-ALTER TABLE `zgo_user_resource`
-ADD CONSTRAINT `fk_resource_user_res` FOREIGN KEY (`resource`)  REFERENCES `zgo_resource` (`resource`),
-ADD CONSTRAINT `fk_resource_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`);
+ALTER TABLE `zgo_user_gateway`
+ADD CONSTRAINT `fk_gateway_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
+ADD CONSTRAINT `fk_user_gateway_name` FOREIGN KEY (`gateway`)  REFERENCES `zgo_gateway` (`name`);
 
 ALTER TABLE `zgo_user_detail`
 ADD CONSTRAINT `fk_user_detail` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
@@ -521,8 +521,8 @@ ALTER TABLE `zgo_user_customer`
 ADD CONSTRAINT `fk_user_customer` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
 
 ALTER TABLE `zgo_user_message`
-ADD CONSTRAINT `fk_u_msg_fo_id` FOREIGN KEY (`fo_id`)  REFERENCES `zgo_user` (`id`),
-ADD CONSTRAINT `fk_u_msg_to_id` FOREIGN KEY (`to_id`)  REFERENCES `zgo_user` (`id`);
+ADD CONSTRAINT `fk_u_msg_to_id` FOREIGN KEY (`to_id`)  REFERENCES `zgo_user` (`id`),
+ADD CONSTRAINT `fk_u_msg_fo_id` FOREIGN KEY (`fo_id`)  REFERENCES `zgo_user` (`id`);
 
 ALTER TABLE `zgo_role_menu`
 ADD CONSTRAINT `fk_menu_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
@@ -545,9 +545,9 @@ ADD CONSTRAINT `fk_menu_user_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_u
 -- INSERT INTO `zgo_role`(`id`, `kid`, `name`, `description`, `status`, `domain`, `organization`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_role_role`(`id`, `owner_id`, `child_id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_user_role`(`id`, `user_id`, `role_id`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
--- INSERT INTO `zgo_resource`(`id`, `kid`, `resource`, `domain`, `methods`, `path`, `netmask`, `allow`, `description`, `status`, `organization`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
--- INSERT INTO `zgo_role_resource`(`id`, `role_id`, `resource`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
--- INSERT INTO `zgo_user_resource`(`id`, `user_id`, `resource`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `zgo_gateway`(`id`, `kid`, `name`, `domain`, `methods`, `path`, `netmask`, `allow`, `description`, `status`, `organization`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_role_gateway`(`id`, `role_id`, `gateway`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `zgo_user_gateway`(`id`, `user_id`, `gateway`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_tag_system`(`id`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_tag_system_r`(`id`, `type`, `belong`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_tag_custom`(`id`, `type`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
@@ -579,12 +579,12 @@ ADD CONSTRAINT `fk_menu_user_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_u
 -- ALTER TABLE `zgo_user_role`
 -- DROP FOREIGN KEY `fk_role_user_id`,
 -- DROP FOREIGN KEY `fk_role_role_id`;
--- ALTER TABLE `zgo_role_resource`
--- DROP FOREIGN KEY `fk_resource_role_id`,
--- DROP FOREIGN KEY `fk_resource_role_res`;
--- ALTER TABLE `zgo_user_resource`
--- DROP FOREIGN KEY `fk_resource_user_id`,
--- DROP FOREIGN KEY `fk_resource_user_res`;
+-- ALTER TABLE `zgo_role_gateway`
+-- DROP FOREIGN KEY `fk_gateway_role_id`,
+-- DROP FOREIGN KEY `fk_role_gateway_name`;
+-- ALTER TABLE `zgo_user_gateway`
+-- DROP FOREIGN KEY `fk_gateway_user_id`,
+-- DROP FOREIGN KEY `fk_user_gateway_name`;
 -- ALTER TABLE `zgo_user_detail`
 -- DROP FOREIGN KEY `fk_user_detail`;
 -- ALTER TABLE `zgo_user_employee`
@@ -592,8 +592,8 @@ ADD CONSTRAINT `fk_menu_user_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_u
 -- ALTER TABLE `zgo_user_customer`
 -- DROP FOREIGN KEY `fk_user_customer`;
 -- ALTER TABLE `zgo_user_message`
--- DROP FOREIGN KEY `fk_u_msg_fo_id`,
--- DROP FOREIGN KEY `fk_u_msg_to_id`;
+-- DROP FOREIGN KEY `fk_u_msg_to_id`,
+-- DROP FOREIGN KEY `fk_u_msg_fo_id`;
 -- ALTER TABLE `zgo_role_menu`
 -- DROP FOREIGN KEY `fk_menu_role_role_id`,
 -- DROP FOREIGN KEY `fk_menu_role_menu_id`;
@@ -610,9 +610,9 @@ ADD CONSTRAINT `fk_menu_user_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_u
 -- DROP TABLE IF EXISTS `zgo_role`;
 -- DROP TABLE IF EXISTS `zgo_role_role`;
 -- DROP TABLE IF EXISTS `zgo_user_role`;
--- DROP TABLE IF EXISTS `zgo_resource`;
--- DROP TABLE IF EXISTS `zgo_role_resource`;
--- DROP TABLE IF EXISTS `zgo_user_resource`;
+-- DROP TABLE IF EXISTS `zgo_gateway`;
+-- DROP TABLE IF EXISTS `zgo_role_gateway`;
+-- DROP TABLE IF EXISTS `zgo_user_gateway`;
 -- DROP TABLE IF EXISTS `zgo_tag_system`;
 -- DROP TABLE IF EXISTS `zgo_tag_system_r`;
 -- DROP TABLE IF EXISTS `zgo_tag_custom`;
