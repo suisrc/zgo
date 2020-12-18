@@ -6,6 +6,7 @@ import (
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
+	i18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/helper"
@@ -27,6 +28,9 @@ func (a *Auth) RegisterWithUAC(r gin.IRouter) {
 		//   proxy_set_header X-Request-Origin-Method $request_method;
 		value := c.GetHeader(k)
 		if value == "" {
+			if value == helper.XReqOriginHostKey {
+				return "default", nil
+			}
 			return "", errors.New("invalid " + k)
 		} else if offset := strings.IndexRune(value, '?'); offset > 0 {
 			value = value[:offset]
@@ -58,5 +62,23 @@ func (a *Auth) Register(r gin.IRouter) {
 func (a *Auth) authorize(c *gin.Context) {
 	// 权限判断有UserAuthCasbinMiddleware完成
 	// 仅仅返回正常结果即可
+
+	// 如果通过验证， 当前用户是一定登录的
+	user, exist := helper.GetUserInfo(c)
+	if !exist {
+		// 未登录
+		helper.ResError(c, &helper.ErrorModel{
+			Status:   200,
+			ShowType: helper.ShowWarn,
+			ErrorMessage: &i18n.Message{
+				ID:    "ERR-AUTHORIZE-USERNOEXIST",
+				Other: "登录用户不存在",
+			},
+		})
+		return
+	}
+	c.Writer.Header().Set(helper.XReqUserKey, user.GetUserID())
+	c.Writer.Header().Set(helper.XReqRoleKey, user.GetRoleID())
+
 	helper.ResSuccess(c, "ok")
 }

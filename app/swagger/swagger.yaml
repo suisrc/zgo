@@ -66,6 +66,142 @@ paths:
       summary: Authorize
       tags:
       - auth
+  /manager/account/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户列表
+      tags:
+      - manager
+  /manager/account/size:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户列表
+      tags:
+      - manager
+  /manager/gateway/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户列表
+      tags:
+      - manager
+  /manager/gateway/size:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户列表
+      tags:
+      - manager
+  /manager/roles/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户列表
+      tags:
+      - manager
+  /manager/roles/size:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户列表
+      tags:
+      - manager
+  /manager/users/list:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户列表
+      tags:
+      - manager
+  /manager/users/size:
+    get:
+      consumes:
+      - application/json
+      description: 获取用户列表
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/helper.Success'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取用户列表
+      tags:
+      - manager
   /signin:
     post:
       consumes:

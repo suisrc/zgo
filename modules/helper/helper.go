@@ -19,8 +19,8 @@ const (
 	ResJwtOptKey = Prefix + "/res-jwt-opt"   // jwt opt
 	ResTokenKey  = Prefix + "/res-token-kid" // token kid -> jwt id
 
-	XReqUserKey = "X-Request-User-KID"
-	XReqRoleKey = "X-Request-Role-KID"
+	XReqUserKey = "X-Request-User-Kid"
+	XReqRoleKey = "X-Request-Role-Kid"
 
 	XReqOriginHostKey   = "X-Request-Origin-Host"
 	XReqOriginPathKey   = "X-Request-Origin-Path"

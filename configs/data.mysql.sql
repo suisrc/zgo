@@ -34,7 +34,7 @@ INSERT INTO `zgo_role`(`id`, `kid`, `name`, `domain`, `status`, `organization`) 
 
 INSERT INTO `zgo_role_gateway`(`id`, `role_id`, `gateway`) VALUES 
 (1, 1, "admin"),
-(2, 2, "api"),
+(2, 2, "api-demo"),
 (3, 2, "jwt"),
 (4, 6, "lys2go");
 

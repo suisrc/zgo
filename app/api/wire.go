@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/casbin/casbin/v2"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"github.com/suisrc/zgo/app/api/manager"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/middlewire"
@@ -19,12 +20,16 @@ var EndpointSet = wire.NewSet(
 	service.ServiceSet,             // 系统提供的服务列表
 	wire.Struct(new(Options), "*"), // 初始化接口参数
 	InitEndpoints,                  // 初始化接口方法
+	manager.EndpointSet,            // 管理页面接口
 
 	// 接口注册
 	wire.Struct(new(Demo), "*"),
 	wire.Struct(new(Auth), "*"),
 	wire.Struct(new(Signin), "*"),
 	wire.Struct(new(User), "*"),
+
+	// 界面管理
+	wire.Struct(new(manager.Wire), "*"),
 )
 
 //=====================================
@@ -43,6 +48,9 @@ type Options struct {
 	Auth   *Auth
 	Signin *Signin
 	User   *User
+
+	// 管理界面
+	ManagerWire *manager.Wire
 }
 
 // Endpoints result
@@ -90,6 +98,8 @@ func InitEndpoints(o *Options) *Endpoints {
 	o.Signin.Register(r)
 	o.User.Register(r)
 	o.Demo.Register(o.Engine)
+
+	o.ManagerWire.Register(r)
 
 	return &Endpoints{}
 }
