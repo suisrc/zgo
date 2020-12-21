@@ -28,7 +28,7 @@ func (a *Auth) RegisterWithUAC(r gin.IRouter) {
 		//   proxy_set_header X-Request-Origin-Method $request_method;
 		value := c.GetHeader(k)
 		if value == "" {
-			if value == helper.XReqOriginHostKey {
+			if k == helper.XReqOriginHostKey {
 				return "default", nil
 			}
 			return "", errors.New("invalid " + k)
@@ -92,13 +92,13 @@ func (a *Auth) authorize(c *gin.Context) {
 
 	h.Set(helper.XReqUserKey, user.GetUserID())
 	h.Set(helper.XReqRoleKey, user.GetRoleID())
-	h.Set(helper.XReqDomainKey, "")       // 平台
-	h.Set(helper.XReqOrganizationKey, "") // 平台 LCOAL-PM-00
+	h.Set(helper.XReqDomainKey, "nil")       // 平台
+	h.Set(helper.XReqOrganizationKey, "nil") // 平台 LCOAL-PM-00
 	h.Set(helper.XReqAccountKey, user.GetRoleID())
 	h.Set(helper.XReqUserIdxKey, user.GetAccountID())
 	h.Set(helper.XreqUserNamKey, user.GetUserName())
-	h.Set(helper.XreqUser3rdKey, "") // 平台
-	h.Set(helper.XReqRoleOrgKey, "") // 平台
+	h.Set(helper.XreqUser3rdKey, "nil") // 平台
+	h.Set(helper.XReqRoleOrgKey, "nil") // 平台
 
 	h.Set(helper.XReqZgoKey, helper.GetHostIP(c))
 

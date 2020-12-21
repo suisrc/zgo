@@ -3,8 +3,9 @@
 @baseUrl=http://127.0.0.1
 @baseUrl1=https://leo2go-80-me03.dev.sims-cn.com
 @baseUrl2=http://lhdg3.dev.k8s.local
+@baseUrl3=http://end-zgo-svc.test.svc.cluster.local
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MDgyODcxNDcsImp0aSI6IjFfZmtnc3R4czk3aDNwaDAwbWtwemUxZnRvdGNyIiwiaWF0IjoxNjA4MjgzNTQ3LCJpc3MiOiIxMjcuMC4wLjEiLCJuYmYiOjE2MDgyODM1NDcsInN1YiI6IjEwMDAwMSIsIm5hbSI6Inpnby11c2VyIiwicm9sIjoiYWRtaW4iLCJhdGkiOiIxIn0.CB-njvVXoGGBhWyxfmzwlF6wnaz0YhEMz_4gpGJXzTFnzlMxtJuImevnuOXU4jg8wJBSvH0DNs9SVG6uEAYN6Q
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MDg1MjAwODksImp0aSI6IjFfN21xZjNtMnYydzZ0NTkzb3VzNG4xZnUwMHM5IiwiaWF0IjoxNjA4NTE2NDg5LCJpc3MiOiIxMjcuMC4wLjEiLCJuYmYiOjE2MDg1MTY0ODksInN1YiI6IjEwMDAwMSIsIm5hbSI6Inpnby11c2VyIiwicm9sIjoiYWRtaW4iLCJhdGkiOiIxIn0.7xYNDO4Dxl6ll6b_5EHBydFQalixxSRWsDy_PXl4csT10o5JD8OeHFUlf4_iRYMcjY3z0rV0YmmmBroikGdYCQ
 
 ###
 POST {{baseUrl}}/api/v1/signin
@@ -18,7 +19,7 @@ Content-Type: application/json
 }
 
 ###
-GET {{baseUrl1}}/authz
+GET {{baseUrl}}/authz
 Content-Type: application/json
 Authorization: Bearer {{bearer}}
 X-Request-Origin-Path: /api/lhdg/v2/user
