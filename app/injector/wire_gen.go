@@ -7,6 +7,7 @@ package injector
 
 import (
 	"github.com/suisrc/zgo/app/api"
+	"github.com/suisrc/zgo/app/api/manager"
 	"github.com/suisrc/zgo/app/model/entc"
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
@@ -107,15 +108,38 @@ func BuildInjector() (*Injector, func(), error) {
 		GPA:         gpaGPA,
 		UserService: user,
 	}
+	managerUser := &manager.User{
+		GPA: gpaGPA,
+	}
+	account := &manager.Account{
+		GPA: gpaGPA,
+	}
+	role := &manager.Role{
+		GPA: gpaGPA,
+	}
+	menu := &manager.Menu{
+		GPA: gpaGPA,
+	}
+	gateway := &manager.Gateway{
+		GPA: gpaGPA,
+	}
+	wire := &manager.Wire{
+		User:    managerUser,
+		Account: account,
+		Role:    role,
+		Menu:    menu,
+		Gateway: gateway,
+	}
 	options := &api.Options{
-		Engine:   engine,
-		Router:   router,
-		Enforcer: syncedEnforcer,
-		Auther:   auther,
-		Demo:     demo,
-		Auth:     auth,
-		Signin:   apiSignin,
-		User:     apiUser,
+		Engine:      engine,
+		Router:      router,
+		Enforcer:    syncedEnforcer,
+		Auther:      auther,
+		Demo:        demo,
+		Auth:        auth,
+		Signin:      apiSignin,
+		User:        apiUser,
+		ManagerWire: wire,
 	}
 	endpoints := api.InitEndpoints(options)
 	watcher, cleanup5, err := casbinmem.NewCasbinWatcher(casbinAdapter, syncedEnforcer)

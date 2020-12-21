@@ -2,6 +2,7 @@ package helper
 
 import (
 	"context"
+	"net"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -19,8 +20,16 @@ const (
 	ResJwtOptKey = Prefix + "/res-jwt-opt"   // jwt opt
 	ResTokenKey  = Prefix + "/res-token-kid" // token kid -> jwt id
 
-	XReqUserKey = "X-Request-User-KID"
-	XReqRoleKey = "X-Request-Role-KID"
+	XReqUserKey         = "X-Request-User-Kid"     // user kid
+	XReqRoleKey         = "X-Request-Role-Kid"     // role kid
+	XReqDomainKey       = "X-Request-Domain"       // domain
+	XReqOrganizationKey = "X-Request-Organization" // Organization
+	XReqAccountKey      = "X-Reqeust-Account"      // account
+	XReqUserIdxKey      = "X-Request-User-Xid"     // user index id
+	XreqUserNamKey      = "X-Request-User-Nam"     // user name
+	XreqUser3rdKey      = "X-Request-User-Tid"     // user third id (application)
+	XReqRoleOrgKey      = "X-Request-Role-Org"     // role organization kid
+	XReqZgoKey          = "X-Request-Zgo-Xip"      // 由于前置授权无需应用间绑定， 如果需要执行必要通信，可以获取通信地址
 
 	XReqOriginHostKey   = "X-Request-Origin-Host"
 	XReqOriginPathKey   = "X-Request-Origin-Path"
@@ -100,6 +109,23 @@ func GetClientIP(c *gin.Context) string {
 		return v
 	}
 	return c.ClientIP()
+}
+
+// GetHostIP 获取主机端IP
+func GetHostIP(c *gin.Context) string {
+	if addrs, err := net.InterfaceAddrs(); err == nil {
+		for _, address := range addrs {
+			// 检查ip地址判断是否回环地址
+			if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+				if ipnet.IP.To4() != nil {
+					return ipnet.IP.String()
+				}
+
+			}
+		}
+	}
+
+	return ""
 }
 
 // GetAcceptLanguage 获取浏览器语言

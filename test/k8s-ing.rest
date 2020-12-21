@@ -1,0 +1,31 @@
+# humao.rest-client
+
+@baseUrl=http://127.0.0.1
+@baseUrl1=https://leo2go-80-me03.dev.sims-cn.com
+@baseUrl2=http://lhdg3.dev.k8s.local
+
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MDgyODcxNDcsImp0aSI6IjFfZmtnc3R4czk3aDNwaDAwbWtwemUxZnRvdGNyIiwiaWF0IjoxNjA4MjgzNTQ3LCJpc3MiOiIxMjcuMC4wLjEiLCJuYmYiOjE2MDgyODM1NDcsInN1YiI6IjEwMDAwMSIsIm5hbSI6Inpnby11c2VyIiwicm9sIjoiYWRtaW4iLCJhdGkiOiIxIn0.CB-njvVXoGGBhWyxfmzwlF6wnaz0YhEMz_4gpGJXzTFnzlMxtJuImevnuOXU4jg8wJBSvH0DNs9SVG6uEAYN6Q
+
+###
+POST {{baseUrl}}/api/v1/signin
+Content-Type: application/json
+
+{
+  "client": "",
+  "code": "",
+  "password": "123456",
+  "username": "zgo1"
+}
+
+###
+GET {{baseUrl1}}/authz
+Content-Type: application/json
+Authorization: Bearer {{bearer}}
+X-Request-Origin-Path: /api/lhdg/v2/user
+X-Request-Origin-Host:
+X-Request-Origin-Method: GET
+
+###
+GET {{baseUrl2}}/api/lhdg/v2/user
+Content-Type: application/json
+Authorization: Bearer {{bearer}}

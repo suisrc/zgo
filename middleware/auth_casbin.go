@@ -114,6 +114,7 @@ func UserAuthCasbinMiddlewareByPathFunc(auther auth.Auther, enforcer *casbin.Syn
 			act = c.Request.Method
 		}
 		cip := helper.GetClientIP(c) // 客户端IP
+		// 执行请求断言
 		if b, err := enforcer.Enforce(sub, usr, dom, aud, pat, cip, act); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err)) // 授权发生异常
 			helper.ResError(c, erm)
