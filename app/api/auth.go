@@ -77,8 +77,30 @@ func (a *Auth) authorize(c *gin.Context) {
 		})
 		return
 	}
-	c.Writer.Header().Set(helper.XReqUserKey, user.GetUserID())
-	c.Writer.Header().Set(helper.XReqRoleKey, user.GetRoleID())
+
+	h := c.Writer.Header()
+
+	// XReqUserKey         = "X-Request-User-Kid"     // user kid
+	// XReqRoleKey         = "X-Request-Role-Kid"     // role kid
+	// XReqDomainKey       = "X-Request-Domain"       // domain
+	// XReqOrganizationKey = "X-Request-Organization" // Organization
+	// XReqAccountKey      = "X-Reqeust-Account"      // account
+	// XReqUserIdxKey      = "X-Request-User-Xid"     // user index id
+	// XreqUser3rdKey      = "X-Request-User-Tid"     // user third id (application)
+	// XReqRoleOrgKey      = "X-Request-Role-Org"     // role organization kid
+	// XReqZgoKey          = "X-Request-Zgo-Uri"      // 由于前置授权无需应用间绑定， 如果需要执行必要通信，可以获取通信地址
+
+	h.Set(helper.XReqUserKey, user.GetUserID())
+	h.Set(helper.XReqRoleKey, user.GetRoleID())
+	h.Set(helper.XReqDomainKey, "")       // 平台
+	h.Set(helper.XReqOrganizationKey, "") // 平台 LCOAL-PM-00
+	h.Set(helper.XReqAccountKey, user.GetRoleID())
+	h.Set(helper.XReqUserIdxKey, user.GetAccountID())
+	h.Set(helper.XreqUserNamKey, user.GetUserName())
+	h.Set(helper.XreqUser3rdKey, "") // 平台
+	h.Set(helper.XReqRoleOrgKey, "") // 平台
+
+	h.Set(helper.XReqZgoKey, helper.GetHostIP(c))
 
 	helper.ResSuccess(c, "ok")
 }
