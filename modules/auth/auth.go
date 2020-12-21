@@ -54,6 +54,11 @@ type UserInfo interface {
 	GetIssuer() string
 	// 令牌接收者
 	GetAudience() string
+
+	// XID
+	GetXID() string
+	// TID
+	GetTID() string
 }
 
 // Auther 认证接口

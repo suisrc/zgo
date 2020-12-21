@@ -68,6 +68,8 @@ type SigninUser struct {
 	Issuer    string
 	Audience  string
 	AccountID string
+	XID       string
+	TID       string
 }
 
 // GetUserName 用户名
@@ -115,6 +117,16 @@ func (s *SigninUser) GetIssuer() string {
 // GetAudience 令牌接收者
 func (s *SigninUser) GetAudience() string {
 	return s.Audience
+}
+
+// GetXID 令牌
+func (s *SigninUser) GetXID() string {
+	return s.XID
+}
+
+// GetTID 令牌
+func (s *SigninUser) GetTID() string {
+	return s.TID
 }
 
 //=========================================================================

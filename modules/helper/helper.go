@@ -49,6 +49,9 @@ type UserInfo interface {
 
 	GetAccountID() string
 	SetRoleID(string) string
+
+	GetXID() string
+	GetTID() string
 }
 
 // UserInfoFunc user

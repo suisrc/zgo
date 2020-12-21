@@ -94,6 +94,8 @@ type UserInfo struct {
 	Issuer    string
 	Audience  string
 	AccountID string
+	XID       string
+	TID       string
 }
 
 // GetUserName name
@@ -141,4 +143,14 @@ func (u *UserInfo) GetAudience() string {
 // GetProps props
 func (u *UserInfo) GetProps() (interface{}, bool) {
 	return nil, false
+}
+
+// GetXID xid
+func (u *UserInfo) GetXID() string {
+	return u.XID
+}
+
+// GetTID tid
+func (u *UserInfo) GetTID() string {
+	return u.TID
 }

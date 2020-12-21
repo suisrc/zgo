@@ -287,6 +287,9 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	}
 	suser.RoleID = role.KID                                              // SigninUser -> 6
 	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) // SigninUser -> 7 配置系统给定的TokenID
+
+	suser.XID = strconv.Itoa(user.ID)
+	suser.TID = ""
 	return &suser, nil
 }
 

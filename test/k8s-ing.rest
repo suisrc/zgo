@@ -5,10 +5,10 @@
 @baseUrl2=http://lhdg3.dev.k8s.local
 @baseUrl3=http://end-zgo-svc.test.svc.cluster.local
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MDg1MjAwODksImp0aSI6IjFfN21xZjNtMnYydzZ0NTkzb3VzNG4xZnUwMHM5IiwiaWF0IjoxNjA4NTE2NDg5LCJpc3MiOiIxMjcuMC4wLjEiLCJuYmYiOjE2MDg1MTY0ODksInN1YiI6IjEwMDAwMSIsIm5hbSI6Inpnby11c2VyIiwicm9sIjoiYWRtaW4iLCJhdGkiOiIxIn0.7xYNDO4Dxl6ll6b_5EHBydFQalixxSRWsDy_PXl4csT10o5JD8OeHFUlf4_iRYMcjY3z0rV0YmmmBroikGdYCQ
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsZW8yZ28tODAtbWUwMy5kZXYuc2ltcy1jbi5jb20iLCJleHAiOjE2MDg1NDQ1MDEsImp0aSI6IjFfcHV2cXR3dmtraGR3NzY0Z2NtY3IxZnUwb241IiwiaWF0IjoxNjA4NTQwOTAxLCJpc3MiOiJsZW8yZ28tODAtbWUwMy5kZXYuc2ltcy1jbi5jb20iLCJuYmYiOjE2MDg1NDA5MDEsInN1YiI6IjEwMDAwMSIsIm5hbSI6Inpnby11c2VyIiwicm9sIjoiYWRtaW4iLCJhdGkiOiIxIn0.0Jl_ZLvNvilM4tTA1mNvloG0ruWo2HWP9mFDHQRY2DJuN-LV7aEbXyOK2AZRHdtf14DllR5_azBfVPB__0F6Lg
 
 ###
-POST {{baseUrl}}/api/v1/signin
+POST {{baseUrl1}}/api/v1/signin
 Content-Type: application/json
 
 {
@@ -19,7 +19,7 @@ Content-Type: application/json
 }
 
 ###
-GET {{baseUrl}}/authz
+GET {{baseUrl1}}/authz
 Content-Type: application/json
 Authorization: Bearer {{bearer}}
 X-Request-Origin-Path: /api/lhdg/v2/user
@@ -27,6 +27,6 @@ X-Request-Origin-Host:
 X-Request-Origin-Method: GET
 
 ###
-GET {{baseUrl2}}/api/lhdg/v2/user
+GET {{baseUrl3}}/api/lhdg/v2/user
 Content-Type: application/json
 Authorization: Bearer {{bearer}}

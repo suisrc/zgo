@@ -57,6 +57,9 @@ func NewUserInfo(user auth.UserInfo) *UserClaims {
 	claims.Issuer = user.GetIssuer()
 	claims.Audience = user.GetAudience()
 
+	claims.XID = user.GetXID()
+	claims.TID = user.GetTID()
+
 	return &claims
 }
 
@@ -69,6 +72,8 @@ type UserClaims struct {
 	Role       string      `json:"rol,omitempty"` // 角色ID, role id
 	AccountID  string      `json:"ati,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式
 	Properties interface{} `json:"pps,omitempty"` // 用户的额外属性
+	XID        string      `json:"xid,omitempty"` // 用户的一种扩展ID
+	TID        string      `json:"tid,omitempty"` // 用户的一种扩展ID
 }
 
 // GetUserName name
@@ -122,4 +127,14 @@ func (u *UserClaims) GetAudience() string {
 // GetProps props
 func (u *UserClaims) GetProps() (interface{}, bool) {
 	return nil, false
+}
+
+// GetXID xid
+func (u *UserClaims) GetXID() string {
+	return u.XID
+}
+
+// GetTID tid
+func (u *UserClaims) GetTID() string {
+	return u.TID
 }

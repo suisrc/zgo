@@ -84,7 +84,7 @@ func (a *Auth) authorize(c *gin.Context) {
 	// XReqRoleKey         = "X-Request-Role-Kid"     // role kid
 	// XReqDomainKey       = "X-Request-Domain"       // domain
 	// XReqOrganizationKey = "X-Request-Organization" // Organization
-	// XReqAccountKey      = "X-Reqeust-Account"      // account
+	// XReqAccountKey      = "X-Request-Account"      // account
 	// XReqUserIdxKey      = "X-Request-User-Xid"     // user index id
 	// XreqUser3rdKey      = "X-Request-User-Tid"     // user third id (application)
 	// XReqRoleOrgKey      = "X-Request-Role-Org"     // role organization kid
@@ -92,13 +92,13 @@ func (a *Auth) authorize(c *gin.Context) {
 
 	h.Set(helper.XReqUserKey, user.GetUserID())
 	h.Set(helper.XReqRoleKey, user.GetRoleID())
+	h.Set(helper.XReqAccountKey, user.GetAccountID())
+	h.Set(helper.XreqUserNamKey, user.GetUserName())
+	h.Set(helper.XReqUserIdxKey, user.GetXID())
+	h.Set(helper.XreqUser3rdKey, user.GetTID())
 	h.Set(helper.XReqDomainKey, "nil")       // 平台
 	h.Set(helper.XReqOrganizationKey, "nil") // 平台 LCOAL-PM-00
-	h.Set(helper.XReqAccountKey, user.GetRoleID())
-	h.Set(helper.XReqUserIdxKey, user.GetAccountID())
-	h.Set(helper.XreqUserNamKey, user.GetUserName())
-	h.Set(helper.XreqUser3rdKey, "nil") // 平台
-	h.Set(helper.XReqRoleOrgKey, "nil") // 平台
+	h.Set(helper.XReqRoleOrgKey, "nil")      // 平台
 
 	h.Set(helper.XReqZgoKey, helper.GetHostIP(c))
 
