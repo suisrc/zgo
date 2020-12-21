@@ -11,10 +11,9 @@
             "name": "suisrc",
             "email": "susirc@outlook.com"
         },
-        "license": {},
         "version": "0.0.1"
     },
-    "basePath": "/api",
+    "basePath": "/api/v1",
     "paths": {
         "/authz": {
             "get": {
@@ -156,8 +155,8 @@
                     },
                     {
                         "type": "string",
-                        "description": "redirect_uri",
-                        "name": "redirect_uri",
+                        "description": "redirect",
+                        "name": "redirect",
                         "in": "query"
                     }
                 ],
@@ -294,7 +293,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "查询当前用户信息",
+                "description": "动态验证用户权限问题",
                 "consumes": [
                     "application/json"
                 ],
@@ -304,7 +303,7 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "查询当前用户信息",
+                "summary": "动态验证用户权限问题",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -322,7 +321,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "查询当前用户信息",
+                "description": "查询当前用户消息",
                 "consumes": [
                     "application/json"
                 ],
@@ -332,7 +331,7 @@
                 "tags": [
                     "user"
                 ],
-                "summary": "查询当前用户信息",
+                "summary": "查询当前用户消息",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -404,6 +403,43 @@
                     "user"
                 ],
                 "summary": "Unbind",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "平台KID",
+                        "name": "kid",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/passwd/change": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "修改密码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "passwd",
                 "parameters": [
                     {
                         "type": "string",

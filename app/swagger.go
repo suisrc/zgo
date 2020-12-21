@@ -19,6 +19,6 @@ package app
 // @in header
 // @name Authorization
 // @schemes https http
-// @basePath /api
+// @basePath /api/v1
 // @contact.name suisrc
 // @contact.email susirc@outlook.com

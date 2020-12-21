@@ -22,7 +22,6 @@ var doc = `{
             "name": "suisrc",
             "email": "susirc@outlook.com"
         },
-        "license": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
@@ -168,8 +167,8 @@ var doc = `{
                     },
                     {
                         "type": "string",
-                        "description": "redirect_uri",
-                        "name": "redirect_uri",
+                        "description": "redirect",
+                        "name": "redirect",
                         "in": "query"
                     }
                 ],
@@ -306,7 +305,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "查询当前用户信息",
+                "description": "动态验证用户权限问题",
                 "consumes": [
                     "application/json"
                 ],
@@ -316,7 +315,7 @@ var doc = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "查询当前用户信息",
+                "summary": "动态验证用户权限问题",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -334,7 +333,7 @@ var doc = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "查询当前用户信息",
+                "description": "查询当前用户消息",
                 "consumes": [
                     "application/json"
                 ],
@@ -344,7 +343,7 @@ var doc = `{
                 "tags": [
                     "user"
                 ],
-                "summary": "查询当前用户信息",
+                "summary": "查询当前用户消息",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -416,6 +415,43 @@ var doc = `{
                     "user"
                 ],
                 "summary": "Unbind",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "平台KID",
+                        "name": "kid",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/helper.Success"
+                        }
+                    }
+                }
+            }
+        },
+        "/user/passwd/change": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "修改密码",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "passwd",
                 "parameters": [
                     {
                         "type": "string",
@@ -517,7 +553,7 @@ type swaggerInfo struct {
 var SwaggerInfo = swaggerInfo{
 	Version:     "0.0.1",
 	Host:        "",
-	BasePath:    "/api",
+	BasePath:    "/api/v1",
 	Schemes:     []string{"https", "http"},
 	Title:       "zgo",
 	Description: "GIN + ENT/SQLX + CASBIN + WIRE",

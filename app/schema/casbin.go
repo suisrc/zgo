@@ -7,50 +7,50 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// CasbinGpaResource policy => p
-type CasbinGpaResource struct {
-	ID       int            `db:"id"`
-	Resource sql.NullString `db:"resource"`
-	Domain   sql.NullString `db:"domain"`
-	Methods  sql.NullString `db:"methods"`
-	Path     sql.NullString `db:"path"`
-	Netmask  sql.NullString `db:"netmask"`
-	Allow    sql.NullBool   `db:"allow"`
+// CasbinGpaGateway policy => p
+type CasbinGpaGateway struct {
+	ID      int            `db:"id"`
+	Name    sql.NullString `db:"name"`
+	Domain  sql.NullString `db:"domain"`
+	Methods sql.NullString `db:"methods"`
+	Path    sql.NullString `db:"path"`
+	Netmask sql.NullString `db:"netmask"`
+	Allow   sql.NullBool   `db:"allow"`
 	// description sql.NullString `db:"description"`
 	// status      sql.NullBool   `db:"status"`
 }
 
 // QueryAll sql select
-func (*CasbinGpaResource) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaResource) error {
-	SQL := "select id, resource, methods, path, netmask, allow from {{TP}}resource where status=1"
+func (*CasbinGpaGateway) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaGateway) error {
+	SQL := "select id, name, methods, path, netmask, allow from {{TP}}gateway where status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Select(dest, SQL)
 }
 
-// CasbinGpaResourceRole policy => g
-type CasbinGpaResourceRole struct {
-	ID       int            `db:"id"`
-	Role     sql.NullString `db:"role"`
-	Resource sql.NullString `db:"resource"`
+// CasbinGpaGatewayRole policy => g
+type CasbinGpaRoleGateway struct {
+	ID      int            `db:"id"`
+	Role    sql.NullString `db:"role"`
+	Gateway sql.NullString `db:"gateway"`
 }
 
 // QueryAll sql select
-func (*CasbinGpaResourceRole) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaResourceRole) error {
-	SQL := "select rr.id, r.kid, rr.resource as role from {{TP}}resource_role rr inner join {{TP}}role r on r.id = rr.role_id where r.status=1"
+func (*CasbinGpaRoleGateway) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaRoleGateway) error {
+	SQL := "select rg.id, r.kid as role, rg.gateway from {{TP}}role_gateway rg inner join {{TP}}role r on r.id = rg.role_id where r.status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Select(dest, SQL)
 }
 
-// CasbinGpaResourceUser policy => g
-type CasbinGpaResourceUser struct {
-	ID       int            `db:"id"`
-	User     sql.NullString `db:"user"`
-	Resource sql.NullString `db:"resource"`
+// CasbinGpaGatewayUser policy => g
+type CasbinGpaUserGateway struct {
+	ID      int            `db:"id"`
+	User    sql.NullString `db:"user"`
+	Gateway sql.NullString `db:"gateway"`
 }
 
 // QueryAll sql select
-func (*CasbinGpaResourceUser) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaResourceUser) error {
-	SQL := "select ru.id, u.kid as user, ru.resource from {{TP}}resource_user ru inner join {{TP}}user u on u.id = ru.user_id where u.status=1"
+func (*CasbinGpaUserGateway) QueryAll(sqlx *sqlx.DB, dest *[]CasbinGpaUserGateway) error {
+	SQL := "select ug.id, u.kid as user, ug.gateway from {{TP}}user_gateway ug inner join {{TP}}user u on u.id = ug.user_id where u.status=1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Select(dest, SQL)
 }

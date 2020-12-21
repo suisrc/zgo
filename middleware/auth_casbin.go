@@ -23,13 +23,13 @@ var (
 
 // UserAuthCasbinMiddleware 用户授权中间件
 func UserAuthCasbinMiddleware(auther auth.Auther, enforcer *casbin.SyncedEnforcer, skippers ...SkipperFunc) gin.HandlerFunc {
-	return UserAuthCasbinMiddlewareByPathFunc(auther, enforcer, func(c *gin.Context) (string, error) {
-		return c.Request.URL.Path, nil
+	return UserAuthCasbinMiddlewareByPathFunc(auther, enforcer, func(c *gin.Context, k string) (string, error) {
+		return "default", nil
 	}, skippers...)
 }
 
 // UserAuthCasbinMiddlewareByPathFunc 用户授权中间件
-func UserAuthCasbinMiddlewareByPathFunc(auther auth.Auther, enforcer *casbin.SyncedEnforcer, pathFunc func(*gin.Context) (string, error), skippers ...SkipperFunc) gin.HandlerFunc {
+func UserAuthCasbinMiddlewareByPathFunc(auther auth.Auther, enforcer *casbin.SyncedEnforcer, fixOriginFunc func(*gin.Context, string) (string, error), skippers ...SkipperFunc) gin.HandlerFunc {
 	if !config.C.JWTAuth.Enable {
 		return EmptyMiddleware()
 	}
@@ -61,7 +61,6 @@ func UserAuthCasbinMiddlewareByPathFunc(auther auth.Auther, enforcer *casbin.Syn
 		// 需要执行casbin授权
 		var sub, usr, aud string      // 角色, 用户,  jwt授权方
 		erm := helper.Err403Forbidden // casbin验证失败后返回的异常
-
 		if err != nil {
 			if err == auth.ErrNoneToken && conf.NoSignin {
 				sub = CasbinNoSignin            // 用户未登陆,且允许执行未登陆认证
@@ -90,15 +89,31 @@ func UserAuthCasbinMiddlewareByPathFunc(auther auth.Auther, enforcer *casbin.Syn
 			}
 			aud = user.GetAudience() // jwt授权方
 		}
-
-		pat, err := pathFunc(c) // 请求路径
-		if err != nil {         // 无访问权限
+		pat, err := fixOriginFunc(c, helper.XReqOriginPathKey) // 请求路径
+		//log.Println(pat)
+		if err != nil {
 			helper.ResError(c, erm)
+			return
+		} else if pat == "default" {
+			pat = c.Request.URL.Path
 		}
-
-		dom := c.Request.Host        // 请求域名
+		dom, err := fixOriginFunc(c, helper.XReqOriginHostKey) // 请求域名
+		//log.Println(dom)
+		if err != nil {
+			helper.ResError(c, erm)
+			return
+		} else if dom == "default" {
+			dom = c.Request.Host
+		}
+		act, err := fixOriginFunc(c, helper.XReqOriginMethodKey) // 请求方法
+		//log.Println(act)
+		if err != nil {
+			helper.ResError(c, erm)
+			return
+		} else if act == "default" {
+			act = c.Request.Method
+		}
 		cip := helper.GetClientIP(c) // 客户端IP
-		act := c.Request.Method      // 请求方法
 		if b, err := enforcer.Enforce(sub, usr, dom, aud, pat, cip, act); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err)) // 授权发生异常
 			helper.ResError(c, erm)
