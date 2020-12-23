@@ -22,6 +22,7 @@ const (
 
 	XReqUserKey         = "X-Request-User-Kid"     // user kid
 	XReqRoleKey         = "X-Request-Role-Kid"     // role kid
+	XReqRoleApp         = "X-Request-Role-App"     // role app
 	XReqDomainKey       = "X-Request-Domain"       // domain
 	XReqOrganizationKey = "X-Request-Organization" // Organization
 	XReqAccountKey      = "X-Request-Account"      // account

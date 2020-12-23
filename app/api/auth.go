@@ -96,6 +96,7 @@ func (a *Auth) authorize(c *gin.Context) {
 	h.Set(helper.XreqUserNamKey, user.GetUserName())
 	h.Set(helper.XReqUserIdxKey, user.GetXID())
 	h.Set(helper.XreqUser3rdKey, user.GetTID())
+	h.Set(helper.XReqRoleApp, "admin")
 	h.Set(helper.XReqDomainKey, "nil")       // 平台
 	h.Set(helper.XReqOrganizationKey, "nil") // 平台 LCOAL-PM-00
 	h.Set(helper.XReqRoleOrgKey, "nil")      // 平台
