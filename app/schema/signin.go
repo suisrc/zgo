@@ -51,6 +51,7 @@ type SigninResult struct {
 	ExpiresAt    int64  `json:"expires_at,omitempty"`                  // 过期时间
 	ExpiresIn    int64  `json:"expires_in,omitempty"`                  // 过期时间
 	RefreshToken string `json:"refresh_token,omitempty"`               // 刷新令牌
+	RefreshExp   int64  `json:"refresh_expires,omitempty"`             // 刷新令牌过期时间
 	Redirect     string `json:"redirect_uri,omitempty"`                // redirect_uri
 	// Message 和 Roles 一般用户发生异常后回显
 	Message string        `json:"message,omitempty"` // 消息,有限显示
@@ -365,6 +366,7 @@ type SigninGpaAccountToken struct {
 	ExpiresAt    sql.NullInt64  `db:"expires_at"`
 	AccessToken  sql.NullString `db:"access_token"`
 	RefreshToken sql.NullString `db:"refresh_token"`
+	RefreshExp   sql.NullInt64  `db:"refresh_expires"`
 	RefreshCount sql.NullInt64  `db:"refresh_count" set:"=refresh_count+1"`
 	Status       sql.NullBool   `db:"status"`
 	CreatedAt    sql.NullTime   `db:"created_at"`

@@ -22,6 +22,7 @@ require (
 	github.com/go-redis/redis v6.15.8+incompatible
 	github.com/go-redis/redis_rate v6.5.0+incompatible
 	github.com/go-sql-driver/mysql v1.5.1-0.20200311113236-681ffa848bae
+	github.com/google/subcommands v1.2.0 // indirect
 	github.com/google/uuid v1.1.1
 	github.com/google/wire v0.4.0
 	github.com/guonaihong/gout v0.1.1
@@ -44,9 +45,10 @@ require (
 	github.com/tidwall/buntdb v1.1.2
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/net v0.0.0-20201216054612-986b41b23924 // indirect
+	golang.org/x/mod v0.4.0 // indirect
+	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
 	golang.org/x/text v0.3.4
 	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
-	golang.org/x/tools v0.0.0-20201215192005-fa10ef0b8743 // indirect
+	golang.org/x/tools v0.0.0-20201226215659-b1c90890d22a // indirect
 	xorm.io/xorm v1.0.3
 )

@@ -27,6 +27,8 @@ var EndpointSet = wire.NewSet(
 	wire.Struct(new(Auth), "*"),
 	wire.Struct(new(Signin), "*"),
 	wire.Struct(new(User), "*"),
+	wire.Struct(new(System), "*"),
+	wire.Struct(new(Use3rd), "*"),
 
 	// 界面管理
 	wire.Struct(new(manager.Wire), "*"),
@@ -48,6 +50,8 @@ type Options struct {
 	Auth   *Auth
 	Signin *Signin
 	User   *User
+	System *System
+	Use3rd *Use3rd
 
 	// 管理界面
 	ManagerWire *manager.Wire
@@ -89,6 +93,8 @@ func InitEndpoints(o *Options) *Endpoints {
 			// pub => public 为系统公共信息
 			// 注意[/api/pub开头的,都会被排除]
 			middleware.JoinPath(config.C.HTTP.ContextPath, "pub"),
+			// /user/current
+			middleware.JoinPath(config.C.HTTP.ContextPath, "user", "current"),
 		),
 	)
 	r.Use(uac)
@@ -97,6 +103,10 @@ func InitEndpoints(o *Options) *Endpoints {
 	o.Auth.Register(r)
 	o.Signin.Register(r)
 	o.User.Register(r)
+
+	o.System.Register(r)
+	o.Use3rd.Register(r)
+
 	o.Demo.Register(o.Engine)
 
 	o.ManagerWire.Register(r)

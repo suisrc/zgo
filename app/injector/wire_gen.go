@@ -107,6 +107,13 @@ func BuildInjector() (*Injector, func(), error) {
 	apiUser := &api.User{
 		GPA:         gpaGPA,
 		UserService: user,
+		Auther:      auther,
+	}
+	system := &api.System{
+		GPA: gpaGPA,
+	}
+	use3rd := &api.Use3rd{
+		GPA: gpaGPA,
 	}
 	managerUser := &manager.User{
 		GPA: gpaGPA,
@@ -139,6 +146,8 @@ func BuildInjector() (*Injector, func(), error) {
 		Auth:        auth,
 		Signin:      apiSignin,
 		User:        apiUser,
+		System:      system,
+		Use3rd:      use3rd,
 		ManagerWire: wire,
 	}
 	endpoints := api.InitEndpoints(options)

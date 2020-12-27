@@ -131,6 +131,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | expires_in    | 有限期间隔     | 字符串   |                                                     | int(11) DEFAULT 7200                                 |
 | expires_time  | 凭据过期时间   | 字符串   |                                                     | timestamp, idx_oauth2_token_exp_time                 |
 | refresh_token | 刷新令牌       | 字符串   |                                                     | varchar(1024)                                        |
+| refresh_expires | 刷新令牌     | 字符串   |                                                     | int(11) DEFAULT 604800                               |
 | refresh_count | 刷新次数       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | sync_lock     | 同步锁         | 数值     | 同步锁,使用时间锁,防止死锁                          | timestamp                                            |
 | call_count    | 调用次数       | 数值     | 令牌被使用的次数, 注意开发时需要降低更新频次        | int(11) DEFAULT 0                                    |
@@ -222,6 +223,7 @@ C应用:  [Client.kid]        应用ID
 | expires_at    | 授权有效期     | 数值     |                                                     | int(11), idx_oauth2_account_expires                  |
 | access_token  | 访问令牌       | 字符串   | 最后一次密钥(二次密钥小于300秒, 直接返回)           | varchar(2048)                                        |
 | refresh_token | 刷新令牌       | 字符串   |                                                     | varchar(128), idx_oauth2_account_rtid                |
+| refresh_expires | 刷新令牌     | 字符串   |                                                     | int(11) DEFAULT 604800                               |
 | refresh_count | 刷新次数       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | status        | 状态           | 数值     | 1:启用 0:禁用 (备用)                                | tinyint(4) DEFAULT 1                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |

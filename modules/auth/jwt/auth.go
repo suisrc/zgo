@@ -220,6 +220,7 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 		AccessToken:  tokenString,
 		ExpiresAt:    claims.ExpiresAt,
 		RefreshToken: NewRefreshToken(claims.AccountID),
+		RefreshExp:   now.Add(time.Duration(a.opts.refresh) * time.Second).Unix(),
 	}
 	return tokenInfo, claims, nil
 }
@@ -259,6 +260,7 @@ func (a *Auther) RefreshToken(c context.Context, tokenString string, check func(
 		AccessToken:  token,
 		ExpiresAt:    claims.ExpiresAt,
 		RefreshToken: NewRefreshToken(claims.AccountID),
+		RefreshExp:   now.Add(time.Duration(a.opts.refresh) * time.Second).Unix(),
 	}
 	return tokenInfo, claims, nil
 }

@@ -92,6 +92,7 @@ func (a *Signin) signin(c *gin.Context) {
 		ExpiresAt:    token.GetExpiresAt(),
 		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
 		RefreshToken: token.GetRefreshToken(),
+		RefreshExp:   token.GetRefreshExp(),
 	}
 
 	// 记录登陆
@@ -125,6 +126,7 @@ func (a *Signin) last(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountTok
 			ExpiresAt:    o2a.ExpiresAt.Int64,
 			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
 			RefreshToken: o2a.RefreshToken.String,
+			RefreshExp:   o2a.RefreshExp.Int64,
 		})
 	}
 	return &o2a, nil
@@ -151,6 +153,7 @@ func (a *Signin) log(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode, re
 		ExpiresAt:    sql.NullInt64{Valid: t.GetExpiresAt() > 0, Int64: t.GetExpiresAt()},
 		AccessToken:  sql.NullString{Valid: t.GetAccessToken() != "", String: t.GetAccessToken()},
 		RefreshToken: sql.NullString{Valid: refresh != "", String: refresh},
+		RefreshExp:   sql.NullInt64{Valid: t.GetRefreshExp() > 0, Int64: t.GetRefreshExp()},
 		Status:       sql.NullBool{Valid: true, Bool: true},
 	}
 	if _, err := o2a.UpdateAndSaveByTokenKID(a.Sqlx); err != nil {
@@ -237,6 +240,7 @@ func (a *Signin) refresh(c *gin.Context) {
 			ExpiresAt:    o2a.ExpiresAt.Int64,
 			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
 			RefreshToken: o2a.RefreshToken.String,
+			RefreshExp:   o2a.RefreshExp.Int64,
 		}
 		helper.ResSuccess(c, &result)
 		return
@@ -265,6 +269,7 @@ func (a *Signin) refresh(c *gin.Context) {
 		ExpiresAt:    token.GetExpiresAt(),
 		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
 		RefreshToken: token.GetRefreshToken(),
+		RefreshExp:   token.GetRefreshExp(),
 	}
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
@@ -362,6 +367,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 		redirect += "&expires_at=" + strconv.Itoa(int(token.GetExpiresAt()))
 		redirect += "&expires_in=" + strconv.Itoa(int(token.GetExpiresAt()-time.Now().Unix()))
 		redirect += "&refresh_token=" + token.GetRefreshToken()
+		redirect += "&refresh_expires=" + strconv.Itoa(int(token.GetRefreshExp()))
 		redirect += "&token_type=Bearer"
 		redirect += "&trace_id=" + helper.GetTraceID(c)
 		// 重定向到登陆页面
@@ -377,6 +383,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 		ExpiresAt:    token.GetExpiresAt(),
 		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
 		RefreshToken: token.GetRefreshToken(),
+		RefreshExp:   token.GetRefreshExp(),
 	}
 
 	// 记录登陆

@@ -15,9 +15,10 @@ var _ auth.TokenInfo = &TokenInfo{}
 // TokenInfo 令牌信息
 type TokenInfo struct {
 	// TokenType    string `json:"token_type,omitempty"`    // 令牌类型
-	AccessToken  string `json:"access_token,omitempty"`  // 访问令牌
-	ExpiresAt    int64  `json:"expires_at,omitempty"`    // 过期时间
-	RefreshToken string `json:"refresh_token,omitempty"` // 刷新令牌
+	AccessToken  string `json:"access_token,omitempty"`    // 访问令牌
+	ExpiresAt    int64  `json:"expires_at,omitempty"`      // 访问令牌过期时间
+	RefreshToken string `json:"refresh_token,omitempty"`   // 刷新令牌
+	RefreshExp   int64  `json:"refresh_expires,omitempty"` // 刷新令牌过期时间
 }
 
 // GetAccessToken access token
@@ -33,6 +34,11 @@ func (t *TokenInfo) GetExpiresAt() int64 {
 // GetRefreshToken refresh token
 func (t *TokenInfo) GetRefreshToken() string {
 	return t.RefreshToken
+}
+
+// GetRefreshExp refresh expires
+func (t *TokenInfo) GetRefreshExp() int64 {
+	return t.RefreshExp
 }
 
 // EncodeToJSON to json

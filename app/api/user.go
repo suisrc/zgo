@@ -1,11 +1,14 @@
 package api
 
 import (
+	"time"
+
 	"github.com/gin-gonic/gin"
 	i18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
+	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/helper"
 	"github.com/suisrc/zgo/modules/logger"
 )
@@ -14,6 +17,7 @@ import (
 type User struct {
 	gpa.GPA
 	UserService service.User
+	Auther      auth.Auther // 令牌控制
 }
 
 // Register 注册接口
@@ -51,15 +55,33 @@ func (a *User) Register(r gin.IRouter) {
 // @Success 200 {object} helper.Success
 // @Router /user/current [get]
 func (a *User) current(c *gin.Context) {
-	// helper.ResSuccess(c, "ok")
+	// 验证登录信息
+	user, err := a.Auther.GetUserInfo(c)
+	// 如果通过验证， 当前用户是一定登录的
+	// user, exist := helper.GetUserInfo(c)
+	if err != nil || user == nil /*!exist*/ {
+		// 未登录
+		helper.ResError(c, &helper.ErrorModel{
+			Status:   200,
+			ShowType: helper.ShowWarn,
+			ErrorMessage: &i18n.Message{
+				ID:    "ERR-AUTHORIZE-USERNOEXIST",
+				Other: "登录用户不存在",
+			},
+		})
+		return
+	}
 
-	helper.ResError(c, &helper.ErrorModel{
-		Status:   200,
-		ShowType: helper.ShowWarn,
-		ErrorMessage: &i18n.Message{
-			ID:    "ERR-INTERFACE-NOTOPEN",
-			Other: "功能接口为开放",
-		},
+	// userid?: string; // 用户ID
+	// avatar?: string; // 头像
+	// name?: string; // 名称
+	// system?: string; // 该字段主要是有前端给出,用以记录使用, 不同system带来的access也是不同的
+	// createAt?: number; // 获取当前信息的时间
+	helper.ResSuccess(c, helper.H{
+		"userid":   user.GetUserID(),
+		"name":     user.GetUserName(),
+		"system":   "LHDG2",
+		"createAt": time.Now(),
 	})
 }
 

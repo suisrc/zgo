@@ -25,6 +25,9 @@ type TokenInfo interface {
 	// 获取刷新令牌
 	GetRefreshToken() string
 
+	// 获取刷新令牌过期时间戳
+	GetRefreshExp() int64
+
 	// JSON
 	EncodeToJSON() ([]byte, error)
 }
