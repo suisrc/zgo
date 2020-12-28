@@ -101,7 +101,7 @@ func (a *User) access(c *gin.Context) {
 
 	helper.ResError(c, &helper.ErrorModel{
 		Status:   200,
-		ShowType: helper.ShowWarn,
+		ShowType: helper.ShowNone,
 		ErrorMessage: &i18n.Message{
 			ID:    "ERR-INTERFACE-NOTOPEN",
 			Other: "功能接口为开放",
@@ -125,7 +125,7 @@ func (a *User) notices(c *gin.Context) {
 
 	helper.ResError(c, &helper.ErrorModel{
 		Status:   200,
-		ShowType: helper.ShowWarn,
+		ShowType: helper.ShowNone,
 		ErrorMessage: &i18n.Message{
 			ID:    "ERR-INTERFACE-NOTOPEN",
 			Other: "功能接口为开放",

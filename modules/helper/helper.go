@@ -20,17 +20,17 @@ const (
 	ResJwtOptKey = Prefix + "/res-jwt-opt"   // jwt opt
 	ResTokenKey  = Prefix + "/res-token-kid" // token kid -> jwt id
 
-	XReqUserKey         = "X-Request-User-Kid"     // user kid
-	XReqRoleKey         = "X-Request-Role-Kid"     // role kid
-	XReqRoleApp         = "X-Request-Role-App"     // role app
-	XReqDomainKey       = "X-Request-Domain"       // domain
-	XReqOrganizationKey = "X-Request-Organization" // Organization
-	XReqAccountKey      = "X-Request-Account"      // account
-	XReqUserIdxKey      = "X-Request-User-Xid"     // user index id
-	XreqUserNamKey      = "X-Request-User-Nam"     // user name
-	XreqUser3rdKey      = "X-Request-User-Tid"     // user third id (application)
-	XReqRoleOrgKey      = "X-Request-Role-Org"     // role organization kid
-	XReqZgoKey          = "X-Request-Zgo-Xip"      // 由于前置授权无需应用间绑定， 如果需要执行必要通信，可以获取通信地址
+	XReqUserKey    = "X-Request-User-Kid" // user kid
+	XReqRoleKey    = "X-Request-Role-Kid" // role kid
+	XReqRoleApp    = "X-Request-Role-App" // role app
+	XReqDomainKey  = "X-Request-Domain"   // domain
+	XReqOrgCodeKey = "X-Request-Org-Code" // Organization
+	XReqAccountKey = "X-Request-Account"  // account
+	XReqUserIdxKey = "X-Request-User-Xid" // user index id
+	XreqUserNamKey = "X-Request-User-Nam" // user name
+	XreqUser3rdKey = "X-Request-User-Tid" // user third id (application)
+	XReqRoleOrgKey = "X-Request-Role-Org" // role organization kid
+	XReqZgoKey     = "X-Request-Zgo-Xip"  // 由于前置授权无需应用间绑定， 如果需要执行必要通信，可以获取通信地址
 
 	XReqOriginHostKey   = "X-Request-Origin-Host"
 	XReqOriginPathKey   = "X-Request-Origin-Path"
