@@ -12,6 +12,9 @@
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/cmd/app",
             "args": ["web", "-c", "./configs/__config.toml"],
+            "env": {
+                // "CONFIG_MYSQL_PORT": 3306,
+            }
         },
         {
             "name": "Connect",
