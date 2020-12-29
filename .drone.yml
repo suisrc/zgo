@@ -118,7 +118,7 @@ steps:
     kubernetes_server: https://production.k8s.local:56443
     kubernetes_token: 
         from_secret: k8s_ali_token
-    namespace: test
+    namespace: fmes-bate
     deployment: end-zgo
     container: zgo
     repo: registry-vpc.cn-shanghai.aliyuncs.com/fmes/zgo
@@ -191,7 +191,7 @@ get:
 kind: secret
 name: k8s_ali_token
 get:
-  path: drone-k8s-ali
+  path: drone-k8s-ali-bate
   name: token
 
 ---
