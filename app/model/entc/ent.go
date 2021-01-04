@@ -5,7 +5,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/facebookincubator/ent/dialect/sql"
+	"github.com/facebook/ent/dialect/sql"
 	"github.com/suisrc/zgo/app/model/ent"
 	"github.com/suisrc/zgo/app/model/gpa"
 )

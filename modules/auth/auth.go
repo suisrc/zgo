@@ -34,34 +34,42 @@ type TokenInfo interface {
 
 // UserInfo user
 type UserInfo interface {
-	//helper.UserInfo
-
-	// GetUserName 用户名
-	GetUserName() string
+	// GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
+	GetTokenID() string
 
 	// GetUserID 用户ID
 	GetUserID() string
-	// GetRoleID 角色ID
-	GetRoleID() string
-	// GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
-	GetTokenID() string
-	// GetAccountID 登陆ID, 本身不具备任何意义,只是标记登陆方式
+	// GetUserName 用户名
+	GetUserName() string
+	// GetUserRole 角色ID
+	GetUserRole() string
+	// GetXidxID 直接获取用户索引ID
+	GetXidxID() string
+	// GetUserAccount 登陆ID, 本身不具备任何意义,只是标记登陆方式
 	GetAccountID() string
+	// GetT3rdID 获取用户第三方索引
+	GetT3rdID() string
+	// GetT3rdID 获取用户第三方索引
+	GetClientID() string
 
-	// 赋予用户临时角色,用户替换,返回之前的角色
-	SetRoleID(string) string
-	// GetProps() 获取私有属性,该内容会被加密, 注意:内容敏感,不要存储太多的内容
-	GetProps() (interface{}, bool)
-
-	// 令牌签发者
+	// GetDomain
+	GetDomain() string
+	// GetIssuer 令牌签发者
 	GetIssuer() string
-	// 令牌接收者
+	// GetAudience 令牌接收者
 	GetAudience() string
 
-	// XID
-	GetXID() string
-	// TID
-	GetTID() string
+	// GetOrgCode
+	GetOrgCode() string
+	// GetOrgRole
+	GetOrgRole() string
+	// GetOrgDomain
+	GetOrgDomain() string
+	// IsOrgAdmin
+	GetOrgAdmin() string
+
+	// 赋予用户临时角色,用户替换,返回之前的角色
+	SetUserRole(string) string
 }
 
 // Auther 认证接口

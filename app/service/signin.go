@@ -201,8 +201,8 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	} else if !user.Status {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
 	}
-	suser.UserName = user.Name // SigninUser -> 2
-	suser.UserID = user.KID    // SigninUser -> 3
+	suser.Name = user.Name  // SigninUser -> 2
+	suser.UserID = user.KID // SigninUser -> 3
 
 	domain := bDomain // 用户请求域名
 	if domain == "" {
@@ -285,11 +285,10 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
 		}
 	}
-	suser.RoleID = role.KID                                              // SigninUser -> 6
+	suser.Role = role.KID                                                // SigninUser -> 6
 	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) // SigninUser -> 7 配置系统给定的TokenID
 
-	suser.XID = strconv.Itoa(user.ID)
-	suser.TID = ""
+	suser.XidxID = strconv.Itoa(user.ID)
 	return &suser, nil
 }
 

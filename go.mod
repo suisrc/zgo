@@ -6,49 +6,42 @@ require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/NebulousLabs/fastrand v0.0.0-20181203155948-6fb6489aac4e
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
-	github.com/billcobbler/casbin-redis-watcher/v2 v2.0.0-20200124034411-c05521d98fa2
-	github.com/casbin/casbin/v2 v2.8.6
+	github.com/billcobbler/casbin-redis-watcher/v2 v2.0.0-20200828043318-3301e9a5ebc2
+	github.com/casbin/casbin/v2 v2.19.8
 	github.com/casbin/json-adapter/v2 v2.0.0
 	github.com/casbin/redis-adapter/v2 v2.0.1
-	github.com/denisenkom/go-mssqldb v0.0.0-20200620013148-b91950f658ec
+	github.com/denisenkom/go-mssqldb v0.9.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
-	github.com/facebookincubator/ent v0.2.7
+	github.com/facebook/ent v0.5.3
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fatih/structs v1.1.0
 	github.com/gin-contrib/cors v1.3.1
-	github.com/gin-contrib/gzip v0.0.2
+	github.com/gin-contrib/gzip v0.0.3
 	github.com/gin-gonic/gin v1.6.3
-	github.com/go-openapi/spec v0.20.0 // indirect
-	github.com/go-redis/redis v6.15.8+incompatible
+	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis_rate v6.5.0+incompatible
 	github.com/go-sql-driver/mysql v1.5.1-0.20200311113236-681ffa848bae
-	github.com/google/subcommands v1.2.0 // indirect
-	github.com/google/uuid v1.1.1
+	github.com/google/uuid v1.1.3
 	github.com/google/wire v0.4.0
-	github.com/guonaihong/gout v0.1.1
+	github.com/guonaihong/gout v0.1.4
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/json-iterator/go v1.1.10
 	github.com/koding/multiconfig v0.0.0-20171124222453-69c27309b2d7
-	github.com/lib/pq v1.7.0
-	github.com/mattn/go-sqlite3 v1.14.0
+	github.com/lib/pq v1.9.0
+	github.com/mattn/go-sqlite3 v1.14.6
 	github.com/memwey/casbin-sqlx-adapter v0.2.0
-	github.com/nicksnyder/go-i18n/v2 v2.0.3
-	github.com/onsi/ginkgo v1.14.0 // indirect
+	github.com/nicksnyder/go-i18n/v2 v2.1.1
 	github.com/pkg/errors v0.9.1
 	github.com/rusenask/casbin-go-cloud-watcher v0.0.0-20200412170359-c7485109e787
-	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/sirupsen/logrus v1.6.0
+	github.com/sirupsen/logrus v1.7.0
 	github.com/stretchr/testify v1.6.1
 	github.com/suisrc/gin-i18n v0.1.1
-	github.com/swaggo/gin-swagger v1.2.0
+	github.com/swaggo/gin-swagger v1.3.0
 	github.com/swaggo/swag v1.7.0
-	github.com/tidwall/buntdb v1.1.2
+	github.com/tidwall/buntdb v1.1.5
 	github.com/urfave/cli/v2 v2.3.0
-	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/mod v0.4.0 // indirect
-	golang.org/x/net v0.0.0-20201224014010-6772e930b67b // indirect
+	golang.org/x/crypto v0.0.0-20201221181555-eec23a3978ad
 	golang.org/x/text v0.3.4
-	golang.org/x/time v0.0.0-20200630173020-3af7569d3a1e
-	golang.org/x/tools v0.0.0-20201226215659-b1c90890d22a // indirect
-	xorm.io/xorm v1.0.3
+	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324
+	xorm.io/xorm v1.0.5
 )

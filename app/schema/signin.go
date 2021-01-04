@@ -8,7 +8,6 @@ import (
 	"github.com/suisrc/zgo/app/model/sqlxc"
 
 	"github.com/jmoiron/sqlx"
-	"github.com/suisrc/zgo/modules/auth"
 )
 
 // SigninBody 登陆参数
@@ -56,78 +55,6 @@ type SigninResult struct {
 	// Message 和 Roles 一般用户发生异常后回显
 	Message string        `json:"message,omitempty"` // 消息,有限显示
 	Roles   []interface{} `json:"roles,omitempty"`   // 多角色的时候，返回角色，重新确认登录
-}
-
-var _ auth.UserInfo = &SigninUser{}
-
-// SigninUser 登陆用户信息
-type SigninUser struct {
-	UserName  string
-	UserID    string
-	RoleID    string
-	TokenID   string
-	Issuer    string
-	Audience  string
-	AccountID string
-	XID       string
-	TID       string
-}
-
-// GetUserName 用户名
-func (s *SigninUser) GetUserName() string {
-	return s.UserName
-}
-
-// GetUserID 用户ID
-func (s *SigninUser) GetUserID() string {
-	return s.UserID
-}
-
-// GetRoleID 角色ID
-func (s *SigninUser) GetRoleID() string {
-	return s.RoleID
-}
-
-// SetRoleID 角色ID
-func (s *SigninUser) SetRoleID(nrole string) string {
-	orole := s.RoleID
-	s.RoleID = nrole
-	return orole
-}
-
-// GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
-func (s *SigninUser) GetTokenID() string {
-	return s.TokenID
-}
-
-// GetAccountID token
-func (s *SigninUser) GetAccountID() string {
-	return s.AccountID
-}
-
-// GetProps 获取私有属性,该内容会被加密, 注意:内容敏感,不要存储太多的内容
-func (s *SigninUser) GetProps() (interface{}, bool) {
-	return nil, false
-}
-
-// GetIssuer 令牌签发者
-func (s *SigninUser) GetIssuer() string {
-	return s.Issuer
-}
-
-// GetAudience 令牌接收者
-func (s *SigninUser) GetAudience() string {
-	return s.Audience
-}
-
-// GetXID 令牌
-func (s *SigninUser) GetXID() string {
-	return s.XID
-}
-
-// GetTID 令牌
-func (s *SigninUser) GetTID() string {
-	return s.TID
 }
 
 //=========================================================================

@@ -44,7 +44,7 @@ swagger:
 wire:
 	wire gen ./app/injector
 
-# go get github.com/facebookincubator/ent/cmd/entc
+# go get github.com/facebook/ent/cmd/entc
 # cd ./app/model && entc init User
 # entc init --target ./app/model/ent/schema
 # generate the schema for User under <project>/ent/schema/

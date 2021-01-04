@@ -5,7 +5,7 @@ https://entgo.io/docs/getting-started/
 
 ```sh
 PATH=$PATH:/root/go/bin
-go get github.com/facebookincubator/ent/cmd/entc
+go get github.com/facebook/ent/cmd/entc
 go mod init <project>
 entc init User
 # generate the schema for User under <project>/ent/schema/
@@ -14,8 +14,8 @@ entc init User
 package schema
 
 import (
-    "github.com/facebookincubator/ent"
-    "github.com/facebookincubator/ent/schema/field"
+    "github.com/facebook/ent"
+    "github.com/facebook/ent/schema/field"
 )
 
 // Fields of the User.
@@ -124,8 +124,8 @@ entc init Car Group
 import (
     "regexp"
 
-    "github.com/facebookincubator/ent"
-    "github.com/facebookincubator/ent/schema/field"
+    "github.com/facebook/ent"
+    "github.com/facebook/ent/schema/field"
 )
 
 // Fields of the Car.
@@ -150,8 +150,8 @@ func (Group) Fields() []ent.Field {
 import (
    "log"
 
-   "github.com/facebookincubator/ent"
-   "github.com/facebookincubator/ent/schema/edge"
+   "github.com/facebook/ent"
+   "github.com/facebook/ent/schema/edge"
 )
 
 // Edges of the User.

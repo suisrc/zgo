@@ -10,7 +10,7 @@ import (
 
 	"github.com/suisrc/zgo/app/model/ent/account"
 
-	"github.com/facebookincubator/ent"
+	"github.com/facebook/ent"
 )
 
 const (

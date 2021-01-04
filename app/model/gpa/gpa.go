@@ -2,11 +2,9 @@ package gpa
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/suisrc/zgo/app/model/ent"
 )
 
 // GPA golang persistence api 数据持久化
 type GPA struct {
-	Entc *ent.Client // ent client, 数据修改和插入
-	Sqlx *sqlx.DB    // sqlx client, 数据查询
+	Sqlx *sqlx.DB // sqlx client, 数据查询
 }

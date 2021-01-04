@@ -73,7 +73,7 @@ func UserAuthCasbinMiddlewareByPathFunc(auther auth.Auther, enforcer *casbin.Syn
 				return
 			}
 		} else {
-			ur := user.GetRoleID() // 请求角色
+			ur := user.GetUserRole() // 请求角色
 			if ur == "" {
 				if conf.NoRole {
 					sub = CasbinNoRole // 用户无角色,且允许执行无角色认证,

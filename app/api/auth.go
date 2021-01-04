@@ -79,19 +79,23 @@ func (a *Auth) authorize(c *gin.Context) {
 	}
 
 	h := c.Writer.Header()
-	h.Set(helper.XReqUserKey, user.GetUserID())
-	h.Set(helper.XReqRoleKey, user.GetRoleID())
-	h.Set(helper.XReqAccountKey, user.GetAccountID())
-	h.Set(helper.XreqUserNamKey, user.GetUserName())
-	h.Set(helper.XReqUserIdxKey, user.GetXID())
-	h.Set(helper.XreqUser3rdKey, user.GetTID())
-	h.Set(helper.XReqRoleApp, "admin")
-	h.Set(helper.XReqDomainKey, "nil")        // 平台
-	h.Set(helper.XReqOrgCodeKey, "ORGCM3558") // 平台 LCOAL-PM-00
-	h.Set(helper.XReqRoleOrgKey, "ORGCM3558") // 平台
-	h.Set("X-Request-Organization", "ORGCM3558")
+	h.Set("X-Request-Z-Token-Kid", user.GetTokenID())
+	h.Set("X-Request-Z-User-Kid", user.GetUserID())
+	h.Set("X-Request-Z-User-Nam"， user.GetUserName())
+	h.Set("X-Request-Z-Role-Kid"， user.GetUserRole())
+	h.Set("X-Request-Z-User-Xid"， user.GetXidxID())
+	h.Set("X-Request-Z-Account"， user.GetAccountID())
+	h.Set("X-Request-Z-User-Tid", user.GetT3rdID())
+	h.Set("X-Request-Z-Client-Kid"， user.GetClientID())
+	h.Set("X-Request-Z-Domain", user.GetDomain())
+	h.Set("X-Request-Z-Issuer"， user.GetIssuer())
+	h.Set("X-Request-Z-Audience"， user.GetAudience())
+	h.Set("X-Request-Z-Org-Code"， user.GetOrgCode())
+	h.Set("X-Request-Z-Org-Domain", user.GetOrgDomain())
+	h.Set("X-Request-Z-Org-Admin", user.GetOrgAdmin())
+
+	//h.Set("X-Request-Z-Org-Code"， "ORGCM3558")
 
 	h.Set(helper.XReqZgoKey, helper.GetHostIP(c))
-
 	helper.ResSuccess(c, "ok")
 }

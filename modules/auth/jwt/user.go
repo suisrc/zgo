@@ -43,7 +43,6 @@ func NewRefreshToken(_ati string) string {
 func NewUserInfo(user auth.UserInfo) *UserClaims {
 	claims := UserClaims{}
 
-	claims.AccountID = user.GetAccountID()
 	tokenID := user.GetTokenID()
 	if tokenID == "" {
 		tokenID = NewTokenID(claims.AccountID)
@@ -52,13 +51,20 @@ func NewUserInfo(user auth.UserInfo) *UserClaims {
 	claims.Subject = user.GetUserID()
 
 	claims.Name = user.GetUserName()
-	claims.Role = user.GetRoleID()
+	claims.Role = user.GetUserRole()
+	claims.XidxID = user.GetXidxID()
+	claims.AccountID = user.GetAccountID()
+	claims.T3rdID = user.GetT3rdID()
+	claims.ClientID = user.GetClientID()
 
+	claims.Domain = user.GetDomain()
 	claims.Issuer = user.GetIssuer()
 	claims.Audience = user.GetAudience()
 
-	claims.XID = user.GetXID()
-	claims.TID = user.GetTID()
+	claims.OrgCode = user.GetOrgCode()
+	claims.OrgRole = user.GetOrgRole()
+	claims.OrgDomain = user.GetOrgDomain()
+	claims.OrgAdmin = user.GetOrgAdmin()
 
 	return &claims
 }
@@ -68,17 +74,22 @@ var _ auth.UserInfo = &UserClaims{}
 // UserClaims 用户信息声明
 type UserClaims struct {
 	jwt.StandardClaims
-	Name       string      `json:"nam,omitempty"` // 用户名
-	Role       string      `json:"rol,omitempty"` // 角色ID, role id
-	AccountID  string      `json:"ati,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式
-	Properties interface{} `json:"pps,omitempty"` // 用户的额外属性
-	XID        string      `json:"xid,omitempty"` // 用户的一种扩展ID
-	TID        string      `json:"tid,omitempty"` // 用户的一种扩展ID
+	Name      string `json:"nam,omitempty"` // 用户名
+	Role      string `json:"rol,omitempty"` // 角色ID, 该角色是平台角色， 也可以理解为平台给机构的角色
+	XidxID    string `json:"xid,omitempty"` // 用户的一种扩展ID, 为用户索引ID
+	AccountID string `json:"ati,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式
+	T3rdID    string `json:"aki,omitempty"` // 子应用用户ID
+	ClientID  string `json:"cki,omitempty"` // 子应用应用ID
+	Domain    string `json:"dom,omitempty"` // 业务域，主要用户当前用户跨应用的业务关联，暂时不使用
+	OrgCode   string `json:"ogc,omitempty"` // 组织code
+	OrgRole   string `json:"ogr,omitempty"` // 组织role
+	OrgDomain string `json:"ogd,omitempty"` // 组织领域，在OrdCode上进行扩展，细化组织下部门的概念
+	OrgAdmin  string `json:"oga,omitempty"` // 是否为管理员，平台没有管理员的概念, 管理员只服务员组织
 }
 
-// GetUserName name
-func (u *UserClaims) GetUserName() string {
-	return u.Name
+// GetTokenID token
+func (u *UserClaims) GetTokenID() string {
+	return u.Id
 }
 
 // GetUserID user
@@ -86,8 +97,13 @@ func (u *UserClaims) GetUserID() string {
 	return u.Subject
 }
 
-// GetRoleID role
-func (u *UserClaims) GetRoleID() string {
+// GetUserName name
+func (u *UserClaims) GetUserName() string {
+	return u.Name
+}
+
+// GetUserRole role
+func (u *UserClaims) GetUserRole() string {
 	// if u.Role == "" {
 	// 	if u.Subject == "1" {
 	// 		return "admin" // 作为默认系统用户
@@ -97,21 +113,36 @@ func (u *UserClaims) GetRoleID() string {
 	return u.Role
 }
 
-// SetRoleID role
-func (u *UserClaims) SetRoleID(nrole string) string {
+// SetUserRole role
+func (u *UserClaims) SetUserRole(nrole string) string {
 	orole := u.Role
 	u.Role = nrole
 	return orole
 }
 
-// GetTokenID token
-func (u *UserClaims) GetTokenID() string {
-	return u.Id
+// GetXidxID user index
+func (u *UserClaims) GetXidxID() string {
+	return u.XidxID
 }
 
 // GetAccountID token
 func (u *UserClaims) GetAccountID() string {
 	return u.AccountID
+}
+
+// GetT3rdID 3rd id
+func (u *UserClaims) GetT3rdID() string {
+	return u.T3rdID
+}
+
+// GetClientID client id
+func (u *UserClaims) GetClientID() string {
+	return u.ClientID
+}
+
+// GetDomain domain
+func (u *UserClaims) GetDomain() string {
+	return u.Domain
 }
 
 // GetIssuer issuer
@@ -124,17 +155,22 @@ func (u *UserClaims) GetAudience() string {
 	return u.Audience
 }
 
-// GetProps props
-func (u *UserClaims) GetProps() (interface{}, bool) {
-	return nil, false
+// GetOrgCode org code
+func (u *UserClaims) GetOrgCode() string {
+	return u.OrgCode
 }
 
-// GetXID xid
-func (u *UserClaims) GetXID() string {
-	return u.XID
+// GetOrgRole org role
+func (u *UserClaims) GetOrgRole() string {
+	return u.OrgRole
 }
 
-// GetTID tid
-func (u *UserClaims) GetTID() string {
-	return u.TID
+// GetOrgDomain org domain
+func (u *UserClaims) GetOrgDomain() string {
+	return u.OrgDomain
+}
+
+// GetOrgAdmin org admin
+func (u *UserClaims) GetOrgAdmin() string {
+	return u.OrgAdmin
 }

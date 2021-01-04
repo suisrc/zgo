@@ -5,7 +5,7 @@ package account
 import (
 	"time"
 
-	"github.com/facebookincubator/ent/dialect/sql"
+	"github.com/facebook/ent/dialect/sql"
 	"github.com/suisrc/zgo/app/model/ent/predicate"
 )
 

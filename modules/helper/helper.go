@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	"github.com/suisrc/zgo/modules/auth"
 )
 
 // 定义上下文中的键
@@ -20,51 +21,21 @@ const (
 	ResJwtOptKey = Prefix + "/res-jwt-opt"   // jwt opt
 	ResTokenKey  = Prefix + "/res-token-kid" // token kid -> jwt id
 
-	XReqUserKey    = "X-Request-User-Kid" // user kid
-	XReqRoleKey    = "X-Request-Role-Kid" // role kid
-	XReqRoleApp    = "X-Request-Role-App" // role app
-	XReqDomainKey  = "X-Request-Domain"   // domain
-	XReqOrgCodeKey = "X-Request-Org-Code" // Organization
-	XReqAccountKey = "X-Request-Account"  // account
-	XReqUserIdxKey = "X-Request-User-Xid" // user index id
-	XreqUserNamKey = "X-Request-User-Nam" // user name
-	XreqUser3rdKey = "X-Request-User-Tid" // user third id (application)
-	XReqRoleOrgKey = "X-Request-Role-Org" // role organization kid
-	XReqZgoKey     = "X-Request-Zgo-Xip"  // 由于前置授权无需应用间绑定， 如果需要执行必要通信，可以获取通信地址
-
 	XReqOriginHostKey   = "X-Request-Origin-Host"
 	XReqOriginPathKey   = "X-Request-Origin-Path"
 	XReqOriginMethodKey = "X-Request-Origin-Method"
 )
 
-// UserInfo 用户信息
-type UserInfo interface {
-	GetUserID() string
-	GetRoleID() string
-	GetProps() (interface{}, bool)
-
-	GetUserName() string
-	GetTokenID() string
-	GetIssuer() string
-	GetAudience() string
-
-	GetAccountID() string
-	SetRoleID(string) string
-
-	GetXID() string
-	GetTID() string
-}
-
 // UserInfoFunc user
 type UserInfoFunc interface {
-	GetUserInfo() (UserInfo, bool)
-	SetUserInfo(UserInfo)
+	GetUserInfo() (auth.UserInfo, bool)
+	SetUserInfo(auth.UserInfo)
 }
 
 // GetUserInfo 用户
-func GetUserInfo(c *gin.Context) (UserInfo, bool) {
+func GetUserInfo(c *gin.Context) (auth.UserInfo, bool) {
 	if v, ok := c.Get(UserInfoKey); ok {
-		if u, b := v.(UserInfo); b {
+		if u, b := v.(auth.UserInfo); b {
 			return u, true
 		}
 	}
@@ -72,7 +43,7 @@ func GetUserInfo(c *gin.Context) (UserInfo, bool) {
 }
 
 // SetUserInfo 用户
-func SetUserInfo(c *gin.Context, user UserInfo) {
+func SetUserInfo(c *gin.Context, user auth.UserInfo) {
 	c.Set(UserInfoKey, user)
 }
 

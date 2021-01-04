@@ -53,10 +53,6 @@ func TestAuth(t *testing.T) {
 	user := &UserInfo{
 		UserName: "Json",
 		UserID:   "123",
-		RoleID:   "789",
-		//TokenID:  "456",
-		Issuer:   "abc.com",
-		Audience: "def.com",
 	}
 
 	token, _, err := jwtAuth.GenerateToken(ctx, user)
@@ -87,37 +83,9 @@ type TokenRef struct {
 
 // UserInfo 用户信息声明
 type UserInfo struct {
-	UserName  string
-	UserID    string
-	RoleID    string
-	TokenID   string
-	Issuer    string
-	Audience  string
-	AccountID string
-	XID       string
-	TID       string
-}
-
-// GetUserName name
-func (u *UserInfo) GetUserName() string {
-	return u.UserName
-}
-
-// GetUserID user
-func (u *UserInfo) GetUserID() string {
-	return u.UserID
-}
-
-// GetRoleID role
-func (u *UserInfo) GetRoleID() string {
-	return u.RoleID
-}
-
-// SetRoleID role
-func (u *UserInfo) SetRoleID(r string) string {
-	x := u.RoleID
-	u.RoleID = r
-	return x
+	UserID   string
+	TokenID  string
+	UserName string
 }
 
 // GetTokenID token
@@ -125,32 +93,77 @@ func (u *UserInfo) GetTokenID() string {
 	return u.TokenID
 }
 
+// GetUserID user
+func (u *UserInfo) GetUserID() string {
+	return u.UserID
+}
+
+// GetUserName name
+func (u *UserInfo) GetUserName() string {
+	return u.UserName
+}
+
+// GetUserRole role
+func (u *UserInfo) GetUserRole() string {
+	return ""
+}
+
+// SetUserRole role
+func (u *UserInfo) SetUserRole(nrole string) string {
+	return nrole
+}
+
+// GetXidxID user index
+func (u *UserInfo) GetXidxID() string {
+	return ""
+}
+
 // GetAccountID token
 func (u *UserInfo) GetAccountID() string {
-	return u.AccountID
+	return ""
+}
+
+// GetT3rdID 3rd id
+func (u *UserInfo) GetT3rdID() string {
+	return ""
+}
+
+// GetClientID client id
+func (u *UserInfo) GetClientID() string {
+	return ""
+}
+
+// GetDomain domain
+func (u *UserInfo) GetDomain() string {
+	return ""
 }
 
 // GetIssuer issuer
 func (u *UserInfo) GetIssuer() string {
-	return u.Issuer
+	return ""
 }
 
 // GetAudience audience
 func (u *UserInfo) GetAudience() string {
-	return u.Audience
+	return ""
 }
 
-// GetProps props
-func (u *UserInfo) GetProps() (interface{}, bool) {
-	return nil, false
+// GetOrgCode org code
+func (u *UserInfo) GetOrgCode() string {
+	return ""
 }
 
-// GetXID xid
-func (u *UserInfo) GetXID() string {
-	return u.XID
+// GetOrgRole org role
+func (u *UserInfo) GetOrgRole() string {
+	return ""
 }
 
-// GetTID tid
-func (u *UserInfo) GetTID() string {
-	return u.TID
+// GetOrgDomain org domain
+func (u *UserInfo) GetOrgDomain() string {
+	return ""
+}
+
+// GetOrgAdmin org admin
+func (u *UserInfo) GetOrgAdmin() string {
+	return ""
 }

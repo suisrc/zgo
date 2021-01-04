@@ -6,7 +6,7 @@ package ent
  如果是复杂的逻辑关系或者对sql没有接触,可以使用ent处理
 */
 import (
-	"github.com/facebookincubator/ent"
+	"github.com/facebook/ent"
 )
 
 // Demo 用例, 没有任何意义

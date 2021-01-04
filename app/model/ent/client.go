@@ -11,8 +11,8 @@ import (
 
 	"github.com/suisrc/zgo/app/model/ent/account"
 
-	"github.com/facebookincubator/ent/dialect"
-	"github.com/facebookincubator/ent/dialect/sql"
+	"github.com/facebook/ent/dialect"
+	"github.com/facebook/ent/dialect/sql"
 )
 
 // Client is the client that holds all ent builders.
