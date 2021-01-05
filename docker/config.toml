@@ -19,7 +19,7 @@ contextpath = "/api/ka/v1"
 
 [jwtauth]
 signingsecret = "J928KDD837C8CLQPZIEC"
-limittime = 5
+limittime = 0
 
 [mysql]
 host = "192.168.3.35"

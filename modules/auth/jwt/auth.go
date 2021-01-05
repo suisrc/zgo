@@ -217,6 +217,7 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 
 	tokenInfo := &TokenInfo{
 		//TokenType:  "Bearer",
+		TokenID:      claims.Id,
 		AccessToken:  tokenString,
 		ExpiresAt:    claims.ExpiresAt,
 		RefreshToken: NewRefreshToken(claims.AccountID),
@@ -257,6 +258,7 @@ func (a *Auther) RefreshToken(c context.Context, tokenString string, check func(
 	}
 
 	tokenInfo := &TokenInfo{
+		TokenID:      claims.Id,
 		AccessToken:  token,
 		ExpiresAt:    claims.ExpiresAt,
 		RefreshToken: NewRefreshToken(claims.AccountID),
