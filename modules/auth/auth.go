@@ -16,6 +16,9 @@ var (
 // TokenInfo 令牌信息
 type TokenInfo interface {
 
+	// 获取令牌ID
+	GetTokenID() string
+
 	// 获取访问令牌
 	GetAccessToken() string
 

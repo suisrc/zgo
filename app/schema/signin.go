@@ -45,6 +45,7 @@ type SigninOfOAuth2 struct {
 // SigninResult 登陆返回值
 type SigninResult struct {
 	TokenStatus  string `json:"status" default:"ok"`                   // 'ok' | 'error' 不适用boolean类型是为了以后可以增加扩展
+	TokenID      string `json:"token_id,omitempty"`                    // 访问令牌ID
 	AccessToken  string `json:"access_token,omitempty"`                // 访问令牌
 	TokenType    string `json:"token_type,omitempty" default:"bearer"` // 令牌类型
 	ExpiresAt    int64  `json:"expires_at,omitempty"`                  // 过期时间

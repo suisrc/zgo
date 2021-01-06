@@ -18,7 +18,7 @@ func NewTokenID(_ati string) string {
 	} else {
 		builder.WriteString(crypto.EncodeBaseX32(int64(ati)))
 	}
-	builder.WriteRune('_')
+	builder.WriteRune('t')
 	builder.WriteString(crypto.UUID(20))                         // 20位
 	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix())) // 7位
 	return builder.String()
@@ -32,7 +32,7 @@ func NewRefreshToken(_ati string) string {
 	} else {
 		builder.WriteString(crypto.EncodeBaseX32(int64(ati)))
 	}
-	builder.WriteRune('_')
+	builder.WriteRune('r')
 	builder.WriteString(crypto.UUID(20))                         // 20位
 	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix())) // 7位
 	builder.WriteString(crypto.UUID(12))                         // 12位

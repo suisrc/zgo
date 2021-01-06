@@ -88,6 +88,7 @@ func (a *Signin) signin(c *gin.Context) {
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
 		TokenType:    "Bearer",
+		TokenID:      token.GetTokenID(),
 		AccessToken:  token.GetAccessToken(),
 		ExpiresAt:    token.GetExpiresAt(),
 		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
@@ -122,6 +123,7 @@ func (a *Signin) last(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountTok
 		return nil, helper.NewSuccess(c, &schema.SigninResult{
 			TokenStatus:  "ok",
 			TokenType:    "Bearer",
+			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
 			ExpiresAt:    o2a.ExpiresAt.Int64,
 			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
@@ -236,6 +238,7 @@ func (a *Signin) refresh(c *gin.Context) {
 		result := schema.SigninResult{
 			TokenStatus:  "ok",
 			TokenType:    "Bearer",
+			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
 			ExpiresAt:    o2a.ExpiresAt.Int64,
 			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
@@ -265,6 +268,7 @@ func (a *Signin) refresh(c *gin.Context) {
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
 		TokenType:    "Bearer",
+		TokenID:      token.GetTokenID(),
 		AccessToken:  token.GetAccessToken(),
 		ExpiresAt:    token.GetExpiresAt(),
 		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
@@ -379,6 +383,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
 		TokenType:    "Bearer",
+		TokenID:      token.GetTokenID(),
 		AccessToken:  token.GetAccessToken(),
 		ExpiresAt:    token.GetExpiresAt(),
 		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
