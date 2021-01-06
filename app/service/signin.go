@@ -418,7 +418,7 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 	} else if !user.Status {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
 	}
-	suser.UserName = user.Name
+	suser.Name = user.Name
 	suser.UserID = user.KID
 
 	// 角色
@@ -459,7 +459,7 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 			})
 		}
 	}
-	suser.RoleID = role.KID
+	suser.Role = role.KID
 
 	suser.Issuer = c.Request.Host
 	suser.Audience = c.Request.Host

@@ -45,7 +45,7 @@ func NewUserInfo(user auth.UserInfo) *UserClaims {
 
 	tokenID := user.GetTokenID()
 	if tokenID == "" {
-		tokenID = NewTokenID(claims.AccountID)
+		tokenID = NewTokenID(user.GetAccountID())
 	}
 	claims.Id = tokenID
 	claims.Subject = user.GetUserID()

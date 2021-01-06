@@ -144,7 +144,7 @@ func (a *Signin) log(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode, re
 		AccountID:    aid,
 		TokenID:      u.GetTokenID(),
 		UserKID:      u.GetUserID(),
-		RoleKID:      sql.NullString{Valid: true, String: u.GetRoleID()},
+		RoleKID:      sql.NullString{Valid: true, String: u.GetUserRole()},
 		ClientID:     sql.NullInt64{Valid: false},
 		ClientKID:    sql.NullString{Valid: cok, String: cid},
 		LastIP:       sql.NullString{Valid: true, String: helper.GetClientIP(c)},
