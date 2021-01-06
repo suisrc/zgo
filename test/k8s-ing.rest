@@ -1,14 +1,16 @@
 # humao.rest-client
 
-@baseUrl=http://127.0.0.1
-@baseUrl1=https://leo2go-80-me03.dev.sims-cn.com
-@baseUrl2=http://lhdg3.dev.k8s.local
-@baseUrl3=http://end-zgo-svc.test.svc.cluster.local
+@base_url=http://127.0.0.1
+@base_url1=https://leo2go-80-me03.dev.sims-cn.com
+@base_url2=http://lhdg3.dev.k8s.local
+@base_url3=http://end-zgo-svc.test.svc.cluster.local
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJlbmQtemdvLXN2Yy50ZXN0LnN2Yy5jbHVzdGVyLmxvY2FsIiwiZXhwIjoxNjA5MDYyMTQyLCJqdGkiOiIxX2xkOWdpbjd4azhqcHU1cDYzNG1qMWZ1Z2k3ZSIsImlhdCI6MTYwOTA1ODU0MiwiaXNzIjoiZW5kLXpnby1zdmMudGVzdC5zdmMuY2x1c3Rlci5sb2NhbCIsIm5iZiI6MTYwOTA1ODU0Miwic3ViIjoiMTAwMDAxIiwibmFtIjoiemdvLXVzZXIiLCJyb2wiOiJhZG1pbiIsImF0aSI6IjEiLCJ4aWQiOiIxIn0.P-yNyZ41rnqmBZmhIZg731ndPfJ7MxzhhiFF74P7DgMahi_Wf6-UCdnydaJpArhsLPYn-1LGaOb5uYFfwWcOQw
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MDk5MTg2MTEsImp0aSI6IjF0d3FzeDVzdTV6MmV6a3o1Y2dncmgxZnZhbWszIiwiaWF0IjoxNjA5OTE1MDExLCJpc3MiOiIxMjcuMC4wLjEiLCJuYmYiOjE2MDk5MTUwMTEsInN1YiI6IjEwMDAwMSIsIm5hbSI6Inpnby11c2VyIiwicm9sIjoiYWRtaW4iLCJ4aWQiOiIxIiwiYXRpIjoiMSJ9.tmBbhNCiwt462imoCWcR9E9lOXvTiLrvqaPxkhe_rJWXziiUmy0O2HTbm_zTFxk8uXJuO-DIO8RtCOmimbFuKA
+
+@refresh_token=1rmk9njyq8q4azfsz1wjbk1fva5dodf4cy982c56x
 
 ###
-POST {{baseUrl3}}/api/ka/v1/signin
+POST {{base_url}}/api/ka/v1/signin
 Content-Type: application/json
 
 {
@@ -23,12 +25,16 @@ Content-Type: application/json
 }
 
 ###
-Get {{baseUrl3}}/api/ka/v1/user/current
+GET {{base_url}}/api/ka/v1/signin/refresh?refresh_token={{refresh_token}}
+Content-Type: application/json
+
+###
+Get {{base_url}}/api/ka/v1/user/current
 Content-Type: application/json
 Authorization: Bearer {{bearer}}
 
 ###
-GET {{baseUrl3}}/authz
+GET {{base_url}}/authz
 Content-Type: application/json
 Authorization: Bearer {{bearer}}
 X-Request-Origin-Path: /api/lhdg/v2/user
@@ -36,6 +42,6 @@ X-Request-Origin-Host:
 X-Request-Origin-Method: GET
 
 ###
-GET {{baseUrl3}}/api/lhdg/v2/user
+GET {{base_url2}}/api/lhdg/v2/user
 Content-Type: application/json
 Authorization: Bearer {{bearer}}
