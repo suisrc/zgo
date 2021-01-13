@@ -39,40 +39,32 @@ type TokenInfo interface {
 type UserInfo interface {
 	// GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
 	GetTokenID() string
-
-	// GetUserID 用户ID
-	GetUserID() string
-	// GetUserName 用户名
-	GetUserName() string
-	// GetUserRole 角色ID
-	GetUserRole() string
-	// GetXidxID 直接获取用户索引ID
-	GetXidxID() string
-	// GetUserAccount 登陆ID, 本身不具备任何意义,只是标记登陆方式
+	// GetUserAccount 登陆ID, 本身不具备任何意义,只是标记登陆方式, 使用token反向加密
 	GetAccountID() string
-	// GetT3rdID 获取用户第三方索引
-	GetT3rdID() string
-	// GetT3rdID 获取用户第三方索引
-	GetClientID() string
+	// GetUserIdxID 直接获取用户索引ID, 使用token反向加密
+	GetUserIdxID() string
 
-	// GetDomain
+	// GetUserID 用户ID， GetOrgCode不为空(P6M开头的租户除外)，不提供
+	GetUserID() string
+	// GetUserName 用户名， GetOrgCode不为空(P6M开头的租户除外)，不提供
+	GetUserName() string
+	// GetUserRoles 角色， GetOrgCode不为空(P6M开头的租户除外)，不提供
+	GetUserRoles() []string
+
+	// GetOrgCode
+	GetOrgCode() string
+	// IsOrgAdmin 'admin'为用户管理员， GetOrgCode为空，提供
+	GetOrgAdmin() string
+
+	// GetDomain 领域标识
 	GetDomain() string
 	// GetIssuer 令牌签发者
 	GetIssuer() string
 	// GetAudience 令牌接收者
 	GetAudience() string
 
-	// GetOrgCode
-	GetOrgCode() string
-	// GetOrgRole
-	GetOrgRole() string
-	// GetOrgDomain
-	GetOrgDomain() string
-	// IsOrgAdmin
-	GetOrgAdmin() string
-
-	// 赋予用户临时角色,用户替换,返回之前的角色
-	SetUserRole(string) string
+	// 通过服务名称获取当前服务的角色
+	GetUserSvcRoles(string) []string
 }
 
 // Auther 认证接口

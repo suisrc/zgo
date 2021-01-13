@@ -3,17 +3,11 @@ package service
 import (
 	"errors"
 
-	"github.com/suisrc/zgo/middleware"
-
 	"github.com/casbin/casbin/v2/model"
 	"github.com/casbin/casbin/v2/persist"
 	"github.com/google/wire"
 	"github.com/suisrc/zgo/app/model/gpa"
-	"github.com/suisrc/zgo/app/model/sqlxc"
-	"github.com/suisrc/zgo/app/schema"
 	zgocasbin "github.com/suisrc/zgo/modules/casbin"
-	"github.com/suisrc/zgo/modules/config"
-	"github.com/suisrc/zgo/modules/logger"
 )
 
 // CasbinAdapterSet 注入casbin
@@ -51,99 +45,99 @@ var _ persist.Adapter = (*CasbinAdapter)(nil)
 
 // LoadPolicy loads policy from database.
 func (a CasbinAdapter) LoadPolicy(model model.Model) error {
-	nosignin, norole, nouser := false, false, true
-	// resouces
-	gateway0 := schema.CasbinGpaGateway{}
-	gateways := []schema.CasbinGpaGateway{}
-	if err := gateway0.QueryAll(a.Sqlx, &gateways); err != nil {
-		logger.Infof(nil, "loading casbin: none -> %s", logger.ErrorWW(err))
-		return nil
-	}
-	for _, g := range gateways {
-		if !g.Name.Valid {
-			continue
-		}
-		line := "p"
-		line += "," + g.Name.String
-		line += "," + g.Domain.String
-		line += "," + g.Path.String
-		line += "," + g.Netmask.String
-		line += "," + g.Methods.String
-		if g.Allow.Bool {
-			line += ",allow"
-		} else {
-			line += ",deny"
-		}
-		persist.LoadPolicyLine(line, model)
-		logger.Infof(nil, "loading casbin: %s", line)
-		if !nosignin && g.Name.String == middleware.CasbinNoSignin {
-			nosignin = true
-		} else if !norole && g.Name.String == middleware.CasbinNoRole {
-			norole = true
-		}
-	}
-	// user
-	user0 := schema.CasbinGpaUserGateway{}
-	users := []schema.CasbinGpaUserGateway{}
-	if err := user0.QueryAll(a.Sqlx, &users); err != nil && !sqlxc.IsNotFound(err) {
-		logger.Infof(nil, "loading casbin: user -> %s", logger.ErrorWW(err))
-	}
-	for _, g := range users {
-		if !g.User.Valid || !g.Gateway.Valid {
-			continue
-		}
-		line := "g2"
-		line += "," + middleware.CasbinUserPrefix + g.User.String
-		line += "," + g.Gateway.String
-		persist.LoadPolicyLine(line, model)
-		logger.Infof(nil, "loading casbin: %s", line)
-		if nouser {
-			nouser = false
-		}
-	}
-	// config
-	config.C.Casbin.NoSignin = nosignin // 覆盖性修改默认配置
-	config.C.Casbin.NoRole = norole     // 覆盖性修改默认配置
-	config.C.Casbin.NoUser = nouser     // 覆盖性修改默认配置
-	logger.Infof(nil, "loading casbin: nosignin: %t, norole: %t, nouser: %t", nosignin, norole, nouser)
-	// role
-	role0 := schema.CasbinGpaRoleGateway{}
-	roles := []schema.CasbinGpaRoleGateway{}
-	if err := role0.QueryAll(a.Sqlx, &roles); err != nil {
-		if !sqlxc.IsNotFound(err) {
-			logger.Infof(nil, "loading casbin: role -> %s", logger.ErrorWW(err))
-		}
-		return nil
-	}
-	for _, r := range roles {
-		if !r.Role.Valid || !r.Gateway.Valid {
-			continue
-		}
-		line := "g"
-		line += "," + middleware.CasbinRolePrefix + r.Role.String
-		line += "," + r.Gateway.String
-		persist.LoadPolicyLine(line, model)
-		logger.Infof(nil, "loading casbin: %s", line)
-	}
-	// role-role
-	rolerole0 := schema.CasbinGpaRoleRole{}
-	roleroles := []schema.CasbinGpaRoleRole{}
-	if err := rolerole0.QueryAll(a.Sqlx, &roleroles); err != nil {
-		if !sqlxc.IsNotFound(err) {
-			logger.Infof(nil, "loading casbin: role-role -> %s", logger.ErrorWW(err))
-		}
-		return nil
-	}
-	for _, r := range roleroles {
-		if !r.Owner.Valid || !r.Child.Valid {
-			continue
-		}
-		line := "g"
-		line += "," + middleware.CasbinRolePrefix + r.Owner.String
-		line += "," + middleware.CasbinRolePrefix + r.Child.String
-		persist.LoadPolicyLine(line, model)
-		logger.Infof(nil, "loading casbin: %s", line)
-	}
+	//nosignin, norole, nouser := false, false, true
+	//// resouces
+	//gateway0 := schema.CasbinGpaGateway{}
+	//gateways := []schema.CasbinGpaGateway{}
+	//if err := gateway0.QueryAll(a.Sqlx, &gateways); err != nil {
+	//	logger.Infof(nil, "loading casbin: none -> %s", logger.ErrorWW(err))
+	//	return nil
+	//}
+	//for _, g := range gateways {
+	//	if !g.Name.Valid {
+	//		continue
+	//	}
+	//	line := "p"
+	//	line += "," + g.Name.String
+	//	line += "," + g.Domain.String
+	//	line += "," + g.Path.String
+	//	line += "," + g.Netmask.String
+	//	line += "," + g.Methods.String
+	//	if g.Allow.Bool {
+	//		line += ",allow"
+	//	} else {
+	//		line += ",deny"
+	//	}
+	//	persist.LoadPolicyLine(line, model)
+	//	logger.Infof(nil, "loading casbin: %s", line)
+	//	if !nosignin && g.Name.String == middleware.CasbinNoSignin {
+	//		nosignin = true
+	//	} else if !norole && g.Name.String == middleware.CasbinNoRole {
+	//		norole = true
+	//	}
+	//}
+	//// user
+	//user0 := schema.CasbinGpaUserGateway{}
+	//users := []schema.CasbinGpaUserGateway{}
+	//if err := user0.QueryAll(a.Sqlx, &users); err != nil && !sqlxc.IsNotFound(err) {
+	//	logger.Infof(nil, "loading casbin: user -> %s", logger.ErrorWW(err))
+	//}
+	//for _, g := range users {
+	//	if !g.User.Valid || !g.Gateway.Valid {
+	//		continue
+	//	}
+	//	line := "g2"
+	//	line += "," + middleware.CasbinUserPrefix + g.User.String
+	//	line += "," + g.Gateway.String
+	//	persist.LoadPolicyLine(line, model)
+	//	logger.Infof(nil, "loading casbin: %s", line)
+	//	if nouser {
+	//		nouser = false
+	//	}
+	//}
+	//// config
+	//config.C.Casbin.NoSignin = nosignin // 覆盖性修改默认配置
+	//config.C.Casbin.NoRole = norole     // 覆盖性修改默认配置
+	//config.C.Casbin.NoUser = nouser     // 覆盖性修改默认配置
+	//logger.Infof(nil, "loading casbin: nosignin: %t, norole: %t, nouser: %t", nosignin, norole, nouser)
+	//// role
+	//role0 := schema.CasbinGpaRoleGateway{}
+	//roles := []schema.CasbinGpaRoleGateway{}
+	//if err := role0.QueryAll(a.Sqlx, &roles); err != nil {
+	//	if !sqlxc.IsNotFound(err) {
+	//		logger.Infof(nil, "loading casbin: role -> %s", logger.ErrorWW(err))
+	//	}
+	//	return nil
+	//}
+	//for _, r := range roles {
+	//	if !r.Role.Valid || !r.Gateway.Valid {
+	//		continue
+	//	}
+	//	line := "g"
+	//	line += "," + middleware.CasbinRolePrefix + r.Role.String
+	//	line += "," + r.Gateway.String
+	//	persist.LoadPolicyLine(line, model)
+	//	logger.Infof(nil, "loading casbin: %s", line)
+	//}
+	//// role-role
+	//rolerole0 := schema.CasbinGpaRoleRole{}
+	//roleroles := []schema.CasbinGpaRoleRole{}
+	//if err := rolerole0.QueryAll(a.Sqlx, &roleroles); err != nil {
+	//	if !sqlxc.IsNotFound(err) {
+	//		logger.Infof(nil, "loading casbin: role-role -> %s", logger.ErrorWW(err))
+	//	}
+	//	return nil
+	//}
+	//for _, r := range roleroles {
+	//	if !r.Owner.Valid || !r.Child.Valid {
+	//		continue
+	//	}
+	//	line := "g"
+	//	line += "," + middleware.CasbinRolePrefix + r.Owner.String
+	//	line += "," + middleware.CasbinRolePrefix + r.Child.String
+	//	persist.LoadPolicyLine(line, model)
+	//	logger.Infof(nil, "loading casbin: %s", line)
+	//}
 
 	return nil
 }

@@ -36,7 +36,7 @@ type Signin struct {
 }
 
 // Signin 登陆控制
-func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	if b.Password != "" {
 		return a.SigninByPasswd(c, b, last)
 	}
@@ -50,57 +50,57 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, last func(c *gin.C
 }
 
 // OAuth2 登陆控制
-func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
-	if b.KID == "" {
-		b.KID = c.Param("kid")
-	}
-	if b.KID != "" {
-		o2p := schema.SigninGpaOAuth2Platfrm{}
-		if err := o2p.QueryByKID(a.Sqlx, b.KID); err != nil {
-			return nil, err
-		}
-		o2h, ok := a.OAuth2Selector[o2p.Platform]
-		if !ok {
-			return nil, helper.NewError(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOP6M",
-				Other: "无有效登陆控制器: [{{.platfrom}}]"}, helper.H{
-				"platfrom": o2p.Platform,
-			})
-		}
-
-		// 当前用户
-		account := &schema.SigninGpaAccount{}
-		if err := o2h.Handle(c, b, &o2p, true, func(openid string) (int, error) {
-			// 查询当前登录人员身份
-			if err := account.QueryByAccount(a.Sqlx, openid, int(schema.ATOpenid), o2p.KID); err != nil {
-				if sqlxc.IsNotFound(err) {
-					return 0, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOBIND", Other: "用户未绑定"})
-				}
-				return 0, err
-			}
-			if account.ID == 0 {
-				return 0, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOBIND", Other: "用户未绑定"})
-			}
-			return account.ID, nil
-		}); err != nil {
-			if redirect, ok := err.(*helper.ErrorRedirect); ok {
-				if result := c.Query("result"); result == "json" {
-					code := redirect.Code
-					if code == 0 {
-						code = 303
-					}
-					return nil, helper.NewSuccess(c, helper.H{
-						"code":     code,
-						"location": redirect.Location,
-					})
-				}
-			}
-			return nil, err
-		}
-		// 获取用户信息
-		return a.GetSignUserByAutoRole(c, account, b.Domain, b.Client, last)
-	}
-	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
-}
+// func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+// 	if b.KID == "" {
+// 		b.KID = c.Param("kid")
+// 	}
+// 	if b.KID != "" {
+// 		o2p := schema.SigninGpaOAuth2Platfrm{}
+// 		if err := o2p.QueryByKID(a.Sqlx, b.KID); err != nil {
+// 			return nil, err
+// 		}
+// 		o2h, ok := a.OAuth2Selector[o2p.Platform]
+// 		if !ok {
+// 			return nil, helper.NewError(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOP6M",
+// 				Other: "无有效登陆控制器: [{{.platfrom}}]"}, helper.H{
+// 				"platfrom": o2p.Platform,
+// 			})
+// 		}
+//
+// 		// 当前用户
+// 		account := &schema.SigninGpaAccount{}
+// 		if err := o2h.Handle(c, b, &o2p, true, func(openid string) (int, error) {
+// 			// 查询当前登录人员身份
+// 			if err := account.QueryByAccount(a.Sqlx, openid, int(schema.ATOpenid), o2p.KID); err != nil {
+// 				if sqlxc.IsNotFound(err) {
+// 					return 0, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOBIND", Other: "用户未绑定"})
+// 				}
+// 				return 0, err
+// 			}
+// 			if account.ID == 0 {
+// 				return 0, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOBIND", Other: "用户未绑定"})
+// 			}
+// 			return account.ID, nil
+// 		}); err != nil {
+// 			if redirect, ok := err.(*helper.ErrorRedirect); ok {
+// 				if result := c.Query("result"); result == "json" {
+// 					code := redirect.Code
+// 					if code == 0 {
+// 						code = 303
+// 					}
+// 					return nil, helper.NewSuccess(c, helper.H{
+// 						"code":     code,
+// 						"location": redirect.Location,
+// 					})
+// 				}
+// 			}
+// 			return nil, err
+// 		}
+// 		// 获取用户信息
+// 		return a.GetSignUserByAutoRole(c, account, b.Domain, b.Client, last)
+// 	}
+// 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
+// }
 
 //============================================================================================
 
@@ -143,7 +143,7 @@ func (a *Signin) Captcha(c *gin.Context, b *schema.SigninOfCaptcha) (string, err
 //============================================================================================
 
 // SigninByPasswd 密码登陆
-func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 查询账户信息
 	account := schema.SigninGpaAccount{}
 	if err := account.QueryByAccount(a.Sqlx, b.Username, 1, b.KID); err != nil || account.ID <= 0 {
@@ -157,11 +157,11 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, last func(
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
 	// 获取用户信息
-	return a.GetSignUserByAutoRole(c, &account, b.Domain, b.Client, last)
+	return a.GetSignUserByAutoRole(c, &account, last)
 }
 
 // SigninByCaptcha 验证码登陆
-func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 查询账户信息
 	accountID, captchaGetter, err := a.parseCaptchaDecrypt(c, b.Code)
 	if err != nil {
@@ -171,7 +171,7 @@ func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func
 	if err := account.QueryByID(a.Sqlx, accountID); err != nil || account.ID <= 0 {
 		logger.Errorf(c, logger.ErrorWW(err)) // 账户异常
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-USER", Other: "账户异常,请联系管理员"})
-	} else if account.Account != b.Username || account.AccountKind.String != b.KID || !account.VerifySecret.Valid {
+	} else if account.Account != b.Username || account.PlatformKID.String != b.KID || !account.VerifySecret.Valid {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-USER", Other: "账户异常,请联系管理员"})
 	}
 	// 验证验证码
@@ -183,112 +183,112 @@ func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-CHECK", Other: "验证码不正确"})
 	}
 	// 获取用户信息
-	return a.GetSignUserByAutoRole(c, &account, b.Domain, b.Client, last)
+	return a.GetSignUserByAutoRole(c, &account, last)
 }
 
 //============================================================================================
 
 // GetSignUserByAutoRole auto role
-func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, bDomain, bClient string, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpaAccount, last func(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 登陆用户
 	suser := schema.SigninUser{}
 	suser.AccountID = strconv.Itoa(account.ID) // SigninUser -> 1
 	// 用户
-	user := schema.SigninGpaUser{}
-	if err := user.QueryByID(a.Sqlx, account.UserID); err != nil {
-		logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
-		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
-	} else if !user.Status {
-		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
-	}
-	suser.Name = user.Name  // SigninUser -> 2
-	suser.UserID = user.KID // SigninUser -> 3
-
-	domain := bDomain // 用户请求域名
-	if domain == "" {
-		domain = c.Request.Host
-	}
-	client := schema.JwtGpaOpts{} // 用户请求应用, 如果client.ID == ""标识client不存在
-	if bClient != "" {
-		if err := client.QueryByKID(a.Sqlx, bClient); err != nil {
-			logger.Errorf(c, logger.ErrorWW(err))
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
-		}
-	} else if bDomain != "" {
-		// 一般定义了重定向的域名
-		if err := client.QueryByAudience(a.Sqlx, bDomain); err != nil {
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
-		}
-	} else {
-		// do nothing
-		// 不进行域名验证,但是下文会验证当前请求域名和角色域.
-	}
-	if client.ID > 0 {
-		helper.SetCtxValue(c, helper.ResJwtKey, client.KID) // 配置客户端, 该内容会影响JWT签名方式
-		if client.Issuer.Valid {
-			suser.Issuer = client.Issuer.String // SigninUser -> 4
-		}
-		if client.Audience.Valid {
-			suser.Audience = client.Audience.String // SigninUser -> 5
-		}
-	}
-	if suser.Issuer == "" {
-		suser.Issuer = c.Request.Host
-	}
-	if suser.Audience == "" {
-		suser.Audience = c.Request.Host
-	}
-
-	if last == nil {
-		last = a.lastNil
-	}
-
-	// 角色
-	role := schema.SigninGpaRole{}
-	if account.RoleID.Valid {
-		// 单角色,账户上又绑定的角色
-		if err := role.QueryByID(a.Sqlx, int(account.RoleID.Int64)); err != nil {
-			logger.Errorf(c, logger.ErrorWW(err)) // 角色ID不存在,只有数据库数据不一致才会发生问题
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-NOROLE", Other: "用户没有有效角色[ID]"})
-		}
-		// 验证角色是否合法
-		if !a.CheckRoleClient(c, &client, domain, &role) {
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
-		}
-	} else if o2a, err := last(c, account.ID, client.ID); err != nil || o2a != nil && o2a.Status.Valid && o2a.Status.Bool && o2a.RoleKID.Valid {
-		if err != nil {
-			return nil, err
-		}
-		if err := role.QueryByKID(a.Sqlx, o2a.RoleKID.String); err != nil {
-			logger.Errorf(c, logger.ErrorWW(err)) // 角色ID不存在,只有数据库数据不一致才会发生问题
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-NOROLE", Other: "用户没有有效角色[KID]"})
-		}
-		// 验证角色是否合法
-		// if !a.CheckRoleClient(c, &client, domain, &role) {
-		// 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
-		// }
-	}
-	if role.ID == 0 {
-		// 多角色问题, 查询第一个可用角色
-		roles := []schema.SigninGpaRole{}
-		if err := role.QueryByUserID(a.Sqlx, &roles, account.UserID); err != nil {
-			logger.Errorf(c, logger.ErrorWW(err))
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
-		}
-		for _, r := range roles {
-			if a.CheckRoleClient(c, &client, domain, &r) {
-				role = r
-				break
-			}
-		}
-		if role.ID == 0 {
-			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
-		}
-	}
-	suser.Role = role.KID                                                // SigninUser -> 6
-	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) // SigninUser -> 7 配置系统给定的TokenID
-
-	suser.XidxID = strconv.Itoa(user.ID)
+	//user := schema.SigninGpaUser{}
+	//if err := user.QueryByID(a.Sqlx, account.UserID); err != nil {
+	//	logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
+	//	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
+	//} else if !user.Status {
+	//	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
+	//}
+	//suser.Name = user.Name  // SigninUser -> 2
+	//suser.UserID = user.KID // SigninUser -> 3
+	//
+	//domain := bDomain // 用户请求域名
+	//if domain == "" {
+	//	domain = c.Request.Host
+	//}
+	//client := schema.JwtGpaOpts{} // 用户请求应用, 如果client.ID == ""标识client不存在
+	//if bClient != "" {
+	//	if err := client.QueryByKID(a.Sqlx, bClient); err != nil {
+	//		logger.Errorf(c, logger.ErrorWW(err))
+	//		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
+	//	}
+	//} else if bDomain != "" {
+	//	// 一般定义了重定向的域名
+	//	if err := client.QueryByAudience(a.Sqlx, bDomain); err != nil {
+	//		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
+	//	}
+	//} else {
+	//	// do nothing
+	//	// 不进行域名验证,但是下文会验证当前请求域名和角色域.
+	//}
+	//if client.ID > 0 {
+	//	helper.SetCtxValue(c, helper.ResJwtKey, client.KID) // 配置客户端, 该内容会影响JWT签名方式
+	//	if client.Issuer.Valid {
+	//		suser.Issuer = client.Issuer.String // SigninUser -> 4
+	//	}
+	//	if client.Audience.Valid {
+	//		suser.Audience = client.Audience.String // SigninUser -> 5
+	//	}
+	//}
+	//if suser.Issuer == "" {
+	//	suser.Issuer = c.Request.Host
+	//}
+	//if suser.Audience == "" {
+	//	suser.Audience = c.Request.Host
+	//}
+	//
+	//if last == nil {
+	//	last = a.lastNil
+	//}
+	//
+	//// 角色
+	//role := schema.SigninGpaRole{}
+	//if account.RoleID.Valid {
+	//	// 单角色,账户上又绑定的角色
+	//	if err := role.QueryByID(a.Sqlx, int(account.RoleID.Int64)); err != nil {
+	//		logger.Errorf(c, logger.ErrorWW(err)) // 角色ID不存在,只有数据库数据不一致才会发生问题
+	//		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-NOROLE", Other: "用户没有有效角色[ID]"})
+	//	}
+	//	// 验证角色是否合法
+	//	if !a.CheckRoleClient(c, &client, domain, &role) {
+	//		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
+	//	}
+	//} else if o2a, err := last(c, account.ID, client.ID); err != nil || o2a != nil && o2a.Status.Valid && o2a.Status.Bool && o2a.RoleKID.Valid {
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	if err := role.QueryByKID(a.Sqlx, o2a.RoleKID.String); err != nil {
+	//		logger.Errorf(c, logger.ErrorWW(err)) // 角色ID不存在,只有数据库数据不一致才会发生问题
+	//		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-NOROLE", Other: "用户没有有效角色[KID]"})
+	//	}
+	//	// 验证角色是否合法
+	//	// if !a.CheckRoleClient(c, &client, domain, &role) {
+	//	// 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOACCESS", Other: "用户无访问权限"})
+	//	// }
+	//}
+	//if role.ID == 0 {
+	//	// 多角色问题, 查询第一个可用角色
+	//	roles := []schema.SigninGpaRole{}
+	//	if err := role.QueryByUserID(a.Sqlx, &roles, account.UserID); err != nil {
+	//		logger.Errorf(c, logger.ErrorWW(err))
+	//		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
+	//	}
+	//	for _, r := range roles {
+	//		if a.CheckRoleClient(c, &client, domain, &r) {
+	//			role = r
+	//			break
+	//		}
+	//	}
+	//	if role.ID == 0 {
+	//		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ROLE-ERROR", Other: "用户没有有效角色"})
+	//	}
+	//}
+	//suser.Role = role.KID                                                // SigninUser -> 6
+	//suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) // SigninUser -> 7 配置系统给定的TokenID
+	//
+	//suser.XidxID = strconv.Itoa(user.ID)
 	return &suser, nil
 }
 
@@ -412,13 +412,13 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 	suser.AccountID = strconv.Itoa(account.ID)
 	// 用户
 	user := schema.SigninGpaUser{}
-	if err := user.QueryByID(a.Sqlx, account.UserID); err != nil {
+	if err := user.QueryByID(a.Sqlx, account.UserID, ""); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
 	} else if !user.Status {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
 	}
-	suser.Name = user.Name
+	suser.UserName = user.Name
 	suser.UserID = user.KID
 
 	// 角色
@@ -459,7 +459,7 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 			})
 		}
 	}
-	suser.Role = role.KID
+	// suser.UserRole = role.KID
 
 	suser.Issuer = c.Request.Host
 	suser.Audience = c.Request.Host

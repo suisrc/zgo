@@ -64,7 +64,7 @@ func TestCreateUpdateSQLByNamed(t *testing.T) {
 		Mode:      sql.NullString{Valid: true, String: "signin"},
 	}
 
-	sql, pas, err := CreateUpdateSQLByNamed("table", "id", IDC{ID: 1}, o2a, nil, nil)
+	sql, pas, err := CreateUpdateSQLByNamed("table", IdxColumn{Column: "id", ID: 1}, o2a, nil, nil)
 
 	log.Println(sql)
 	log.Println(pas)
@@ -86,7 +86,7 @@ func TestCreateUpdateSQLByNamedSkipNil(t *testing.T) {
 		Mode:      sql.NullString{Valid: true, String: "signin"},
 	}
 
-	sql, pas, err := CreateUpdateSQLByNamedAndSkipNil("table", "id", IDC{ID: 1}, &o2a)
+	sql, pas, err := CreateUpdateSQLByNamedAndSkipNil("table", IdxColumn{Column: "id", ID: 1}, &o2a)
 
 	log.Println(sql)
 	log.Println(pas)
@@ -109,7 +109,7 @@ func TestCreateUpdateSQLByNamedSkipNilAndSet(t *testing.T) {
 		Mode:      sql.NullString{Valid: true, String: "signin"},
 	}
 
-	sql, pas, err := CreateUpdateSQLByNamedAndSkipNilAndSet("table", "id", IDC{ID: 1}, &o2a)
+	sql, pas, err := CreateUpdateSQLByNamedAndSkipNilAndSet("table", IdxColumn{Column: "id", KID: "1"}, &o2a)
 
 	log.Println(sql)
 	log.Println(pas)

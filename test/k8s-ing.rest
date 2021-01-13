@@ -21,7 +21,7 @@ Content-Type: application/json
   //"kid": "",
   //"role": "",
   "password": "123456",
-  "username": "zgo1"
+  "username": "it-100002"
 }
 
 ###

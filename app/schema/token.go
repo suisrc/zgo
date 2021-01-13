@@ -9,17 +9,37 @@ import (
 	"github.com/suisrc/zgo/app/model/sqlxc"
 )
 
-// TokenOAuth2 第三方登陆实体
-type TokenOAuth2 struct {
-	ID           int            `db:"id"`            // id
-	PlatformID   int            `db:"oauth2_id"`     // 平台
-	TokenID      sql.NullString `db:"token_kid"`     // 用户令牌标识
-	AccessToken  sql.NullString `db:"access_token"`  // 访问令牌
-	ExpiresIn    sql.NullInt64  `db:"expires_in"`    // 有限期间隔
-	ExpiresTime  sql.NullTime   `db:"expires_time"`  // 凭据过期时间
-	RefreshToken sql.NullString `db:"refresh_token"` // 刷新令牌
-	RefreshCount sql.NullString `db:"refresh_count"` // 刷新次数
-	SyncLock     sql.NullTime   `db:"sync_lock"`     // 同步锁
+// AccountOAuth2Token account
+type AccountOAuth2Token struct {
+	TokenID      string         `db:"token_kid"`      // 令牌标识
+	AccessToken  sql.NullString `db:"access_token"`   // oauth2令牌
+	AccessExp    sql.NullTime   `db:"access_expired"` // oauth2过期时间
+	ExpiresIn    sql.NullInt64  `db:"expires_in"`     // 有限期间隔
+	RefreshToken sql.NullString `db:"refresh_token"`  // 刷新令牌
+	Scope        sql.NullString `db:"token_scope"`    // 授权作用域
+}
+
+// UpdateToken update
+func (a *AccountOAuth2Token) UpdateToken(sqlx *sqlx.DB) error {
+	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: a.TokenID}
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"token_oauth2", IDX, a)
+	if err != nil {
+		return err
+	}
+	_, err = sqlx.NamedExec(SQL, params)
+	return err
+}
+
+// ServerOAuth2Token 第三方登陆实体
+type ServerOAuth2Token struct {
+	TokenID      string         `db:"token_kid"`      // 令牌标识
+	PlatformID   int            `db:"oauth2_id"`      // 平台
+	AccessToken  sql.NullString `db:"access_token"`   // 访问令牌
+	AccessExp    sql.NullTime   `db:"access_expired"` // 凭据过期时间
+	ExpiresIn    sql.NullInt64  `db:"expires_in"`     // 有限期间隔
+	RefreshToken sql.NullString `db:"refresh_token"`  // 刷新令牌
+	RefreshCount sql.NullString `db:"refresh_count"`  // 刷新次数
+	SyncLock     sql.NullTime   `db:"sync_lock"`      // 同步锁
 	CreatedAt    sql.NullTime   `db:"created_at"`
 	UpdatedAt    sql.NullTime   `db:"updated_at"`
 	//TokenType    sql.NullString `db:"token_type"`
@@ -27,44 +47,42 @@ type TokenOAuth2 struct {
 	//CallCount    sql.NullString `db:"call_count" set:"=version+1"`
 }
 
-// QueryByID kid
-func (a *TokenOAuth2) QueryByID(sqlx *sqlx.DB, id int) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_token where id=?"
+// QueryByTokenID kid
+func (a *ServerOAuth2Token) QueryByTokenID(sqlx *sqlx.DB, id string) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token_oauth2 where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, id)
 }
 
 // QueryByPlatform platform
-func (a *TokenOAuth2) QueryByPlatform(sqlx *sqlx.DB, platform int) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_token where oauth2_id=? order by expires_time desc limit 1"
+func (a *ServerOAuth2Token) QueryByPlatform(sqlx *sqlx.DB, platform int) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token_oauth2 where oauth2_id=? order by expires_time desc limit 1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, platform)
 }
 
 // QueryByPlatformMust platform
-func (a *TokenOAuth2) QueryByPlatformMust(sqlx *sqlx.DB, platform int) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}oauth2_token where oauth2_id=? and expires_time > ? order by expires_time desc limit 1"
+func (a *ServerOAuth2Token) QueryByPlatformMust(sqlx *sqlx.DB, platform int) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token_oauth2 where oauth2_id=? and access_expired > ? order by expires_time desc limit 1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, platform, time.Now())
 }
 
-// UpdateTokenOAuth2 update
-func (a *TokenOAuth2) UpdateTokenOAuth2(sqlx *sqlx.DB) error {
-	IDC := sqlxc.IDC{ID: int64(a.ID)}
-	if err := sqlxc.UpdateAndSaveByIDWithNamed(sqlx, IDC, func() (string, map[string]interface{}, error) {
-		return sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"oauth2_token", "id", IDC, a)
+// UpdateToken update
+func (a *ServerOAuth2Token) UpdateToken(sqlx *sqlx.DB) error {
+	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: a.TokenID}
+	if err := sqlxc.UpdateAndSaveByIDWithNamed(sqlx, nil, func() (string, map[string]interface{}, error) {
+		return sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"token_oauth2", IDX, a)
 	}); err != nil {
 		return err
-	} else if a.ID == 0 {
-		a.ID = int(IDC.ID)
 	}
 	return nil
 }
 
 // LockSync lock, 延迟锁定5秒
-func (a *TokenOAuth2) LockSync(sqlx *sqlx.DB) error {
-	SQL := "update {{TP}}oauth2_token set sync_lock=? where id=?"
+func (a *ServerOAuth2Token) LockSync(sqlx *sqlx.DB) error {
+	SQL := "update {{TP}}oauth2_token set sync_lock=? where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	_, err := sqlx.Exec(SQL, time.Now().Add(time.Duration(5)*time.Second), a.ID)
+	_, err := sqlx.Exec(SQL, time.Now().Add(time.Duration(5)*time.Second), a.TokenID)
 	return err
 }

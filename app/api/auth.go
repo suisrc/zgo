@@ -80,22 +80,24 @@ func (a *Auth) authorize(c *gin.Context) {
 
 	h := c.Writer.Header()
 	h.Set("X-Request-Z-Token-Kid", user.GetTokenID())
-	h.Set("X-Request-Z-User-Kid", user.GetUserID())
-	h.Set("X-Request-Z-User-Nam", user.GetUserName())
-	h.Set("X-Request-Z-Role-Kid", user.GetUserRole())
-	h.Set("X-Request-Z-User-Xid", user.GetXidxID())
 	h.Set("X-Request-Z-Account", user.GetAccountID())
-	h.Set("X-Request-Z-User-Uid", user.GetT3rdID())
-	h.Set("X-Request-Z-User-Tid", user.GetT3rdID())
-	h.Set("X-Request-Z-Client-Kid", user.GetClientID())
+	h.Set("X-Request-Z-User-Idx", user.GetUserIdxID())
+
+	h.Set("X-Request-Z-User-Kid", user.GetUserID())
+	h.Set("X-Request-Z-User-Name", user.GetUserName())
+	h.Set("X-Request-Z-Roles", strings.Join(user.GetUserRoles(), ";"))
+
+	h.Set("X-Request-Z-Org-Code", user.GetOrgCode())
+	h.Set("X-Request-Z-Org-Admin", user.GetOrgAdmin())
+
 	h.Set("X-Request-Z-Domain", user.GetDomain())
 	h.Set("X-Request-Z-Issuer", user.GetIssuer())
 	h.Set("X-Request-Z-Audience", user.GetAudience())
-	h.Set("X-Request-Z-Org-Code", user.GetOrgCode())
-	h.Set("X-Request-Z-Org-Domain", user.GetOrgDomain())
-	h.Set("X-Request-Z-Org-Admin", user.GetOrgAdmin())
 
 	//h.Set("X-Request-Z-Org-Code", "ORGCM3558")
+	if svc := h.Get("X-Request-Z-Svc"); svc != "" {
+		h.Set("X-Request-Z-Roles-Svc", strings.Join(user.GetUserSvcRoles(svc+":"), ";"))
+	}
 
 	h.Set("X-Request-Z-Xip", helper.GetHostIP(c))
 	helper.ResSuccess(c, "ok")

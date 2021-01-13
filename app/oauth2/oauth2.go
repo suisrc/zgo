@@ -6,11 +6,11 @@ import (
 	"errors"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 
 	"github.com/gin-gonic/gin"
 	"github.com/suisrc/zgo/app/model/gpa"
-	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/modules/store"
 )
 
@@ -38,7 +38,7 @@ type Handler interface {
 	// Handle 处理OAuth2认证, 被动函数回调得到用户的openid
 	// bool 必须是成员,我们在平台的OAuth2认证时候,可能非成员用户扫码,是否将非成员的openid带入被动处理函数中
 	// func (openid string) (accountid int, err error)
-	Handle(*gin.Context, *schema.SigninOfOAuth2, *schema.SigninGpaOAuth2Platfrm, bool, func(string) (int, error)) error
+	Handle(*gin.Context, RequestParams, RequestPlatfrm, bool, func(string) (int, error)) error
 }
 
 //===================================================================================================AccessToken-START
@@ -98,13 +98,13 @@ var _ TokenHandler = (*TokenManager)(nil)
 
 // TokenManager manager
 type TokenManager struct {
-	gpa.GPA                                                              // 数据库操作
-	Key          string                                                  // 令牌Key, 注意不能未空,且必须全局唯一
-	PlatformID   int                                                     // 平台ID
-	Storer       store.Storer                                            // 缓存
-	NewTokenFunc func(context.Context, int) (*schema.TokenOAuth2, error) // 获取新令牌
-	MaxCacheIdle int                                                     // 使用缓存的临界值, 达到临界值会被动更新令牌, 如果Token是2个小时,推荐使用300秒
-	MinCacheIdle int                                                     // 使用缓存的TTL值, 不要高于MaxCacheIdle,推荐使用60秒
+	gpa.GPA                                                       // 数据库操作
+	Key          string                                           // 令牌Key, 注意不能未空,且必须全局唯一
+	PlatformID   int                                              // 平台ID
+	Storer       store.Storer                                     // 缓存
+	NewTokenFunc func(context.Context, int) (*TokenOAuth2, error) // 获取新令牌
+	MaxCacheIdle int                                              // 使用缓存的临界值, 达到临界值会被动更新令牌, 如果Token是2个小时,推荐使用300秒
+	MinCacheIdle int                                              // 使用缓存的TTL值, 不要高于MaxCacheIdle,推荐使用60秒
 }
 
 // FindToken find
@@ -115,16 +115,16 @@ func (a *TokenManager) FindToken(c context.Context) (string, error) {
 		return value, nil
 	}
 	if a.PlatformID > 0 {
-		toa2 := &schema.TokenOAuth2{}
+		toa2 := &TokenOAuth2{}
 		if err := toa2.QueryByPlatformMust(a.Sqlx, a.PlatformID); err != nil {
 			if !sqlxc.IsNotFound(err) {
 				return "", err
 			}
-		}
-		if toa2.ID > 0 {
-			// 数据库中存在
+			// 数据不存在
+		} else {
+			// 数据存在
 			if a.MaxCacheIdle > 0 && a.MinCacheIdle > 0 {
-				if toa2.ExpiresTime.Time.Sub(time.Now()) > time.Duration(a.MaxCacheIdle)*time.Second {
+				if toa2.ExpiresAt.Time.Sub(time.Now()) > time.Duration(a.MaxCacheIdle)*time.Second {
 					// 将令牌缓存到缓存池中缓存
 					a.Storer.Set(c, "access_token:"+a.Key, toa2.AccessToken.String, time.Duration(a.MinCacheIdle)*time.Second)
 				} else if !toa2.SyncLock.Valid || toa2.SyncLock.Time.Before(time.Now()) {
@@ -149,7 +149,7 @@ func (a *TokenManager) NewToken(c context.Context) (string, error) {
 		return "", errors.New("access token empty")
 	}
 	token.SyncLock = sql.NullTime{Valid: true, Time: time.Now()} // 具有解除锁定的功能
-	if err := token.UpdateTokenOAuth2(a.Sqlx); err != nil {
+	if err := token.UpdateOAuth2(a.Sqlx); err != nil {
 		return "", err
 	}
 	a.Storer.Set(c, "access_token:"+a.Key, token.AccessToken.String, time.Duration(a.MinCacheIdle)*time.Second)
@@ -157,3 +157,48 @@ func (a *TokenManager) NewToken(c context.Context) (string, error) {
 }
 
 //===================================================================================================AccessToken-END
+
+// RequestPlatfrm xxx
+type RequestPlatfrm interface {
+	GetID() int
+	GetAppID() string
+	GetAppSecret() string
+	GetAgentID() string
+	GetSigninURL() string
+	CheckConfig() error
+}
+
+// RequestParams xxx
+type RequestParams interface {
+	GetCode() string
+	GetState() string
+	GetScope() string
+}
+
+// TokenOAuth2 xxx
+type TokenOAuth2 struct {
+	Account      int
+	PlatformID   int
+	TokenID      sql.NullString
+	AccessToken  sql.NullString
+	ExpiresIn    sql.NullInt64
+	ExpiresAt    sql.NullTime
+	RefreshToken sql.NullString
+	Scope        sql.NullString
+	SyncLock     sql.NullTime
+}
+
+// UpdateOAuth2 update
+func (u *TokenOAuth2) UpdateOAuth2(sqlx *sqlx.DB) error {
+	return nil
+}
+
+// QueryByPlatformMust query
+func (u *TokenOAuth2) QueryByPlatformMust(sqlx *sqlx.DB, platform int) error {
+	return nil
+}
+
+// LockSync lock, 延迟锁定5秒
+func (u *TokenOAuth2) LockSync(sqlx *sqlx.DB) error {
+	return nil
+}

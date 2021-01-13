@@ -3,9 +3,7 @@ package api
 import (
 	"database/sql"
 	"net/http"
-	"net/url"
 	"strconv"
-	"strings"
 	"time"
 
 	i18n "github.com/suisrc/gin-i18n"
@@ -83,7 +81,7 @@ func (a *Signin) signin(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.log(c, usr, token, "signin", token.GetRefreshToken())
+	a.log(c, usr, token, false, token.GetRefreshToken())
 	// 登陆结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
@@ -104,13 +102,13 @@ func (a *Signin) signin(c *gin.Context) {
 //==================================================================================================================
 
 // 获取最后一次登陆信息
-func (a *Signin) last(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error) {
+func (a *Signin) last(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, error) {
 	if config.C.JWTAuth.LimitTime <= 0 {
 		// 不使用上去签名的结果作为缓存
 		return nil, nil
 	}
 	o2a := schema.SigninGpaAccountToken{}
-	if err := o2a.QueryByAccountAndClient(a.Sqlx, aid, cid, helper.GetClientIP(c)); err != nil {
+	if err := o2a.QueryByAccountAndClient(a.Sqlx, aid, helper.GetClientIP(c)); err != nil {
 		if !sqlxc.IsNotFound(err) {
 			// 数据库查询发生异常
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -125,8 +123,8 @@ func (a *Signin) last(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountTok
 			TokenType:    "Bearer",
 			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
-			ExpiresAt:    o2a.ExpiresAt.Int64,
-			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
+			ExpiresAt:    o2a.AccessExp.Int64,
+			ExpiresIn:    o2a.AccessExp.Int64 - time.Now().Unix(),
 			RefreshToken: o2a.RefreshToken.String,
 			RefreshExp:   o2a.RefreshExp.Int64,
 		})
@@ -135,30 +133,22 @@ func (a *Signin) last(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountTok
 }
 
 // 登陆日志
-func (a *Signin) log(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, mode, refresh string) {
+func (a *Signin) log(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, update bool, refresh string) {
 	// c.SetCookie("signin", u.GetTokenID(), -1, "", u.GetAudience(), false, false) // 标记登陆信息
 
 	aid, _ := strconv.Atoi(u.GetAccountID())
-	cid, cok := helper.GetCtxValueToString(c, helper.ResJwtKey)
+	// cid, cok := helper.GetCtxValueToString(c, helper.ResJwtKey)
 	o2a := schema.SigninGpaAccountToken{
-		AccountID:    aid,
 		TokenID:      u.GetTokenID(),
-		UserKID:      u.GetUserID(),
-		RoleKID:      sql.NullString{Valid: true, String: u.GetUserRole()},
-		ClientID:     sql.NullInt64{Valid: false},
-		ClientKID:    sql.NullString{Valid: cok, String: cid},
-		LastIP:       sql.NullString{Valid: true, String: helper.GetClientIP(c)},
-		LastAt:       sql.NullTime{Valid: true, Time: time.Now()},
-		LimitExp:     sql.NullTime{Valid: false},
-		LimitKey:     sql.NullString{Valid: false},
-		Mode:         sql.NullString{Valid: mode != "", String: mode},
-		ExpiresAt:    sql.NullInt64{Valid: t.GetExpiresAt() > 0, Int64: t.GetExpiresAt()},
+		AccountID:    aid,
 		AccessToken:  sql.NullString{Valid: t.GetAccessToken() != "", String: t.GetAccessToken()},
+		AccessExp:    sql.NullInt64{Valid: t.GetExpiresAt() > 0, Int64: t.GetExpiresAt()},
 		RefreshToken: sql.NullString{Valid: refresh != "", String: refresh},
 		RefreshExp:   sql.NullInt64{Valid: t.GetRefreshExp() > 0, Int64: t.GetRefreshExp()},
-		Status:       sql.NullBool{Valid: true, Bool: true},
+		LastIP:       sql.NullString{Valid: true, String: helper.GetClientIP(c)},
+		LastAt:       sql.NullTime{Valid: true, Time: time.Now()},
 	}
-	if _, err := o2a.UpdateAndSaveByTokenKID(a.Sqlx); err != nil {
+	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, update); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err))
 	}
 
@@ -227,7 +217,7 @@ func (a *Signin) refresh(c *gin.Context) {
 		}
 		return
 	}
-	if o2a.Status.Valid && !o2a.Status.Bool {
+	if o2a.ErrCode.Valid && o2a.ErrCode.String != "" {
 		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-DISABLE", Other: "刷新令牌被禁用"}))
 		return
 	}
@@ -240,8 +230,8 @@ func (a *Signin) refresh(c *gin.Context) {
 			TokenType:    "Bearer",
 			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
-			ExpiresAt:    o2a.ExpiresAt.Int64,
-			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
+			ExpiresAt:    o2a.AccessExp.Int64,
+			ExpiresIn:    o2a.AccessExp.Int64 - time.Now().Unix(),
 			RefreshToken: o2a.RefreshToken.String,
 			RefreshExp:   o2a.RefreshExp.Int64,
 		}
@@ -264,7 +254,7 @@ func (a *Signin) refresh(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.log(c, user, token, "refresh", token.GetRefreshToken())
+	a.log(c, user, token, true, token.GetRefreshToken())
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
 		TokenType:    "Bearer",
@@ -326,74 +316,75 @@ func (a *Signin) captcha(c *gin.Context) {
 // @Router /signin/oauth2/{kid} [get]
 func (a *Signin) oauth2(c *gin.Context) {
 	// 解析参数
-	body := schema.SigninOfOAuth2{}
-	if err := helper.ParseQuery(c, &body); err != nil {
-		helper.FixResponse406Error(c, err, func() {
-			logger.Errorf(c, logger.ErrorWW(err))
-		})
-		return
-	}
-
-	// 执行登录
-	user, err := a.SigninService.OAuth2(c, &body, a.last)
-	if err != nil {
-		helper.FixResponse500Error(c, err, func() {
-			logger.Errorf(c, logger.ErrorWW(err))
-		})
-		return
-	}
-	token, usr, err := a.Auther.GenerateToken(c, user)
-	if err != nil {
-		helper.FixResponse500Error(c, err, func() {
-			logger.Errorf(c, logger.ErrorWW(err))
-		})
-		return
-	}
-
-	// 登陆日志
-	a.log(c, usr, token, "oauth2", token.GetRefreshToken())
-	if body.Redirect != "" {
-		// 需要重定向跳转
-		redirect, err := url.QueryUnescape(body.Redirect)
-		if err != nil {
-			helper.FixResponse500Error(c, err, func() {
-				logger.Errorf(c, logger.ErrorWW(err))
-			})
-			return
-		}
-		if strings.IndexRune(redirect, '?') <= 0 {
-			redirect += "?"
-		}
-		if endc := redirect[len(redirect)-1:]; endc != "?" && endc != "&" {
-			redirect += "&"
-		}
-		redirect += "access_token=" + token.GetAccessToken()
-		redirect += "&expires_at=" + strconv.Itoa(int(token.GetExpiresAt()))
-		redirect += "&expires_in=" + strconv.Itoa(int(token.GetExpiresAt()-time.Now().Unix()))
-		redirect += "&refresh_token=" + token.GetRefreshToken()
-		redirect += "&refresh_expires=" + strconv.Itoa(int(token.GetRefreshExp()))
-		redirect += "&token_type=Bearer"
-		redirect += "&trace_id=" + helper.GetTraceID(c)
-		// 重定向到登陆页面
-		c.Redirect(303, redirect)
-		return
-	}
-
-	// 登陆结果
-	result := schema.SigninResult{
-		TokenStatus:  "ok",
-		TokenType:    "Bearer",
-		TokenID:      token.GetTokenID(),
-		AccessToken:  token.GetAccessToken(),
-		ExpiresAt:    token.GetExpiresAt(),
-		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
-		RefreshToken: token.GetRefreshToken(),
-		RefreshExp:   token.GetRefreshExp(),
-	}
-
-	// 记录登陆
-	// 返回正常结果即可
-	helper.ResSuccess(c, &result)
+	//body := schema.SigninOfOAuth2{}
+	//if err := helper.ParseQuery(c, &body); err != nil {
+	//	helper.FixResponse406Error(c, err, func() {
+	//		logger.Errorf(c, logger.ErrorWW(err))
+	//	})
+	//	return
+	//}
+	//
+	//// 执行登录
+	//user, err := a.SigninService.OAuth2(c, &body, a.last)
+	//if err != nil {
+	//	helper.FixResponse500Error(c, err, func() {
+	//		logger.Errorf(c, logger.ErrorWW(err))
+	//	})
+	//	return
+	//}
+	//token, usr, err := a.Auther.GenerateToken(c, user)
+	//if err != nil {
+	//	helper.FixResponse500Error(c, err, func() {
+	//		logger.Errorf(c, logger.ErrorWW(err))
+	//	})
+	//	return
+	//}
+	//
+	//// 登陆日志
+	//a.log(c, usr, token, "oauth2", token.GetRefreshToken())
+	//if body.Redirect != "" {
+	//	// 需要重定向跳转
+	//	redirect, err := url.QueryUnescape(body.Redirect)
+	//	if err != nil {
+	//		helper.FixResponse500Error(c, err, func() {
+	//			logger.Errorf(c, logger.ErrorWW(err))
+	//		})
+	//		return
+	//	}
+	//	if strings.IndexRune(redirect, '?') <= 0 {
+	//		redirect += "?"
+	//	}
+	//	if endc := redirect[len(redirect)-1:]; endc != "?" && endc != "&" {
+	//		redirect += "&"
+	//	}
+	//	redirect += "access_token=" + token.GetAccessToken()
+	//	redirect += "&expires_at=" + strconv.Itoa(int(token.GetExpiresAt()))
+	//	redirect += "&expires_in=" + strconv.Itoa(int(token.GetExpiresAt()-time.Now().Unix()))
+	//	redirect += "&refresh_token=" + token.GetRefreshToken()
+	//	redirect += "&refresh_expires=" + strconv.Itoa(int(token.GetRefreshExp()))
+	//	redirect += "&token_type=Bearer"
+	//	redirect += "&trace_id=" + helper.GetTraceID(c)
+	//	// 重定向到登陆页面
+	//	c.Redirect(303, redirect)
+	//	return
+	//}
+	//
+	//// 登陆结果
+	//result := schema.SigninResult{
+	//	TokenStatus:  "ok",
+	//	TokenType:    "Bearer",
+	//	TokenID:      token.GetTokenID(),
+	//	AccessToken:  token.GetAccessToken(),
+	//	ExpiresAt:    token.GetExpiresAt(),
+	//	ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
+	//	RefreshToken: token.GetRefreshToken(),
+	//	RefreshExp:   token.GetRefreshExp(),
+	//}
+	//
+	//// 记录登陆
+	//// 返回正常结果即可
+	//helper.ResSuccess(c, &result)
+	helper.ResSuccess(c, "功能未开放")
 }
 
 // Signup godoc

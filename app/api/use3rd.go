@@ -14,7 +14,7 @@ type Use3rd struct {
 
 // Register 注册路由,认证接口特殊,需要独立注册
 func (a *Use3rd) Register(r gin.IRouter) {
-	r.GET("/pub/3rd/apps", a.applications)
+	r.GET("/pub/3rd/apps", a.list)
 	r.GET("/pub/3rd/signin", a.signin)
 }
 
@@ -26,7 +26,7 @@ func (a *Use3rd) Register(r gin.IRouter) {
 // @Produce  json
 // @Success 200 {object} helper.Success
 // @Router /pub/3rd/apps [get]
-func (a *Use3rd) applications(c *gin.Context) {
+func (a *Use3rd) list(c *gin.Context) {
 	helper.ResSuccess(c, []helper.H{})
 	// helper.ResSuccess(c, []helper.H{
 	// 	{

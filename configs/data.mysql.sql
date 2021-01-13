@@ -4,13 +4,15 @@
 -- 用户(48)： u<助记符3位><时间编码8位><ID编码8位><机器码4位><随机码24位>
 -- 租户(32)： o<助记符3位><时间编码8位><ID编码8位><机器码4位><随机码8位>
 -- 应用(24)： a<助记符3位><时间编码8位><机器码4位><随机码8位>
--- zgo_user自增从 100000001 开始, 小于100000001为保留字段， 用于人工录入修正
 INSERT INTO `zgo_user`(`id`, `type`, `kid`, `name`, `status`) VALUES
 (1,      "org", "00000000000000000000000000000000",                 "P6M-ADM", 0),
 (10007,  "usr", "u00020210112xx0100071111x000000000x000000000x007", "P6M-T7",  1),
 (100001, "org", "o00020210112xx1000011111000000a1",                 "赢迪",    1),
 (100002, "usr", "u00020210112xx1000021111x000000000x000000000x002", "USR-IT2", 1),
 (100003, "usr", "u00020210112xx1000031111x000000000x000000000x003", "USR-IT3", 1);
+
+-- zgo_user自增从 100000001 开始, 小于100000001为保留字段， 用于人工录入修正
+ALTER TABLE `zgo_user` AUTO_INCREMENT = 100000001;
 
 
 -- 租户 code=P6M， 为平台租户
@@ -41,6 +43,23 @@ INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `pa
 (7, null, 100003, "it-100003",   1, "123456", null, null, null, "ORGCM3558", 1, "赢迪-测试1");
 
 
+-- 平台服务
+INSERT INTO `zgo_app_service`(`id`, `name`, `code`) VALUES 
+(1, "认证授权", 'ka'),
+(2, "灵活导购", 'lhdg'),
+(3, "通路数据", 'tlsj');
+
+-- 平台对应关系
+INSERT INTO `zgo_app_service_audience`(`svc_id`, `audience`, `resource`) VALUES 
+(1, null, '/api/ka/'),
+(2, null, '/api/lhdg/'),
+(3, null, '/api/tlsj/');
+
+-- 授权
+INSERT INTO `zgo_app_service_org`(`svc_id`, `org_cod`, `expired`, `status`, `description`) VALUES 
+(1, "ORGCM3558", null, 1, ""),
+(2, "ORGCM3558", null, 1, "");
+
 -- domain 如果同一用户有多个角色,系统可以通过访问的域名自动分配角色
 -- kid编码(24)： <时间编码8位><机器码4位><随机数12位>
 INSERT INTO `zgo_role`(`id`, `kid`, `name`, `org_cod`, `org_adm`, `status`, `description`) VALUES
@@ -67,23 +86,6 @@ INSERT INTO `zgo_user_role`(`user_id`, `role_id`, `org_cod`) VALUES
 (100002, 4, 'ORGCM3558'),
 (100002, 5, 'ORGCM3558'),
 (100003, 6, 'ORGCM3558');
-
--- 平台服务
-INSERT INTO `zgo_policy_service`(`id`, `name`, `code`) VALUES 
-(1, "认证授权", 'ka'),
-(2, "灵活导购", 'lhdg'),
-(3, "通路数据", 'tlsj');
-
--- 平台对应关系
-INSERT INTO `zgo_policy_service_audience`(`svc_id`, `audience`, `resource`) VALUES 
-(1, null, '/api/ka/'),
-(2, null, '/api/lhdg/'),
-(3, null, '/api/tlsj/');
-
--- 授权
-INSERT INTO `zgo_policy_service_org`(`svc_id`, `org_cod`, `expired`, `status`, `description`) VALUES 
-(1, "ORGCM3558", null, 1, ""),
-(2, "ORGCM3558", null, 1, "");
 
 -- 接口
 INSERT INTO `zgo_policy_service_action`(`id`, `svc_id`, `name`, `resource`, `status`, `description`) VALUES 

@@ -88,82 +88,62 @@ type UserInfo struct {
 	UserName string
 }
 
-// GetTokenID token
+// GetTokenID xxx
 func (u *UserInfo) GetTokenID() string {
 	return u.TokenID
 }
 
-// GetUserID user
-func (u *UserInfo) GetUserID() string {
-	return u.UserID
-}
-
-// GetUserName name
-func (u *UserInfo) GetUserName() string {
-	return u.UserName
-}
-
-// GetUserRole role
-func (u *UserInfo) GetUserRole() string {
-	return ""
-}
-
-// SetUserRole role
-func (u *UserInfo) SetUserRole(nrole string) string {
-	return nrole
-}
-
-// GetXidxID user index
-func (u *UserInfo) GetXidxID() string {
-	return ""
-}
-
-// GetAccountID token
+// GetAccountID xxx
 func (u *UserInfo) GetAccountID() string {
 	return ""
 }
 
-// GetT3rdID 3rd id
-func (u *UserInfo) GetT3rdID() string {
+// GetUserIdxID xxx
+func (u *UserInfo) GetUserIdxID() string {
 	return ""
 }
 
-// GetClientID client id
-func (u *UserInfo) GetClientID() string {
-	return ""
-}
-
-// GetDomain domain
+// GetDomain xxx
 func (u *UserInfo) GetDomain() string {
 	return ""
 }
 
-// GetIssuer issuer
+// GetIssuer xxx
 func (u *UserInfo) GetIssuer() string {
 	return ""
 }
 
-// GetAudience audience
+// GetAudience xxx
 func (u *UserInfo) GetAudience() string {
 	return ""
 }
 
-// GetOrgCode org code
+// GetUserID xxx
+func (u *UserInfo) GetUserID() string {
+	return ""
+}
+
+// GetUserName xxx
+func (u *UserInfo) GetUserName() string {
+	return ""
+}
+
+// GetUserRoles xxx
+func (u *UserInfo) GetUserRoles() []string {
+	return nil
+}
+
+// GetOrgCode xxx
 func (u *UserInfo) GetOrgCode() string {
 	return ""
 }
 
-// GetOrgRole org role
-func (u *UserInfo) GetOrgRole() string {
-	return ""
-}
-
-// GetOrgDomain org domain
-func (u *UserInfo) GetOrgDomain() string {
-	return ""
-}
-
-// GetOrgAdmin org admin
+// GetOrgAdmin xxx
 func (u *UserInfo) GetOrgAdmin() string {
 	return ""
+}
+
+// GetUserSvcRoles xxx
+func (u *UserInfo) GetUserSvcRoles(svc string) []string {
+	return nil
 }
