@@ -85,6 +85,7 @@ func (a *Auth) authorize(c *gin.Context) {
 	h.Set("X-Request-Z-Role-Kid", user.GetUserRole())
 	h.Set("X-Request-Z-User-Xid", user.GetXidxID())
 	h.Set("X-Request-Z-Account", user.GetAccountID())
+	h.Set("X-Request-Z-User-Uid", user.GetT3rdID())
 	h.Set("X-Request-Z-User-Tid", user.GetT3rdID())
 	h.Set("X-Request-Z-Client-Kid", user.GetClientID())
 	h.Set("X-Request-Z-Domain", user.GetDomain())

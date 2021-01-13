@@ -17,7 +17,7 @@ var (
 	CasbinNoRole = "norole"
 	// CasbinRolePrefix 角色前缀
 	CasbinRolePrefix = "r:"
-	// CasbinUserPrefix 角色前缀
+	// CasbinUserPrefix 用户前缀
 	CasbinUserPrefix = "u:"
 )
 

@@ -354,17 +354,21 @@ func (a *entity) build(fixStr func(string, string) string) (string, error) {
 	//	content += "),\n"
 	//}
 
-	content += "  PRIMARY KEY ("
-	for i, p := range a.primary {
-		if i == 0 {
-			content += "`" + p + "`"
-		} else {
-			content += ",`" + p + "`"
+	if strings.Contains(content, "AUTO_INCREMENT") {
+		content += "  PRIMARY KEY ("
+		for i, p := range a.primary {
+			if i == 0 {
+				content += "`" + p + "`"
+			} else {
+				content += ",`" + p + "`"
+			}
 		}
+		content += ")\n"
+		content += ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;"
+	} else {
+		content = content[:len(content)-2] + "\n"
+		content += ") ENGINE=InnoDB DEFAULT CHARSET=utf8;"
 	}
-	content += ")\n"
-
-	content += ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;"
 	return content, nil
 }
 
