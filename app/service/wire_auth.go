@@ -81,18 +81,18 @@ func (a *AuthOpts) tokenFunc(ctx context.Context) (string, error) {
 
 // 更新认证
 func (a *AuthOpts) updateFunc(c context.Context) error {
-	opts := map[interface{}]*schema.JwtGpaOpts{}
-	jwtOpt := new(schema.JwtGpaOpts)
-	jwtOpts := []schema.JwtGpaOpts{}
-	if err := jwtOpt.QueryAll(a.Sqlx, &jwtOpts); err != nil {
-		logger.Errorf(c, logger.ErrorWW(err)) // 更新发生异常
-	} else {
-		for _, v := range jwtOpts {
-			v.SecretByte = []byte(v.Secret)
-			opts[v.KID] = &v
-		}
-	}
-	a.Jwts = opts
+	//opts := map[interface{}]*schema.JwtGpaOpts{}
+	//jwtOpt := new(schema.JwtGpaOpts)
+	//jwtOpts := []schema.JwtGpaOpts{}
+	// if err := jwtOpt.QueryAll(a.Sqlx, &jwtOpts); err != nil {
+	// 	logger.Errorf(c, logger.ErrorWW(err)) // 更新发生异常
+	// } else {
+	// 	for _, v := range jwtOpts {
+	// 		v.SecretByte = []byte(v.Secret)
+	// 		opts[v.KID] = &v
+	// 	}
+	// }
+	//a.Jwts = opts
 
 	return nil
 }

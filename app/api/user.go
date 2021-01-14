@@ -80,7 +80,7 @@ func (a *User) current(c *gin.Context) {
 	helper.ResSuccess(c, helper.H{
 		"userid":   user.GetUserID(),
 		"name":     user.GetUserName(),
-		"system":   "LHDG2",
+		"orgCode":  user.GetOrgCode(),
 		"createAt": time.Now(),
 	})
 }

@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2021-01-13 18:44:12 CST
+-- time: 2021-01-13 22:10:17 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -426,8 +426,8 @@ ALTER TABLE `zgo_organization`
 ADD CONSTRAINT `fk_organization_id` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
 
 ALTER TABLE `zgo_organization_user`
-ADD CONSTRAINT `fk_org_user_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`),
-ADD CONSTRAINT `fk_org_user_uid` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`);
+ADD CONSTRAINT `fk_org_user_uid` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
+ADD CONSTRAINT `fk_org_user_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
 
 ALTER TABLE `zgo_user_union`
 ADD CONSTRAINT `fk_user_union_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_user_union` (`id`),
@@ -439,8 +439,8 @@ ADD CONSTRAINT `fk_app_service_org_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_
 ADD CONSTRAINT `fk_app_service_org_orcd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
 
 ALTER TABLE `zgo_app_service_audience`
-ADD CONSTRAINT `fk_app_service_audience_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`),
-ADD CONSTRAINT `fk_app_service_audience_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`);
+ADD CONSTRAINT `fk_app_service_audience_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`),
+ADD CONSTRAINT `fk_app_service_audience_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
 
 ALTER TABLE `zgo_role`
 ADD CONSTRAINT `fk_role_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`),
@@ -532,9 +532,9 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_or
 -- DROP FOREIGN KEY `fk_org_user_uid`,
 -- DROP FOREIGN KEY `fk_org_user_ocd`;
 -- ALTER TABLE `zgo_user_union`
+-- DROP FOREIGN KEY `fk_user_union_user_id`,
 -- DROP FOREIGN KEY `fk_user_union_pid`,
--- DROP FOREIGN KEY `fk_user_union_org_cod`,
--- DROP FOREIGN KEY `fk_user_union_user_id`;
+-- DROP FOREIGN KEY `fk_user_union_org_cod`;
 -- ALTER TABLE `zgo_app_service_org`
 -- DROP FOREIGN KEY `fk_app_service_org_sid`,
 -- DROP FOREIGN KEY `fk_app_service_org_orcd`;
@@ -553,9 +553,9 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_or
 -- DROP FOREIGN KEY `fk_user_role_role_id`,
 -- DROP FOREIGN KEY `fk_user_role_org_cod`;
 -- ALTER TABLE `zgo_role_policy`
+-- DROP FOREIGN KEY `fk_role_policy_plcy_id`,
 -- DROP FOREIGN KEY `fk_role_policy_org_cod`,
--- DROP FOREIGN KEY `fk_role_policy_role_id`,
--- DROP FOREIGN KEY `fk_role_policy_plcy_id`;
+-- DROP FOREIGN KEY `fk_role_policy_role_id`;
 -- ALTER TABLE `zgo_user_policy`
 -- DROP FOREIGN KEY `fk_role_role_user_id`,
 -- DROP FOREIGN KEY `fk_role_role_plcy_id`,

@@ -193,16 +193,32 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	// 登陆用户
 	suser := schema.SigninUser{}
 	suser.AccountID = strconv.Itoa(account.ID) // SigninUser -> 1
-	// 用户
-	//user := schema.SigninGpaUser{}
-	//if err := user.QueryByID(a.Sqlx, account.UserID); err != nil {
-	//	logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
-	//	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
-	//} else if !user.Status {
-	//	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
-	//}
-	//suser.Name = user.Name  // SigninUser -> 2
-	//suser.UserID = user.KID // SigninUser -> 3
+	suser.UserIdxID = strconv.Itoa(account.UserID)
+
+	if account.OrgCod.Valid {
+		// 用户
+		user := schema.SigninGpaOrgUser{}
+		if err := user.QueryByUserAndOrg(a.Sqlx, account.UserID, account.OrgCod.String); err != nil {
+			logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
+		} else if user.Status != 1 {
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
+		}
+		suser.UserID = user.OrgUID
+		suser.UserName = user.OrgName
+		suser.OrgCode = user.OrgCode
+	} else {
+		// 用户
+		user := schema.SigninGpaUser{}
+		if err := user.QueryByID(a.Sqlx, account.UserID, ""); err != nil {
+			logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
+		} else if user.Status != 1 {
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
+		}
+		suser.UserID = user.KID
+		suser.UserName = user.Name
+	}
 	//
 	//domain := bDomain // 用户请求域名
 	//if domain == "" {
@@ -232,17 +248,16 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	//		suser.Audience = client.Audience.String // SigninUser -> 5
 	//	}
 	//}
-	//if suser.Issuer == "" {
-	//	suser.Issuer = c.Request.Host
-	//}
-	//if suser.Audience == "" {
-	//	suser.Audience = c.Request.Host
-	//}
-	//
-	//if last == nil {
-	//	last = a.lastNil
-	//}
-	//
+	if suser.Issuer == "" {
+		suser.Issuer = c.Request.Host
+	}
+	if suser.Audience == "" {
+		suser.Audience = c.Request.Host
+	}
+	if last == nil {
+		last = a.lastNil
+	}
+
 	//// 角色
 	//role := schema.SigninGpaRole{}
 	//if account.RoleID.Valid {
@@ -286,9 +301,8 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	//	}
 	//}
 	//suser.Role = role.KID                                                // SigninUser -> 6
-	//suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) // SigninUser -> 7 配置系统给定的TokenID
-	//
-	//suser.XidxID = strconv.Itoa(user.ID)
+	suser.OrgAdmin = "admin"
+	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) // SigninUser -> 7 配置系统给定的TokenID
 	return &suser, nil
 }
 
@@ -415,7 +429,7 @@ func (a *Signin) GetSignUserBySelectRole(c *gin.Context, account *schema.SigninG
 	if err := user.QueryByID(a.Sqlx, account.UserID, ""); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户不存在"})
-	} else if !user.Status {
+	} else if user.Status != 1 {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
 	}
 	suser.UserName = user.Name
@@ -508,6 +522,6 @@ func (a *PasswdCheck) Type() string {
 //============================================================================================
 
 // 空的上次登陆验证器
-func (a *Signin) lastNil(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error) {
+func (a *Signin) lastNil(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, error) {
 	return nil, nil
 }

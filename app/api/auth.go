@@ -2,6 +2,7 @@ package api
 
 import (
 	"errors"
+	"net/url"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
@@ -84,7 +85,7 @@ func (a *Auth) authorize(c *gin.Context) {
 	h.Set("X-Request-Z-User-Idx", user.GetUserIdxID())
 
 	h.Set("X-Request-Z-User-Kid", user.GetUserID())
-	h.Set("X-Request-Z-User-Name", user.GetUserName())
+	h.Set("X-Request-Z-User-Name", url.QueryEscape(user.GetUserName()))
 	h.Set("X-Request-Z-Roles", strings.Join(user.GetUserRoles(), ";"))
 
 	h.Set("X-Request-Z-Org-Code", user.GetOrgCode())

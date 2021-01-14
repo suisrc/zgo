@@ -68,7 +68,7 @@ type SigninGpaUser struct {
 	KID    string `db:"kid" json:"id"`
 	Name   string `db:"name" json:"name"`
 	Type   string `db:"type" json:"-"`
-	Status bool   `db:"status" json:"-"`
+	Status int    `db:"status" json:"-"`
 }
 
 // QueryByID sql 查询用户信息
@@ -118,10 +118,30 @@ func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, user
 //=========================================================================
 //=========================================================================
 
+// SigninGpaOrgUser user
+type SigninGpaOrgUser struct {
+	UserID  int    `db:"user_id"`
+	OrgCode string `db:"org_cod"`
+	OrgUID  string `db:"ouid"`
+	OrgName string `db:"name"`
+	Status  int    `db:"status"`
+}
+
+// QueryByUserAndOrg sql select
+func (a *SigninGpaOrgUser) QueryByUserAndOrg(sqlx *sqlx.DB, userid int, orgcode string) error {
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}organization_user where user_id=? and org_cod=?"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, userid, orgcode)
+}
+
+//=========================================================================
+//=========================================================================
+//=========================================================================
+
 // SigninGpaAccount account
 type SigninGpaAccount struct {
 	ID           int            `db:"id"`
-	PID          sql.NullInt64  `db:"account_pid"`   // 上级账户
+	PID          sql.NullInt64  `db:"pid"`           // 上级账户
 	Account      string         `db:"account"`       // 账户
 	AccountType  int            `db:"account_type"`  // 账户类型 1:name 2:mobile 3:email 4:openid 5:unionid 6:token
 	PlatformKID  sql.NullString `db:"platform_kid"`  // 账户归属平台
@@ -258,7 +278,6 @@ type SigninGpaAccountToken struct {
 	AccessExp    sql.NullInt64  `db:"access_expires"`
 	RefreshToken sql.NullString `db:"refresh_token"`
 	RefreshExp   sql.NullInt64  `db:"refresh_expires"`
-	CallMode     sql.NullInt64  `db:"call_mode"`
 	CallCount    sql.NullInt64  `db:"call_count"`
 	RefreshCount sql.NullInt64  `db:"refresh_count" set:"=refresh_count+1"`
 	LastIP       sql.NullString `db:"last_ip"`
@@ -272,21 +291,21 @@ type SigninGpaAccountToken struct {
 
 // QueryByRefreshToken rtk
 func (a *SigninGpaAccountToken) QueryByRefreshToken(sqlx *sqlx.DB, token string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where refresh_token=?"
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token where refresh_token=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, token)
 }
 
 // QueryByTokenKID kid
 func (a *SigninGpaAccountToken) QueryByTokenKID(sqlx *sqlx.DB, kid string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where token_kid=?"
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, kid)
 }
 
 // QueryByAccountAndClient kid
 func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, accountID int, clientIP string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account_token where account_id=?"
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token where account_id=?"
 	params := []interface{}{accountID}
 	if clientIP != "" {
 		SQL += " and last_ip=?"
@@ -295,13 +314,14 @@ func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, accountID
 	SQL += " order by access_expires desc limit 1"
 
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	log.Println(SQL)
 	return sqlx.Get(a, SQL, params...)
 }
 
 // UpdateAndSaveByTokenKID 更新
 func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, refresh bool) error {
 	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: a.TokenID, Create: !refresh, Update: refresh}
-	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(TablePrefix+"account_token", IDX, a)
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(TablePrefix+"token", IDX, a)
 	if err != nil {
 		return err
 	}
