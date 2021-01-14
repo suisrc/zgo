@@ -26,7 +26,7 @@ host = "192.168.3.35"
 port = 33006
 user = "plus"
 password = "LdkxiD938Sdc"
-dbname = "zgo"
+dbname = "zgo_dev"
 parameters = "charset=utf8&parseTime=True&loc=Asia%2FShanghai"
 
 [i18n]
