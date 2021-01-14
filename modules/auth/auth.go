@@ -55,6 +55,8 @@ type UserInfo interface {
 	GetOrgCode() string
 	// IsOrgAdmin 'admin'为用户管理员， GetOrgCode为空，提供
 	GetOrgAdmin() string
+	// GetOrgUsrID 获取用户ID
+	GetOrgUsrID() string
 
 	// GetDomain 领域标识
 	GetDomain() string

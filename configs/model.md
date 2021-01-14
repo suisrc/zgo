@@ -169,10 +169,11 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | user_id       | 用户ID         | 数值     |                                                     | int(11) NOT NULL, udx_org_user_kid,fk_org_user_uid->user.id |
-| org_cod       | 租户ID         | 字符串   |                                                     | varchar(64) NOT NULL, udx_org_user_kid,udx_org_user_ouid,udx_org_user_name,fk_org_user_ocd->organization.code |
+| org_cod       | 租户ID         | 字符串   |                                                     | varchar(64) NOT NULL, udx_org_user_kid,udx_org_user_union_kid,udx_org_user_name,fk_org_user_ocd->organization.code |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| ouid          | 唯一标识       | 字符串   |                                                     | varchar(64) NOT NULL, udx_org_user_ouid              |
+| union_kid     | 唯一标识       | 字符串   | 组织下唯一id                                        | varchar(64) NOT NULL, udx_org_user_union_kid         |
 | name          | 用户名         | 字符串   | 默认同unid                                          | varchar(64) NOT NULL, udx_org_user_name              |
+| custom_id     | 唯一标识       | 字符串   | 组织自定义id                                        | varchar(255)                                         |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | status        | 状态           | 数值     | 1:启用 0:禁用 2: 未激活, 3: 销户                    | tinyint(4) DEFAULT 1                                 |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |

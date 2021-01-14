@@ -86,10 +86,11 @@ func (a *Auth) authorize(c *gin.Context) {
 
 	h.Set("X-Request-Z-User-Kid", user.GetUserID())
 	h.Set("X-Request-Z-User-Name", url.QueryEscape(user.GetUserName()))
-	h.Set("X-Request-Z-Roles", strings.Join(user.GetUserRoles(), ";"))
+	h.Set("X-Request-Z-User-Roles", strings.Join(user.GetUserRoles(), ";"))
 
 	h.Set("X-Request-Z-Org-Code", user.GetOrgCode())
 	h.Set("X-Request-Z-Org-Admin", user.GetOrgAdmin())
+	h.Set("X-Request-Z-Org-Usrid", user.GetOrgUsrID())
 
 	h.Set("X-Request-Z-Domain", user.GetDomain())
 	h.Set("X-Request-Z-Issuer", user.GetIssuer())
@@ -97,7 +98,7 @@ func (a *Auth) authorize(c *gin.Context) {
 
 	//h.Set("X-Request-Z-Org-Code", "ORGCM3558")
 	if svc := h.Get("X-Request-Z-Svc"); svc != "" {
-		h.Set("X-Request-Z-Roles-Svc", strings.Join(user.GetUserSvcRoles(svc+":"), ";"))
+		h.Set("X-Request-Z-Svc-Roles", strings.Join(user.GetUserSvcRoles(svc+":"), ";"))
 	}
 
 	h.Set("X-Request-Z-Xip", helper.GetHostIP(c))

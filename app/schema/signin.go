@@ -120,11 +120,12 @@ func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, user
 
 // SigninGpaOrgUser user
 type SigninGpaOrgUser struct {
-	UserID  int    `db:"user_id"`
-	OrgCode string `db:"org_cod"`
-	OrgUID  string `db:"ouid"`
-	OrgName string `db:"name"`
-	Status  int    `db:"status"`
+	UserID   int            `db:"user_id"`
+	OrgCode  string         `db:"org_cod"`
+	UnionKID string         `db:"union_kid"`
+	Name     string         `db:"name"`
+	CustomID sql.NullString `db:"custom_id"`
+	Status   int            `db:"status"`
 }
 
 // QueryByUserAndOrg sql select

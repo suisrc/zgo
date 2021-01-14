@@ -42,6 +42,10 @@ INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `pa
 (6, null, 100002, "it-100002",   1, "123456", null, null, null, "ORGCM3558", 1, "赢迪-测试1"),
 (7, null, 100003, "it-100003",   1, "123456", null, null, null, "ORGCM3558", 1, "赢迪-测试1");
 
+-- 账户
+INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES
+(8, null, 100003, "zgo1",   1, "123456", null, null, null, "ORGCM3558", 1, "ZGO-测试1")
+(9, null, 100003, "plus1",   1, "123456", null, null, null, "ORGCM3558", 1, "PLUS-测试1")；
 
 -- 平台服务
 INSERT INTO `zgo_app_service`(`id`, `name`, `code`) VALUES 

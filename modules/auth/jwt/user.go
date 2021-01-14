@@ -57,6 +57,7 @@ func NewUserInfo(user auth.UserInfo) *UserClaims {
 
 	claims.OrgCode = user.GetOrgCode()
 	claims.OrgAdmin = user.GetOrgAdmin()
+	claims.OrgUsrID = user.GetOrgUsrID()
 
 	claims.Domain = user.GetDomain()
 	claims.Issuer = user.GetIssuer()
@@ -81,6 +82,7 @@ type UserClaims struct {
 
 	OrgCode  string `json:"ogc,omitempty"` // 组织code
 	OrgAdmin string `json:"oga,omitempty"` // admin'为用户管理员， GetOrgCode为空，提供
+	OrgUsrID string `json:"ogu,omitempty"` // 用户自定义ID
 
 	Domain string `json:"dom,omitempty"` // 业务域，主要用户当前用户跨应用的业务关联，暂时不使用
 	// Issuer -> Issuer
@@ -127,6 +129,11 @@ func (u *UserClaims) GetOrgCode() string {
 // GetOrgAdmin xxx
 func (u *UserClaims) GetOrgAdmin() string {
 	return u.OrgAdmin
+}
+
+// GetOrgUsrID xxx
+func (u *UserClaims) GetOrgUsrID() string {
+	return u.OrgUsrID
 }
 
 // GetDomain xxx

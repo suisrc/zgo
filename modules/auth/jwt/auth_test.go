@@ -143,6 +143,11 @@ func (u *UserInfo) GetOrgAdmin() string {
 	return ""
 }
 
+// GetOrgUsrID xxx
+func (u *UserInfo) GetOrgUsrID() string {
+	return ""
+}
+
 // GetUserSvcRoles xxx
 func (u *UserInfo) GetUserSvcRoles(svc string) []string {
 	return nil

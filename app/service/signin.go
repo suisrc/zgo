@@ -204,9 +204,11 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 		} else if user.Status != 1 {
 			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
 		}
-		suser.UserID = user.OrgUID
-		suser.UserName = user.OrgName
+		suser.UserID = user.UnionKID
+		suser.UserName = user.Name
 		suser.OrgCode = user.OrgCode
+		suser.OrgUsrID = user.CustomID.String
+		suser.OrgAdmin = "admin"
 	} else {
 		// 用户
 		user := schema.SigninGpaUser{}
@@ -301,7 +303,6 @@ func (a *Signin) GetSignUserByAutoRole(c *gin.Context, account *schema.SigninGpa
 	//	}
 	//}
 	//suser.Role = role.KID                                                // SigninUser -> 6
-	suser.OrgAdmin = "admin"
 	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) // SigninUser -> 7 配置系统给定的TokenID
 	return &suser, nil
 }
