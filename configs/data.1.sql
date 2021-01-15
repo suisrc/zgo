@@ -28,9 +28,9 @@ INSERT INTO `zgo_person`(`id`, `unique_name`, `first_name`, `last_name`) VALUES
 
 -- 租户用户
 -- 租户编码(40)： u<助记符3位><租户ID编码8位><时间编码8位><用户ID编码8位><机器码4位><随机码8位>
-INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `ouid`, `name`) VALUES
-(100002, "ORGCM3558", "u000xx10000120210112xx100002111100000001", "赢迪测试2"),
-(100003, "ORGCM3558", "u000xx10000120210112xx100003111100000001", "赢迪测试3");
+INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+(100002, "ORGCM3558", "u000xx10000120210112xx100002111100000001", "赢迪测试2", null),
+(100003, "ORGCM3558", "u000xx10000120210112xx100003111100000001", "赢迪测试3", null);
 
 -- 账户
 INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES 
@@ -115,13 +115,13 @@ INSERT INTO `zgo_role_policy`(`role_id`, `plcy_id`, `org_cod`) VALUES
 INSERT INTO `zgo_user_policy`(`user_id`, `plcy_id`, `org_cod`) VALUES 
 (100003, 3, 'ORGCM3558');
 
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------
 
--- 账户
-INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES
-(8, null, 100003, "zgo1",   1, "123456", null, null, null, "ORGCM3558", 1, "ZGO-测试1")
-(9, null, 100003, "plus1",   1, "123456", null, null, null, "ORGCM3558", 1, "PLUS-测试1")；
-
-
+-- 租户 code=P6M， 为平台租户
+INSERT INTO `zgo_organization`(`id`, `code`) VALUES
+(100101, "ORGCM3358");
 
 -- 编码说明
 -- 用户(48)： u<助记符3位><时间编码8位><ID编码8位><机器码4位><随机码24位>
@@ -142,26 +142,56 @@ INSERT INTO `zgo_user`(`id`, `type`, `kid`, `name`, `status`) VALUES
 (100112, "usr", "u00020210114xx1000031111x000000000x000000000x012", "陈哲",    1),
 (100113, "usr", "u00020210114xx1000031111x000000000x000000000x013", "李丹丹",  1),
 (100114, "usr", "u00020210114xx1000031111x000000000x000000000x014", "李根",    1),
-(100115, "usr", "u00020210114xx1000031111x000000000x000000000x015", "艾磊",    1);
+(100115, "usr", "u00020210114xx1000031111x000000000x000000000x015", "艾磊",    1),
+(100117, "usr", "u00020210114xx1000021111x000000000x000000000x117", "孙燕",    1),
+(100118, "usr", "u00020210114xx1000021111x000000000x000000000x118", "许亚楠",  1);
 
 -- 租户用户
 -- 租户编码(40)： u<助记符3位><租户ID编码8位><时间编码8位><用户ID编码8位><机器码4位><随机码8位>
-INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `ouid`, `name`) VALUES
-(100002, "ORGCM3558", "u000xx10000120210112xx100002111100000001", "赢迪测试2"),
-(100003, "ORGCM3558", "u000xx10000120210112xx100003111100000001", "赢迪测试3");
+INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+(100102, "ORGCM3558", "u000xx10000120210114xx100002111100000102", "李丹",   "NSY20102515"),
+(100103, "ORGCM3558", "u000xx10000120210114xx100002111100000103", "徐薇",   "PT20190124"),
+(100104, "ORGCM3558", "u000xx10000120210114xx100002111100000104", "游旋",   "HSH20180249"),
+(100105, "ORGCM3558", "u000xx10000120210114xx100002111100000105", "罗双慧", "HSH20160180"),
+(100106, "ORGCM3558", "u000xx10000120210114xx100002111100000106", "刘静1",  "HSH20070123"),
+(100107, "ORGCM3558", "u000xx10000120210114xx100002111100000107", "卢洪琦", "HSH20151304"),
+(100108, "ORGCM3558", "u000xx10000120210114xx100002111100000108", "庄园",   "OT202000002"),
+(100109, "ORGCM3558", "u000xx10000120210114xx100002111100000109", "吴小英", "PTB0420151382"),
+(100110, "ORGCM3558", "u000xx10000120210114xx100002111100000110", "邝艳秋", "HSH20160589"),
+(100111, "ORGCM3558", "u000xx10000120210114xx100002111100000111", "王明",   "SPOC20180044"),
+(100112, "ORGCM3558", "u000xx10000120210114xx100002111100000112", "程慧",   "PTB0420140083"),
+(100113, "ORGCM3558", "u000xx10000120210114xx100002111100000113", "徐浩",   "PTB0220161379"),
+(100114, "ORGCM3558", "u000xx10000120210114xx100002111100000114", "杨小慧", "PTB0720160124"),
+(100115, "ORGCM3558", "u000xx10000120210114xx100002111100000115", "李瑾",   "PTB0920151531"),
+(100117, "ORGCM3558", "u000xx10000120210114xx100002111100000117", "孙燕",   "HSH20121236"),
+(100118, "ORGCM3558", "u000xx10000120210114xx100002111100000118", "许亚楠", "HSH20121347");
 
-1.0编码	经营者	扮演的人的名字
-NSY20102515	孟凡宇	李丹
-PT20190124	曲海焦	徐薇
-HSH20180249	孙媛媛	游旋
-HSH20160180	罗双慧	罗双慧
-HSH20070123	艾准	刘静1
-HSH20151304	卢洪琦	卢洪琦
-OT202000002	庄园	庄园
-PTB0420151382	洪波	吴小英
-HSH20160589	秋	邝艳秋
-SPOC20180044	童静	王明
-PTB0420140083	陈哲	程慧
-PTB0220161379	李丹丹	徐浩
-PTB0720160124	李根	杨小慧
-PTB0920151531	艾磊	李瑾
+-- 账户
+INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES
+(102, null, 100102, "孟凡宇",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(103, null, 100102, "曲海焦",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(104, null, 100102, "孙媛媛",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(105, null, 100102, "罗双慧",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(106, null, 100102, "艾准",    1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(107, null, 100102, "卢洪琦",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(108, null, 100102, "庄园",    1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(109, null, 100102, "洪波",    1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(110, null, 100102, "邝艳秋",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(111, null, 100102, "童静",    1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(112, null, 100102, "陈哲",    1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(113, null, 100102, "李丹丹",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(114, null, 100102, "李根",    1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(115, null, 100102, "艾磊",    1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(117, null, 100116, "孙燕",    1, "123456", null, null, null, "ORGCM3558", 1, "测试001"),
+(118, null, 100118, "许亚楠",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001");
+
+
+
+INSERT INTO `zgo_user`(`id`, `type`, `kid`, `name`, `status`) VALUES
+(100118, "usr", "u00020210114xx1000021111x000000000x000000000x118", "许亚楠",  1);
+
+INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+(100118, "ORGCM3558", "u000xx10000120210114xx100002111100000118", "许亚楠",   "HSH20121347");
+
+INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES
+(118, null, 100118, "许亚楠",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001");

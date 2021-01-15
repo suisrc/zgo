@@ -51,7 +51,7 @@ type SigninResult struct {
 	ExpiresAt    int64  `json:"expires_at,omitempty"`                  // 过期时间
 	ExpiresIn    int64  `json:"expires_in,omitempty"`                  // 过期时间
 	RefreshToken string `json:"refresh_token,omitempty"`               // 刷新令牌
-	RefreshExp   int64  `json:"refresh_expires,omitempty"`             // 刷新令牌过期时间
+	RefreshExpAt int64  `json:"refresh_expires,omitempty"`             // 刷新令牌过期时间
 	Redirect     string `json:"redirect_uri,omitempty"`                // redirect_uri
 	// Message 和 Datas 一般用户发生异常后回显
 	Message string        `json:"message,omitempty"` // 消息,有限显示
@@ -276,9 +276,9 @@ type SigninGpaAccountToken struct {
 	TokenID      string         `db:"token_kid"`
 	AccountID    int            `db:"account_id"`
 	AccessToken  sql.NullString `db:"access_token"`
-	AccessExp    sql.NullInt64  `db:"access_expires"`
+	ExpiresAt    sql.NullInt64  `db:"expires_at"`
 	RefreshToken sql.NullString `db:"refresh_token"`
-	RefreshExp   sql.NullInt64  `db:"refresh_expires"`
+	RefreshExpAt sql.NullInt64  `db:"refresh_expires"`
 	CallCount    sql.NullInt64  `db:"call_count"`
 	RefreshCount sql.NullInt64  `db:"refresh_count" set:"=refresh_count+1"`
 	LastIP       sql.NullString `db:"last_ip"`
@@ -312,7 +312,7 @@ func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, accountID
 		SQL += " and last_ip=?"
 		params = append(params, clientIP)
 	}
-	SQL += " order by access_expires desc limit 1"
+	SQL += " order by expires_at desc limit 1"
 
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	log.Println(SQL)

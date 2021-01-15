@@ -332,7 +332,7 @@ CREATE TABLE `zgo_token` (
   `token_kid` varchar(64) DEFAULT NULL COMMENT '角色标识',
   `account_id` int(11) DEFAULT NULL COMMENT '令牌归属',
   `access_token` varchar(4096) DEFAULT NULL COMMENT '访问令牌',
-  `access_expires` int(11) DEFAULT 7200 COMMENT '访问令牌',
+  `expires_at` int(11) DEFAULT 7200 COMMENT '访问令牌',
   `refresh_token` varchar(255) DEFAULT NULL COMMENT '刷新令牌',
   `refresh_expires` int(11) DEFAULT 604800 COMMENT '刷新令牌',
   `call_count` int(11) DEFAULT 0 COMMENT '调用次数',
@@ -503,7 +503,7 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_or
 -- INSERT INTO `zgo_policy`(`id`, `ver`, `org_cod`, `name`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_policy_statement`(`plcy_id`, `effect`, `action`, `resource`, `condition`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_platform`(`id`, `kid`, `type`, `signin`, `org_cod`, `avatar`, `status`, `description`, `app_id`, `app_secret`, `agent_id`, `agent_secret`, `suite_id`, `suite_secret`, `authorize_url`, `token_url`, `profile_url`, `signin_url`, `js_secret`, `state_secret`, `callback`, `cb_domain`, `cb_scheme`, `cb_encrypt`, `cb_token`, `cb_encoding`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
--- INSERT INTO `zgo_token`(`token_kid`, `account_id`, `access_token`, `access_expires`, `refresh_token`, `refresh_expires`, `call_count`, `sync_lock`, `refresh_count`, `last_ip`, `last_at`, `error_code`, `error_message`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_token`(`token_kid`, `account_id`, `access_token`, `expires_at`, `refresh_token`, `refresh_expires`, `call_count`, `sync_lock`, `refresh_count`, `last_ip`, `last_at`, `error_code`, `error_message`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_tag_system`(`type`, `bid`, `tag`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_tag_custom`(`type`, `bid`, `tag`, `deleted`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_i18n_language`(`mid`, `lang`, `description`, `left_delim`, `right_delim`, `zero`, `one`, `two`, `few`, `many`, `other`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();

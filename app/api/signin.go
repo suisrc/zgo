@@ -91,7 +91,7 @@ func (a *Signin) signin(c *gin.Context) {
 		ExpiresAt:    token.GetExpiresAt(),
 		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
 		RefreshToken: token.GetRefreshToken(),
-		RefreshExp:   token.GetRefreshExp(),
+		RefreshExpAt: token.GetRefreshExpAt(),
 	}
 
 	// 记录登陆
@@ -123,10 +123,10 @@ func (a *Signin) last(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, e
 			TokenType:    "Bearer",
 			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
-			ExpiresAt:    o2a.AccessExp.Int64,
-			ExpiresIn:    o2a.AccessExp.Int64 - time.Now().Unix(),
+			ExpiresAt:    o2a.ExpiresAt.Int64,
+			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
 			RefreshToken: o2a.RefreshToken.String,
-			RefreshExp:   o2a.RefreshExp.Int64,
+			RefreshExpAt: o2a.RefreshExpAt.Int64,
 		})
 	}
 	return &o2a, nil
@@ -142,9 +142,9 @@ func (a *Signin) log(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, update b
 		TokenID:      u.GetTokenID(),
 		AccountID:    aid,
 		AccessToken:  sql.NullString{Valid: t.GetAccessToken() != "", String: t.GetAccessToken()},
-		AccessExp:    sql.NullInt64{Valid: t.GetExpiresAt() > 0, Int64: t.GetExpiresAt()},
+		ExpiresAt:    sql.NullInt64{Valid: t.GetExpiresAt() > 0, Int64: t.GetExpiresAt()},
 		RefreshToken: sql.NullString{Valid: refresh != "", String: refresh},
-		RefreshExp:   sql.NullInt64{Valid: t.GetRefreshExp() > 0, Int64: t.GetRefreshExp()},
+		RefreshExpAt: sql.NullInt64{Valid: t.GetRefreshExpAt() > 0, Int64: t.GetRefreshExpAt()},
 		LastIP:       sql.NullString{Valid: true, String: helper.GetClientIP(c)},
 		LastAt:       sql.NullTime{Valid: true, Time: time.Now()},
 	}
@@ -230,17 +230,18 @@ func (a *Signin) refresh(c *gin.Context) {
 			TokenType:    "Bearer",
 			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
-			ExpiresAt:    o2a.AccessExp.Int64,
-			ExpiresIn:    o2a.AccessExp.Int64 - time.Now().Unix(),
+			ExpiresAt:    o2a.ExpiresAt.Int64,
+			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
 			RefreshToken: o2a.RefreshToken.String,
-			RefreshExp:   o2a.RefreshExp.Int64,
+			RefreshExpAt: o2a.RefreshExpAt.Int64,
 		}
 		helper.ResSuccess(c, &result)
 		return
 	}
 
 	token, user, err := a.Auther.RefreshToken(c, o2a.AccessToken.String, func(usr auth.UserInfo, exp int) error {
-		if time.Now().Sub(o2a.CreatedAt.Time) > time.Duration(exp)*time.Second {
+		// if time.Now().Sub(o2a.CreatedAt.Time) > time.Duration(exp)*time.Second {
+		if time.Now().Unix() > o2a.RefreshExpAt.Int64 {
 			// return errors.New("token is expired")
 			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "刷新令牌过期"})
 		}
@@ -263,7 +264,7 @@ func (a *Signin) refresh(c *gin.Context) {
 		ExpiresAt:    token.GetExpiresAt(),
 		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
 		RefreshToken: token.GetRefreshToken(),
-		RefreshExp:   token.GetRefreshExp(),
+		RefreshExpAt: token.GetRefreshExpAt(),
 	}
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
@@ -361,7 +362,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 	//	redirect += "&expires_at=" + strconv.Itoa(int(token.GetExpiresAt()))
 	//	redirect += "&expires_in=" + strconv.Itoa(int(token.GetExpiresAt()-time.Now().Unix()))
 	//	redirect += "&refresh_token=" + token.GetRefreshToken()
-	//	redirect += "&refresh_expires=" + strconv.Itoa(int(token.GetRefreshExp()))
+	//	redirect += "&refresh_expires=" + strconv.Itoa(int(token.GetRefreshExpAt()))
 	//	redirect += "&token_type=Bearer"
 	//	redirect += "&trace_id=" + helper.GetTraceID(c)
 	//	// 重定向到登陆页面
@@ -378,7 +379,7 @@ func (a *Signin) oauth2(c *gin.Context) {
 	//	ExpiresAt:    token.GetExpiresAt(),
 	//	ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
 	//	RefreshToken: token.GetRefreshToken(),
-	//	RefreshExp:   token.GetRefreshExp(),
+	//	RefreshExpAt:   token.GetRefreshExpAt(),
 	//}
 	//
 	//// 记录登陆

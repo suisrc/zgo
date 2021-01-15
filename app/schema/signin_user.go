@@ -51,6 +51,9 @@ func (u *SigninUser) GetUserName() string {
 
 // GetUserRoles xxx
 func (u *SigninUser) GetUserRoles() []string {
+	if u.UserRoles == "" {
+		return nil
+	}
 	return strings.Split(u.UserRoles, ";")
 }
 
@@ -97,5 +100,9 @@ func (u *SigninUser) GetUserSvcRoles(svc string) []string {
 
 // SetUserRoles xxx
 func (u *SigninUser) SetUserRoles(roles []string) {
-	u.UserRoles = strings.Join(roles, ";")
+	if roles == nil {
+		u.UserRoles = ""
+	} else {
+		u.UserRoles = strings.Join(roles, ";")
+	}
 }

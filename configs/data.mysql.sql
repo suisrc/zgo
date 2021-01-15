@@ -28,9 +28,9 @@ INSERT INTO `zgo_person`(`id`, `unique_name`, `first_name`, `last_name`) VALUES
 
 -- 租户用户
 -- 租户编码(40)： u<助记符3位><租户ID编码8位><时间编码8位><用户ID编码8位><机器码4位><随机码8位>
-INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `ouid`, `name`) VALUES
-(100002, "ORGCM3558", "u000xx10000120210112xx100002111100000001", "u000xx10000120210112xx100002111100000001"),
-(100003, "ORGCM3558", "u000xx10000120210112xx100003111100000001", "u000xx10000120210112xx100003111100000001");
+INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+(100002, "ORGCM3558", "u000xx10000120210112xx100002111100000001", "赢迪测试2", null),
+(100003, "ORGCM3558", "u000xx10000120210112xx100003111100000001", "赢迪测试3", null);
 
 -- 账户
 INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES 
