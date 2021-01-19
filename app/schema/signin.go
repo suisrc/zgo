@@ -2,6 +2,7 @@ package schema
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"strings"
 
@@ -44,18 +45,17 @@ type SigninOfOAuth2 struct {
 
 // SigninResult 登陆返回值
 type SigninResult struct {
-	TokenStatus  string `json:"status" default:"ok"`                   // 'ok' | 'error' 不适用boolean类型是为了以后可以增加扩展
-	TokenID      string `json:"token_id,omitempty"`                    // 访问令牌ID
-	AccessToken  string `json:"access_token,omitempty"`                // 访问令牌
-	TokenType    string `json:"token_type,omitempty" default:"bearer"` // 令牌类型
-	ExpiresAt    int64  `json:"expires_at,omitempty"`                  // 过期时间
-	ExpiresIn    int64  `json:"expires_in,omitempty"`                  // 过期时间
-	RefreshToken string `json:"refresh_token,omitempty"`               // 刷新令牌
-	RefreshExpAt int64  `json:"refresh_expires,omitempty"`             // 刷新令牌过期时间
-	Redirect     string `json:"redirect_uri,omitempty"`                // redirect_uri
-	// Message 和 Datas 一般用户发生异常后回显
-	Message string        `json:"message,omitempty"` // 消息,有限显示
-	Params  []interface{} `json:"params,omitempty"`  // 多租户多角色的时候，返回角色，重新确认登录
+	TokenStatus  string        `json:"status" default:"ok"`                   // 'ok' | 'error' 不适用boolean类型是为了以后可以增加扩展
+	TokenID      string        `json:"token_id,omitempty"`                    // 访问令牌ID
+	AccessToken  string        `json:"access_token,omitempty"`                // 访问令牌
+	TokenType    string        `json:"token_type,omitempty" default:"bearer"` // 令牌类型
+	ExpiresAt    int64         `json:"expires_at,omitempty"`                  // 过期时间
+	ExpiresIn    int64         `json:"expires_in,omitempty"`                  // 过期时间
+	RefreshToken string        `json:"refresh_token,omitempty"`               // 刷新令牌
+	RefreshExpAt int64         `json:"refresh_expires,omitempty"`             // 刷新令牌过期时间
+	Redirect     string        `json:"redirect_uri,omitempty"`                // redirect_uri
+	Message      string        `json:"message,omitempty"`                     // 消息,有限显示 // Message 和 Datas 一般用户发生异常后回显
+	Params       []interface{} `json:"params,omitempty"`                      // 多租户多角色的时候，返回角色，重新确认登录
 }
 
 //=========================================================================
@@ -64,11 +64,11 @@ type SigninResult struct {
 
 // SigninGpaUser user
 type SigninGpaUser struct {
-	ID     int    `db:"id" json:"-"`
-	KID    string `db:"kid" json:"id"`
-	Name   string `db:"name" json:"name"`
-	Type   string `db:"type" json:"-"`
-	Status int    `db:"status" json:"-"`
+	ID     int        `db:"id" json:"-"`
+	KID    string     `db:"kid" json:"id"`
+	Name   string     `db:"name" json:"name"`
+	Type   string     `db:"type" json:"-"`
+	Status StatusType `db:"status" json:"-"`
 }
 
 // QueryByID sql 查询用户信息
@@ -125,12 +125,12 @@ type SigninGpaOrgUser struct {
 	UnionKID string         `db:"union_kid"`
 	Name     string         `db:"name"`
 	CustomID sql.NullString `db:"custom_id"`
-	Status   int            `db:"status"`
+	Status   StatusType     `db:"status"`
 }
 
 // QueryByUserAndOrg sql select
 func (a *SigninGpaOrgUser) QueryByUserAndOrg(sqlx *sqlx.DB, userid int, orgcode string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}organization_user where user_id=? and org_cod=?"
+	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}tenant_user where user_id=? and org_cod=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, userid, orgcode)
 }
@@ -153,7 +153,7 @@ type SigninGpaAccount struct {
 	PasswordSalt sql.NullString `db:"password_salt"` // 密码盐值
 	PasswordType sql.NullString `db:"password_type"` // 密码方式
 	VerifySecret sql.NullString `db:"verify_secret"` // 校验密钥
-	Status       bool           `db:"status"`        // 状态
+	Status       StatusType     `db:"status"`        // 状态
 	CreatedAt    sql.NullTime   `db:"created_at"`    // 创建时间
 	UpdatedAt    sql.NullTime   `db:"updated_at"`    // 更新时间
 	Version      sql.NullInt64  `db:"version" set:"=version+1"`
@@ -184,6 +184,29 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
 	// log.Println(SQL)
 	return sqlx.Get(a, SQL, params...)
+}
+
+// QueryByParentAccount sql select
+func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ int, kid string) error {
+	err := a.QueryByAccount(sqlx, acc, typ, kid)
+	if err != nil {
+		return err
+	}
+	if !a.PID.Valid {
+		return errors.New("account pid is null")
+	}
+	paccount := SigninGpaAccount{}
+	if err = paccount.QueryByID(sqlx, int(a.PID.Int64)); err != nil {
+		return err
+	} else if paccount.AccountType == int(AccountTypeName) || paccount.Status != StatusEnable {
+		// 主账户不是密码账户或者主账户被禁用
+		return errors.New("account pid is error")
+	}
+	// 使用主账户的密钥替换子账户
+	a.Password = paccount.Password
+	a.PasswordType = paccount.PasswordType
+	a.PasswordSalt = paccount.PasswordSalt
+	return nil
 }
 
 // QueryByAccountSkipStatus sql select
@@ -320,8 +343,8 @@ func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, accountID
 }
 
 // UpdateAndSaveByTokenKID 更新
-func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, refresh bool) error {
-	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: a.TokenID, Create: !refresh, Update: refresh}
+func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, update bool) error {
+	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: a.TokenID, Create: !update, Update: update}
 	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(TablePrefix+"token", IDX, a)
 	if err != nil {
 		return err

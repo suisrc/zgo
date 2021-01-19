@@ -1,6 +1,19 @@
 package service
 
-import "github.com/suisrc/zgo/app/model/gpa"
+import (
+	"time"
+
+	"github.com/suisrc/zgo/app/model/gpa"
+)
+
+// SenderInfo 发送者信息
+type SenderInfo struct {
+	Acc    string                 // 发送账户
+	Typ    int                    // 发送类型
+	KID    string                 // 平台标识
+	Expire time.Duration          // 验证码超时间隔
+	Sender func() (string, error) // 发送验证码
+}
 
 // MobileSender 手机号码发送器
 type MobileSender struct {

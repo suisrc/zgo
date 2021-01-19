@@ -1,0 +1,26 @@
+@base_url=http://127.0.0.1
+
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTEwNTM1ODcsImp0aSI6IjEybHlwNG01dGIyaGxqNHp2cjdpdDVxdTFnMGRiMDMiLCJpYXQiOjE2MTEwNDk5ODcsImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTA0OTk4Nywic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6ImlRejM0b19YS0d2TTUxVFp5bVJSOTVITjhUOHp3My1QR09ZXzQ1blhiLUU9IiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsIm9nYyI6Ik9SR0NNMzU1OCIsIm9ndSI6IjEyMyJ9.XhqdPIAr6t4EjdjLZkN9cJN2oMzfohYXeM6IlHt1NZxudYY4_hVc8QE7Jb7XkbVwyJIczamO8BCEx5981mw_Eg
+
+@refresh_token=1g0dbol12l3y2yfcpi0e34fmixgo4bi_6lqqdje2w2juu2alqmeh1g0dbp5sp21cys3w4y9
+
+###
+POST {{base_url}}/api/ka/v1/signin
+Content-Type: application/json
+
+{
+  "password": "123456",
+  "username": "it-100002"
+}
+
+###
+GET {{base_url}}/api/ka/v1/signin/refresh?refresh_token={{refresh_token}}
+Content-Type: application/json
+
+###
+GET {{base_url}}/authz
+Content-Type: application/json
+Authorization: Bearer {{bearer}}
+X-Request-Origin-Path: /api/lhdg/v2/user
+X-Request-Origin-Host:
+X-Request-Origin-Method: GET

@@ -186,7 +186,7 @@
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | kid           | 客户端标识     | 字符串   | jwt的header[kid], 请求未指定看audience              | varchar(64)  NOT NULL, udx_client_kid         |
 | secret        | 客户端密钥     | 字符串   | 主要用于应用间通信                                  | varchar(1024)                                        |
-| org_id        | 租户标识       | 数值     | 如果不为空,表示账户和租户绑定                       | int(11), fk_client_org_id->organization.id           |
+| org_id        | 租户标识       | 数值     | 如果不为空,表示账户和租户绑定                       | int(11), fk_client_org_id->tenant.id           |
 | audience      | 接受域         | 字符串   | 用于跳转或者登录授权                                | varchar(255)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | jwt_audience  | 令牌接受平台   | 字符串   |                                                     | varchar(255)                                         |
@@ -261,7 +261,7 @@ C应用:  [Client.kid]        应用ID
 | kid           | 唯一标识       | 字符串   | casbin系统使用， 全平台字段                         | varchar(64), udx_gateway_kid                         |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | name          | 角色名         | 字符串   | casbin系统使用， 租户内部字段                       | varchar(64), udx_gateway_name                        |
-| org_id        | 租户标识       | 字符串   | 角色归属的租户， 1表示平台                          | int(11), udx_gateway_name, fk_gateway_org_id->organization.id |
+| org_id        | 租户标识       | 字符串   | 角色归属的租户， 1表示平台                          | int(11), udx_gateway_name, fk_gateway_org_id->tenant.id |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | methods       | 方法           | 字符串   | (GET)(POST)(PUT)(DELETE)                            | varchar(64)                                          |
 | domains       | 接受域         | 字符串   | api.io, 不同于role中的audience，它只是跨区域表现    | varchar(255)                                         |

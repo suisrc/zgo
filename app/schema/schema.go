@@ -10,18 +10,35 @@ const (
 type AccountType int
 
 const (
-	// ATNone 无
-	ATNone AccountType = iota // value -> 0
-	// ATName 名称
-	ATName
-	// ATMobile 手机
-	ATMobile
-	// ATEmail 邮箱
-	ATEmail
-	// ATOpenid openid
-	ATOpenid
-	// ATUnionid unionid
-	ATUnionid
-	// ATToken token
-	ATToken
+	// AccountTypeNone 无
+	AccountTypeNone AccountType = iota // value -> 0
+	// AccountTypeName 名称
+	AccountTypeName
+	// AccountTypeMobile 手机
+	AccountTypeMobile
+	// AccountTypeEmail 邮箱
+	AccountTypeEmail
+	// AccountTypeOpenid openid
+	AccountTypeOpenid
+	// AccountTypeUnionid unionid
+	AccountTypeUnionid
+	// AccountTypeToken token
+	AccountTypeToken
+)
+
+// StatusType 数据状态
+type StatusType int
+
+// 1:启用 0:禁用 2: 未激活 3: 注销
+const (
+	// StatusDisable 禁用
+	StatusDisable StatusType = iota // value -> 0
+	// StatusEnable 启用
+	StatusEnable
+	// StatusNoActivate 为激活
+	StatusNoActivate
+	// StatusRevoked 注销
+	StatusRevoked
+	// StatusDeleted 删除
+	StatusDeleted
 )

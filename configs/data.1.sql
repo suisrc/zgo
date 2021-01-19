@@ -16,7 +16,7 @@ ALTER TABLE `zgo_user` AUTO_INCREMENT = 100000001;
 
 
 -- 租户 code=P6M， 为平台租户
-INSERT INTO `zgo_organization`(`id`, `code`) VALUES
+INSERT INTO `zgo_tenant`(`id`, `code`) VALUES
 (1,      "P6M"),
 (100001, "ORGCM3558");
 
@@ -28,7 +28,7 @@ INSERT INTO `zgo_person`(`id`, `unique_name`, `first_name`, `last_name`) VALUES
 
 -- 租户用户
 -- 租户编码(40)： u<助记符3位><租户ID编码8位><时间编码8位><用户ID编码8位><机器码4位><随机码8位>
-INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
 (100002, "ORGCM3558", "u000xx10000120210112xx100002111100000001", "赢迪测试2", null),
 (100003, "ORGCM3558", "u000xx10000120210112xx100003111100000001", "赢迪测试3", null);
 
@@ -120,7 +120,7 @@ INSERT INTO `zgo_user_policy`(`user_id`, `plcy_id`, `org_cod`) VALUES
 ----------------------------------------------------------------------------------------
 
 -- 租户 code=P6M， 为平台租户
-INSERT INTO `zgo_organization`(`id`, `code`) VALUES
+INSERT INTO `zgo_tenant`(`id`, `code`) VALUES
 (100101, "ORGCM3358");
 
 -- 编码说明
@@ -148,7 +148,7 @@ INSERT INTO `zgo_user`(`id`, `type`, `kid`, `name`, `status`) VALUES
 
 -- 租户用户
 -- 租户编码(40)： u<助记符3位><租户ID编码8位><时间编码8位><用户ID编码8位><机器码4位><随机码8位>
-INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
 (100102, "ORGCM3558", "u000xx10000120210114xx100002111100000102", "李丹",   "NSY20102515"),
 (100103, "ORGCM3558", "u000xx10000120210114xx100002111100000103", "徐薇",   "PT20190124"),
 (100104, "ORGCM3558", "u000xx10000120210114xx100002111100000104", "游旋",   "HSH20180249"),
@@ -190,7 +190,7 @@ INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `pa
 INSERT INTO `zgo_user`(`id`, `type`, `kid`, `name`, `status`) VALUES
 (100118, "usr", "u00020210114xx1000021111x000000000x000000000x118", "许亚楠",  1);
 
-INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
 (100118, "ORGCM3558", "u000xx10000120210114xx100002111100000118", "许亚楠",   "HSH20121347");
 
 INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES

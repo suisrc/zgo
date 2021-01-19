@@ -32,7 +32,7 @@ excludes=
 BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpassword为基础的位运算加密,不会影响其执行速度, 注意,其可以基于本身进行解密处理
 经过测试, MD5和SHA1 -> 0.170s/万次, BCR -> 667s/万次, MD5和SHA1的执行效率大约是BCR的4000~5000倍, 在非必要请求下,请使用MD5或者SHA1
 
-在系统中domain通常指的是域名, 用于区分子应用. 而架构中的域, 一般指的是领域, 这里通常指的是机构域, 即organization
+在系统中domain通常指的是域名, 用于区分子应用. 而架构中的域, 一般指的是领域, 这里通常指的是机构域, 即tenant
 
 注意， name账户只允许使用[a-z0-9_-.]， phone账户只允许使用[0-9-], 邮箱账户只允许使用[a-z0-9_-.]和唯一[@]
 
@@ -47,7 +47,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | user_id       | 用户标识       | 数值     |                                                     | int(11) NOT NULL, fk_account_user_id->user.id        |
 | role_id       | 角色标识       | 数值     | 如果不为空,表示账户和角色绑定                       | int(11), fk_account_role_id->user_role.id            |
-| org_cod       | 租户标识       | 字符串   | 如果不为空,表示账户和租户绑定                       | varchar(64), fk_account_org_cod->organization.code   |
+| org_cod       | 租户标识       | 字符串   | 如果不为空,表示账户和租户绑定                       | varchar(64), fk_account_org_cod->tenant.code         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | password      | 登录密码       | 字符串   | 1.密码, 2:签名密钥 3:密钥 4:密钥                    | varchar(255)                                         |
 | password_salt | 密码盐值       | 字符串   | 加密规则加固, 防止暴力破解                          | varchar(255)                                         |
@@ -135,14 +135,16 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | first_name    | 用户名         | 字符串   |                                                     | varchar(32)                                          |
 | last_name     | 用户名         | 字符串   |                                                     | varchar(32)                                          |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| org_cod       | 租户ID         | 字符串   | 租户构建的账户，暂时可能无法处理归属问题            | varchar(64), fk_person_org_cod->organization.code    |
+| org_cod       | 租户ID         | 字符串   | 租户构建的账户，暂时可能无法处理归属问题            | varchar(64), fk_person_org_cod->tenant.code          |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | string_1      | 备用字段       | 字符串   |                                                     | varchar(255)                                         |
 | number_1      | 备用字段       | 数值     |                                                     | int(11)                                              |
 
 ---
-## 租户实体(`organization`)
+## 租户/组织/机构实体(`tenant`)
+
+tenant
 
 租户基本属性， 
 注意：
@@ -151,9 +153,9 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_organization_id->user.id |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_tenant_id->user.id      |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| code          | 租户标识       | 字符串   |                                                     | varchar(64) NOT NULL, udx_organization_code          |
+| code          | 租户标识       | 字符串   |                                                     | varchar(64) NOT NULL, udx_tenant_code                |
 | hosted        | 租户被托管     | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 0                                 |
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -162,14 +164,14 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 
 
 ---
-## 租户用户主键(`organization_user`)
+## 租户用户主键(`tenant_user`)
 
 人员归属租户产生的联合ID
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | user_id       | 用户ID         | 数值     |                                                     | int(11) NOT NULL, udx_org_user_kid,fk_org_user_uid->user.id |
-| org_cod       | 租户ID         | 字符串   |                                                     | varchar(64) NOT NULL, udx_org_user_kid,udx_org_user_union_kid,udx_org_user_name,fk_org_user_ocd->organization.code |
+| org_cod       | 租户ID         | 字符串   |                                                     | varchar(64) NOT NULL, udx_org_user_kid,udx_org_user_union_kid,udx_org_user_name,fk_org_user_ocd->tenant.code |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | union_kid     | 唯一标识       | 字符串   | 组织下唯一id                                        | varchar(64) NOT NULL, udx_org_user_union_kid         |
 | name          | 用户名         | 字符串   | 默认同unid                                          | varchar(64) NOT NULL, udx_org_user_name              |
@@ -189,7 +191,7 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | pid           | 唯一标识       | 数值     | 归一依赖                                            | int(11), fk_user_union_pid->user_union.id            |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| org_cod       | 租户ID         | 字符串   |                                                     | varchar(64), fk_user_union_org_cod->organization.code |
+| org_cod       | 租户ID         | 字符串   |                                                     | varchar(64), fk_user_union_org_cod->tenant.code |
 | user_id       | 用户ID         | 数值     |                                                     | int(11) NOT NULL, fk_user_union_user_id->user.id     |
 | type          | 归一方式       | 字符串   | 人归一时，验证用户归一方式                          | varchar(64)  NOT NULL, idx_user_union_type           |
 | type_id       | 归一标识       | 字符串   | 人归一时，验证用户归一主键                          | varchar(255), idx_user_union_type_id                 |
@@ -231,7 +233,7 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | svc_id        | 服务标识       | 数值     |                                                     | int(11) NOT NULL, fk_app_service_org_sid->app_service.id |
-| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64) NOT NULL, fk_app_service_org_orcd->organization.code |
+| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64) NOT NULL, fk_app_service_org_orcd->tenant.code |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | expired       | 授权有效期     | 时间格式 |                                                     | timestamp                                            |
 | status        | 状态           | 数值     | 1:启用 0:禁用 2:未激活 3: 删除 4: 欠费 5: 到期      | tinyint(4) DEFAULT 1                                 |
@@ -258,7 +260,7 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | svc_id        | 服务标识       | 数值     |                                                     | int(11) NOT NULL, fk_app_service_audience_sid->app_service.id |
-| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_app_service_audience_ocd->organization.code |
+| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_app_service_audience_ocd->tenant.code |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | audience      | 受众域         | 字符串   | 绑定服务                                            | varchar(255), udx_app_service_audience               |
 | resource      | 受众源         | 字符串   | 绑定服务                                            | varchar(255), udx_app_service_audience               |
@@ -286,7 +288,7 @@ gateway -> role -> role -> user -> role -> user
 | svc_id        | 服务标识       | 数值     |                                                     | int(11), fk_role_sid->app_service.id                 |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | name          | 角色名称       | 字符串   | casbin系统使用， 租户内部字段                       | varchar(64), udx_role_name                           |
-| org_cod       | 租户标识       | 字符串   | 角色归属的租户， 1表示平台                          | varchar(64), udx_role_name,fk_role_org_cod->organization.code |
+| org_cod       | 租户标识       | 字符串   | 角色归属的租户， 1表示平台                          | varchar(64), udx_role_name,fk_role_org_cod->tenant.code |
 | org_adm       | 管理员         | 数值     | 1:是管理员 0:普通用户 ->管理员跳过机构内部权限      | tinyint(4) DEFAULT 1                                 |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | status        | 状态           | 数值     | 1:启用 0:禁用 2:未激活(备用)                        | tinyint(4) DEFAULT 1                                 |
@@ -310,7 +312,7 @@ gateway -> role -> role -> user -> role -> user
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | pid           | 父节点标识     | 数值     |                                                     | int(11), fk_role_role_pid->role.id                   |
 | cid           | 子节点标识     | 数值     |                                                     | int(11), fk_role_role_cid->role.id                   |
-| org_cod       | 租户标识       | 数值     |                                                     | varchar(64), fk_role_role_org_cod->organization.code |
+| org_cod       | 租户标识       | 数值     |                                                     | varchar(64), fk_role_role_org_cod->tenant.code       |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
@@ -324,7 +326,7 @@ gateway -> role -> role -> user -> role -> user
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | user_id       | 账户标识       | 数值     |                                                     | int(11), fk_user_role_user_id->user.id               |
 | role_id       | 角色标识       | 数值     |                                                     | int(11), fk_user_role_role_id->role.id               |
-| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_user_role_org_cod->organization.code |
+| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_user_role_org_cod->tenant.code       |
 | expired       | 授权有效期     | 时间格式 |                                                     | timestamp                                            |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -340,7 +342,7 @@ gateway -> role -> role -> user -> role -> user
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | role_id       | 角色标识       | 数值     |                                                     | int(11), fk_role_policy_role_id->role.id             |
 | plcy_id       | 策略标识       | 数值     |                                                     | int(11), fk_role_policy_plcy_id->role.id             |
-| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_role_policy_org_cod->organization.code |
+| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_role_policy_org_cod->tenant.code     |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
@@ -355,7 +357,7 @@ gateway -> role -> role -> user -> role -> user
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | user_id       | 账户标识       | 数值     |                                                     | int(11), fk_role_role_user_id->user.id               |
 | plcy_id       | 策略标识       | 数值     |                                                     | int(11), fk_role_role_plcy_id->role.id               |
-| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_user_policy_org_cod->organization.code |
+| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_user_policy_org_cod->tenant.code     |
 | expired       | 授权有效期     | 时间格式 |                                                     | timestamp                                            |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -402,7 +404,7 @@ resource： 为数组结构， 使用“:”进行分割
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | ver           | 版本           | 字符串   |                                                     | varchar(16) DEFAULT '1'                              |
-| org_cod       | 组织标识       | 字符串   | 角色归属的组织， 1表示平台                          | varchar(64), udx_policy_name, fk_policy_org_cod->organization.code |
+| org_cod       | 组织标识       | 字符串   | 角色归属的组织， 1表示平台                          | varchar(64), udx_policy_name, fk_policy_org_cod->tenant.code |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | name          | 策略名称       | 字符串   | casbin系统使用， 组织内部字段                       | varchar(64), udx_policy_name                         |
 | status        | 状态           | 数值     | 1:启用 0:禁用 2:未激活                              | tinyint(4) DEFAULT 1                                 |
@@ -470,7 +472,7 @@ condition: 条件， 策略预计成立的条件
 | kid           | 三方标识       | 字符串   |                                                     | varchar(64)  NOT NULL, udx_oauth2_platform_kid       |
 | type          | 平台标识       | 字符串   | 1:WX 2:TB 3:JD 4:GITEA 5: WXQ 6...                  | varchar(32) NOT NULL                                 |
 | signin        | 可登陆         | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 0                                 |
-| org_cod       | 租户标识       | 字符串   | 如果不为空,表示账户和租户绑定                       | varchar(64), fk_platform_org_cod->organization.cod   |
+| org_cod       | 租户标识       | 字符串   | 如果不为空,表示账户和租户绑定                       | varchar(64), fk_platform_org_cod->tenant.cod         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | avatar        | 平台头像       | 字符串   |                                                     | varchar(255)                                         |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |

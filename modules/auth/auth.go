@@ -40,9 +40,7 @@ type UserInfo interface {
 	// GetTokenID 令牌ID, 主要用于验证或者销毁令牌等关于令牌的操作
 	GetTokenID() string
 	// GetUserAccount 登陆ID, 本身不具备任何意义,只是标记登陆方式, 使用token反向加密
-	GetAccountID() string
-	// GetUserIdxID 直接获取用户索引ID, 使用token反向加密
-	GetUserIdxID() string
+	GetAccount() string
 
 	// GetUserID 用户ID， GetOrgCode不为空(P6M开头的租户除外)，不提供
 	GetUserID() string

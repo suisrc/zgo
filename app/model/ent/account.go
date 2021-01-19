@@ -73,198 +73,213 @@ type Account struct {
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
-func (*Account) scanValues() []interface{} {
-	return []interface{}{
-		&sql.NullInt64{},  // id
-		&sql.NullString{}, // pid
-		&sql.NullString{}, // account
-		&sql.NullString{}, // account_typ
-		&sql.NullString{}, // account_kid
-		&sql.NullString{}, // password
-		&sql.NullString{}, // password_salt
-		&sql.NullString{}, // password_type
-		&sql.NullString{}, // verify_secret
-		&sql.NullString{}, // verify_type
-		&sql.NullInt64{},  // user_id
-		&sql.NullInt64{},  // role_id
-		&sql.NullInt64{},  // status
-		&sql.NullString{}, // description
-		&sql.NullString{}, // oa2_token
-		&sql.NullTime{},   // oa2_expired
-		&sql.NullString{}, // oa2_fake
-		&sql.NullInt64{},  // oa2_client
-		&sql.NullString{}, // creator
-		&sql.NullTime{},   // created_at
-		&sql.NullTime{},   // updated_at
-		&sql.NullInt64{},  // version
-		&sql.NullString{}, // string_1
-		&sql.NullString{}, // string_2
-		&sql.NullString{}, // string_3
-		&sql.NullInt64{},  // number_1
-		&sql.NullInt64{},  // number_2
-		&sql.NullInt64{},  // number_3
+func (*Account) scanValues(columns []string) ([]interface{}, error) {
+	values := make([]interface{}, len(columns))
+	for i := range columns {
+		switch columns[i] {
+		case account.FieldID, account.FieldUserID, account.FieldRoleID, account.FieldStatus, account.FieldOa2Client, account.FieldVersion, account.FieldNumber1, account.FieldNumber2, account.FieldNumber3:
+			values[i] = &sql.NullInt64{}
+		case account.FieldPid, account.FieldAccount, account.FieldAccountTyp, account.FieldAccountKid, account.FieldPassword, account.FieldPasswordSalt, account.FieldPasswordType, account.FieldVerifySecret, account.FieldVerifyType, account.FieldDescription, account.FieldOa2Token, account.FieldOa2Fake, account.FieldCreator, account.FieldString1, account.FieldString2, account.FieldString3:
+			values[i] = &sql.NullString{}
+		case account.FieldOa2Expired, account.FieldCreatedAt, account.FieldUpdatedAt:
+			values[i] = &sql.NullTime{}
+		default:
+			return nil, fmt.Errorf("unexpected column %q for type Account", columns[i])
+		}
 	}
+	return values, nil
 }
 
 // assignValues assigns the values that were returned from sql.Rows (after scanning)
 // to the Account fields.
-func (a *Account) assignValues(values ...interface{}) error {
-	if m, n := len(values), len(account.Columns); m < n {
+func (a *Account) assignValues(columns []string, values []interface{}) error {
+	if m, n := len(values), len(columns); m < n {
 		return fmt.Errorf("mismatch number of scan values: %d != %d", m, n)
 	}
-	value, ok := values[0].(*sql.NullInt64)
-	if !ok {
-		return fmt.Errorf("unexpected type %T for field id", value)
-	}
-	a.ID = int(value.Int64)
-	values = values[1:]
-	if value, ok := values[0].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field pid", values[0])
-	} else if value.Valid {
-		a.Pid = value.String
-	}
-	if value, ok := values[1].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field account", values[1])
-	} else if value.Valid {
-		a.Account = value.String
-	}
-	if value, ok := values[2].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field account_typ", values[2])
-	} else if value.Valid {
-		a.AccountTyp = value.String
-	}
-	if value, ok := values[3].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field account_kid", values[3])
-	} else if value.Valid {
-		a.AccountKid = value.String
-	}
-	if value, ok := values[4].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field password", values[4])
-	} else if value.Valid {
-		a.Password = value.String
-	}
-	if value, ok := values[5].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field password_salt", values[5])
-	} else if value.Valid {
-		a.PasswordSalt = value.String
-	}
-	if value, ok := values[6].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field password_type", values[6])
-	} else if value.Valid {
-		a.PasswordType = value.String
-	}
-	if value, ok := values[7].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field verify_secret", values[7])
-	} else if value.Valid {
-		a.VerifySecret = value.String
-	}
-	if value, ok := values[8].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field verify_type", values[8])
-	} else if value.Valid {
-		a.VerifyType = value.String
-	}
-	if value, ok := values[9].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field user_id", values[9])
-	} else if value.Valid {
-		a.UserID = int(value.Int64)
-	}
-	if value, ok := values[10].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field role_id", values[10])
-	} else if value.Valid {
-		a.RoleID = int(value.Int64)
-	}
-	if value, ok := values[11].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field status", values[11])
-	} else if value.Valid {
-		a.Status = int(value.Int64)
-	}
-	if value, ok := values[12].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field description", values[12])
-	} else if value.Valid {
-		a.Description = value.String
-	}
-	if value, ok := values[13].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field oa2_token", values[13])
-	} else if value.Valid {
-		a.Oa2Token = value.String
-	}
-	if value, ok := values[14].(*sql.NullTime); !ok {
-		return fmt.Errorf("unexpected type %T for field oa2_expired", values[14])
-	} else if value.Valid {
-		a.Oa2Expired = value.Time
-	}
-	if value, ok := values[15].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field oa2_fake", values[15])
-	} else if value.Valid {
-		a.Oa2Fake = value.String
-	}
-	if value, ok := values[16].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field oa2_client", values[16])
-	} else if value.Valid {
-		a.Oa2Client = int(value.Int64)
-	}
-	if value, ok := values[17].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field creator", values[17])
-	} else if value.Valid {
-		a.Creator = value.String
-	}
-	if value, ok := values[18].(*sql.NullTime); !ok {
-		return fmt.Errorf("unexpected type %T for field created_at", values[18])
-	} else if value.Valid {
-		a.CreatedAt = value.Time
-	}
-	if value, ok := values[19].(*sql.NullTime); !ok {
-		return fmt.Errorf("unexpected type %T for field updated_at", values[19])
-	} else if value.Valid {
-		a.UpdatedAt = value.Time
-	}
-	if value, ok := values[20].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field version", values[20])
-	} else if value.Valid {
-		a.Version = int(value.Int64)
-	}
-	if value, ok := values[21].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field string_1", values[21])
-	} else if value.Valid {
-		a.String1 = value.String
-	}
-	if value, ok := values[22].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field string_2", values[22])
-	} else if value.Valid {
-		a.String2 = value.String
-	}
-	if value, ok := values[23].(*sql.NullString); !ok {
-		return fmt.Errorf("unexpected type %T for field string_3", values[23])
-	} else if value.Valid {
-		a.String3 = value.String
-	}
-	if value, ok := values[24].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field number_1", values[24])
-	} else if value.Valid {
-		a.Number1 = int(value.Int64)
-	}
-	if value, ok := values[25].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field number_2", values[25])
-	} else if value.Valid {
-		a.Number2 = int(value.Int64)
-	}
-	if value, ok := values[26].(*sql.NullInt64); !ok {
-		return fmt.Errorf("unexpected type %T for field number_3", values[26])
-	} else if value.Valid {
-		a.Number3 = int(value.Int64)
+	for i := range columns {
+		switch columns[i] {
+		case account.FieldID:
+			value, ok := values[i].(*sql.NullInt64)
+			if !ok {
+				return fmt.Errorf("unexpected type %T for field id", value)
+			}
+			a.ID = int(value.Int64)
+		case account.FieldPid:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field pid", values[i])
+			} else if value.Valid {
+				a.Pid = value.String
+			}
+		case account.FieldAccount:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field account", values[i])
+			} else if value.Valid {
+				a.Account = value.String
+			}
+		case account.FieldAccountTyp:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field account_typ", values[i])
+			} else if value.Valid {
+				a.AccountTyp = value.String
+			}
+		case account.FieldAccountKid:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field account_kid", values[i])
+			} else if value.Valid {
+				a.AccountKid = value.String
+			}
+		case account.FieldPassword:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field password", values[i])
+			} else if value.Valid {
+				a.Password = value.String
+			}
+		case account.FieldPasswordSalt:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field password_salt", values[i])
+			} else if value.Valid {
+				a.PasswordSalt = value.String
+			}
+		case account.FieldPasswordType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field password_type", values[i])
+			} else if value.Valid {
+				a.PasswordType = value.String
+			}
+		case account.FieldVerifySecret:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field verify_secret", values[i])
+			} else if value.Valid {
+				a.VerifySecret = value.String
+			}
+		case account.FieldVerifyType:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field verify_type", values[i])
+			} else if value.Valid {
+				a.VerifyType = value.String
+			}
+		case account.FieldUserID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value.Valid {
+				a.UserID = int(value.Int64)
+			}
+		case account.FieldRoleID:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field role_id", values[i])
+			} else if value.Valid {
+				a.RoleID = int(value.Int64)
+			}
+		case account.FieldStatus:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field status", values[i])
+			} else if value.Valid {
+				a.Status = int(value.Int64)
+			}
+		case account.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				a.Description = value.String
+			}
+		case account.FieldOa2Token:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field oa2_token", values[i])
+			} else if value.Valid {
+				a.Oa2Token = value.String
+			}
+		case account.FieldOa2Expired:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field oa2_expired", values[i])
+			} else if value.Valid {
+				a.Oa2Expired = value.Time
+			}
+		case account.FieldOa2Fake:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field oa2_fake", values[i])
+			} else if value.Valid {
+				a.Oa2Fake = value.String
+			}
+		case account.FieldOa2Client:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field oa2_client", values[i])
+			} else if value.Valid {
+				a.Oa2Client = int(value.Int64)
+			}
+		case account.FieldCreator:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field creator", values[i])
+			} else if value.Valid {
+				a.Creator = value.String
+			}
+		case account.FieldCreatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field created_at", values[i])
+			} else if value.Valid {
+				a.CreatedAt = value.Time
+			}
+		case account.FieldUpdatedAt:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field updated_at", values[i])
+			} else if value.Valid {
+				a.UpdatedAt = value.Time
+			}
+		case account.FieldVersion:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field version", values[i])
+			} else if value.Valid {
+				a.Version = int(value.Int64)
+			}
+		case account.FieldString1:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field string_1", values[i])
+			} else if value.Valid {
+				a.String1 = value.String
+			}
+		case account.FieldString2:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field string_2", values[i])
+			} else if value.Valid {
+				a.String2 = value.String
+			}
+		case account.FieldString3:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field string_3", values[i])
+			} else if value.Valid {
+				a.String3 = value.String
+			}
+		case account.FieldNumber1:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field number_1", values[i])
+			} else if value.Valid {
+				a.Number1 = int(value.Int64)
+			}
+		case account.FieldNumber2:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field number_2", values[i])
+			} else if value.Valid {
+				a.Number2 = int(value.Int64)
+			}
+		case account.FieldNumber3:
+			if value, ok := values[i].(*sql.NullInt64); !ok {
+				return fmt.Errorf("unexpected type %T for field number_3", values[i])
+			} else if value.Valid {
+				a.Number3 = int(value.Int64)
+			}
+		}
 	}
 	return nil
 }
 
 // Update returns a builder for updating this Account.
-// Note that, you need to call Account.Unwrap() before calling this method, if this Account
+// Note that you need to call Account.Unwrap() before calling this method if this Account
 // was returned from a transaction, and the transaction was committed or rolled back.
 func (a *Account) Update() *AccountUpdateOne {
 	return (&AccountClient{config: a.config}).UpdateOne(a)
 }
 
-// Unwrap unwraps the entity that was returned from a transaction after it was closed,
-// so that all next queries will be executed through the driver which created the transaction.
+// Unwrap unwraps the Account entity that was returned from a transaction after it was closed,
+// so that all future queries will be executed through the driver which created the transaction.
 func (a *Account) Unwrap() *Account {
 	tx, ok := a.config.driver.(*txDriver)
 	if !ok {

@@ -72,7 +72,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	}, nil
 }
 
-// BeginTx returns a transactional client with options.
+// BeginTx returns a transactional client with specified options.
 func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) {
 	if _, ok := c.driver.(*txDriver); ok {
 		return nil, fmt.Errorf("ent: cannot start a transaction within a transaction")
@@ -138,6 +138,11 @@ func (c *AccountClient) Create() *AccountCreate {
 	return &AccountCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
+// CreateBulk returns a builder for creating a bulk of Account entities.
+func (c *AccountClient) CreateBulk(builders ...*AccountCreate) *AccountCreateBulk {
+	return &AccountCreateBulk{config: c.config, builders: builders}
+}
+
 // Update returns an update builder for Account.
 func (c *AccountClient) Update() *AccountUpdate {
 	mutation := newAccountMutation(c.config, OpUpdate)
@@ -175,7 +180,7 @@ func (c *AccountClient) DeleteOneID(id int) *AccountDeleteOne {
 	return &AccountDeleteOne{builder}
 }
 
-// Create returns a query builder for Account.
+// Query returns a query builder for Account.
 func (c *AccountClient) Query() *AccountQuery {
 	return &AccountQuery{config: c.config}
 }
@@ -187,11 +192,11 @@ func (c *AccountClient) Get(ctx context.Context, id int) (*Account, error) {
 
 // GetX is like Get, but panics if an error occurs.
 func (c *AccountClient) GetX(ctx context.Context, id int) *Account {
-	a, err := c.Get(ctx, id)
+	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
 	}
-	return a
+	return obj
 }
 
 // Hooks returns the client hooks.

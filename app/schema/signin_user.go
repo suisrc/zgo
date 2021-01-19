@@ -11,8 +11,7 @@ var _ auth.UserInfo = &SigninUser{}
 // SigninUser 登陆用户信息
 type SigninUser struct {
 	TokenID   string
-	AccountID string
-	UserIdxID string
+	Account   string
 	UserID    string
 	UserName  string
 	UserRoles string
@@ -29,14 +28,9 @@ func (u *SigninUser) GetTokenID() string {
 	return u.TokenID
 }
 
-// GetAccountID xxx
-func (u *SigninUser) GetAccountID() string {
-	return u.AccountID
-}
-
-// GetUserIdxID xxx
-func (u *SigninUser) GetUserIdxID() string {
-	return u.UserIdxID
+// GetAccount xxx
+func (u *SigninUser) GetAccount() string {
+	return u.Account
 }
 
 // GetUserID xxx

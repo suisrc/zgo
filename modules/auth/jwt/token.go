@@ -19,7 +19,7 @@ type TokenInfo struct {
 	AccessToken  string `json:"access_token,omitempty"`    // 访问令牌
 	ExpiresAt    int64  `json:"expires_at,omitempty"`      // 访问令牌过期时间
 	RefreshToken string `json:"refresh_token,omitempty"`   // 刷新令牌
-	RefreshExpAt   int64  `json:"refresh_expires,omitempty"` // 刷新令牌过期时间
+	RefreshExpAt int64  `json:"refresh_expires,omitempty"` // 刷新令牌过期时间
 }
 
 // GetTokenID token id

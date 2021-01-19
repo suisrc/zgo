@@ -3,11 +3,13 @@ package api
 import (
 	"errors"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	i18n "github.com/suisrc/gin-i18n"
+	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/helper"
@@ -81,8 +83,11 @@ func (a *Auth) authorize(c *gin.Context) {
 
 	h := c.Writer.Header()
 	h.Set("X-Request-Z-Token-Kid", user.GetTokenID())
-	h.Set("X-Request-Z-Account", user.GetAccountID())
-	h.Set("X-Request-Z-User-Idx", user.GetUserIdxID())
+
+	if acc, usr, err := service.DecryptAccountWithUser(c, user.GetAccount(), user.GetTokenID()); err == nil {
+		h.Set("X-Request-Z-Account", strconv.Itoa(acc))
+		h.Set("X-Request-Z-User-Idx", strconv.Itoa(usr))
+	}
 
 	h.Set("X-Request-Z-User-Kid", user.GetUserID())
 	h.Set("X-Request-Z-User-Name", url.QueryEscape(user.GetUserName()))

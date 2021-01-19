@@ -67,7 +67,7 @@ func EncodeBaseX64(code int64) string {
 	var sbir strings.Builder
 	value := uint64(code) // go 没有无符号左移,需要使用无符号字符处理
 	for value != 0 {
-		current := value & 0X3F
+		current := value & 0x3F
 		sbir.WriteByte(code64[current])
 		value >>= 6
 	}
@@ -106,7 +106,7 @@ func EncodeBaseX32(code int64) string {
 	var sbir strings.Builder
 	value := uint64(code) // go 没有无符号左移,需要使用无符号字符处理
 	for value != 0 {
-		current := value & 0X1F
+		current := value & 0x1F
 		sbir.WriteByte(code36[current])
 		value >>= 5
 	}
@@ -143,4 +143,9 @@ func RandomBytes(length int) []byte {
 // RandomAes32 random aes 32
 func RandomAes32() string {
 	return Base64EncodeToString(RandomBytes(32))
+}
+
+// FixRandomAes32 random aes 32
+func FixRandomAes32(str string) string {
+	return FixPreStrLen(str, 32)
 }

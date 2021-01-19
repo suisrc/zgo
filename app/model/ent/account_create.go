@@ -20,121 +20,121 @@ type AccountCreate struct {
 	hooks    []Hook
 }
 
-// SetPid sets the pid field.
+// SetPid sets the "pid" field.
 func (ac *AccountCreate) SetPid(s string) *AccountCreate {
 	ac.mutation.SetPid(s)
 	return ac
 }
 
-// SetAccount sets the account field.
+// SetAccount sets the "account" field.
 func (ac *AccountCreate) SetAccount(s string) *AccountCreate {
 	ac.mutation.SetAccount(s)
 	return ac
 }
 
-// SetAccountTyp sets the account_typ field.
+// SetAccountTyp sets the "account_typ" field.
 func (ac *AccountCreate) SetAccountTyp(s string) *AccountCreate {
 	ac.mutation.SetAccountTyp(s)
 	return ac
 }
 
-// SetAccountKid sets the account_kid field.
+// SetAccountKid sets the "account_kid" field.
 func (ac *AccountCreate) SetAccountKid(s string) *AccountCreate {
 	ac.mutation.SetAccountKid(s)
 	return ac
 }
 
-// SetPassword sets the password field.
+// SetPassword sets the "password" field.
 func (ac *AccountCreate) SetPassword(s string) *AccountCreate {
 	ac.mutation.SetPassword(s)
 	return ac
 }
 
-// SetPasswordSalt sets the password_salt field.
+// SetPasswordSalt sets the "password_salt" field.
 func (ac *AccountCreate) SetPasswordSalt(s string) *AccountCreate {
 	ac.mutation.SetPasswordSalt(s)
 	return ac
 }
 
-// SetPasswordType sets the password_type field.
+// SetPasswordType sets the "password_type" field.
 func (ac *AccountCreate) SetPasswordType(s string) *AccountCreate {
 	ac.mutation.SetPasswordType(s)
 	return ac
 }
 
-// SetVerifySecret sets the verify_secret field.
+// SetVerifySecret sets the "verify_secret" field.
 func (ac *AccountCreate) SetVerifySecret(s string) *AccountCreate {
 	ac.mutation.SetVerifySecret(s)
 	return ac
 }
 
-// SetVerifyType sets the verify_type field.
+// SetVerifyType sets the "verify_type" field.
 func (ac *AccountCreate) SetVerifyType(s string) *AccountCreate {
 	ac.mutation.SetVerifyType(s)
 	return ac
 }
 
-// SetUserID sets the user_id field.
+// SetUserID sets the "user_id" field.
 func (ac *AccountCreate) SetUserID(i int) *AccountCreate {
 	ac.mutation.SetUserID(i)
 	return ac
 }
 
-// SetRoleID sets the role_id field.
+// SetRoleID sets the "role_id" field.
 func (ac *AccountCreate) SetRoleID(i int) *AccountCreate {
 	ac.mutation.SetRoleID(i)
 	return ac
 }
 
-// SetStatus sets the status field.
+// SetStatus sets the "status" field.
 func (ac *AccountCreate) SetStatus(i int) *AccountCreate {
 	ac.mutation.SetStatus(i)
 	return ac
 }
 
-// SetDescription sets the description field.
+// SetDescription sets the "description" field.
 func (ac *AccountCreate) SetDescription(s string) *AccountCreate {
 	ac.mutation.SetDescription(s)
 	return ac
 }
 
-// SetOa2Token sets the oa2_token field.
+// SetOa2Token sets the "oa2_token" field.
 func (ac *AccountCreate) SetOa2Token(s string) *AccountCreate {
 	ac.mutation.SetOa2Token(s)
 	return ac
 }
 
-// SetOa2Expired sets the oa2_expired field.
+// SetOa2Expired sets the "oa2_expired" field.
 func (ac *AccountCreate) SetOa2Expired(t time.Time) *AccountCreate {
 	ac.mutation.SetOa2Expired(t)
 	return ac
 }
 
-// SetOa2Fake sets the oa2_fake field.
+// SetOa2Fake sets the "oa2_fake" field.
 func (ac *AccountCreate) SetOa2Fake(s string) *AccountCreate {
 	ac.mutation.SetOa2Fake(s)
 	return ac
 }
 
-// SetOa2Client sets the oa2_client field.
+// SetOa2Client sets the "oa2_client" field.
 func (ac *AccountCreate) SetOa2Client(i int) *AccountCreate {
 	ac.mutation.SetOa2Client(i)
 	return ac
 }
 
-// SetCreator sets the creator field.
+// SetCreator sets the "creator" field.
 func (ac *AccountCreate) SetCreator(s string) *AccountCreate {
 	ac.mutation.SetCreator(s)
 	return ac
 }
 
-// SetCreatedAt sets the created_at field.
+// SetCreatedAt sets the "created_at" field.
 func (ac *AccountCreate) SetCreatedAt(t time.Time) *AccountCreate {
 	ac.mutation.SetCreatedAt(t)
 	return ac
 }
 
-// SetNillableCreatedAt sets the created_at field if the given value is not nil.
+// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
 func (ac *AccountCreate) SetNillableCreatedAt(t *time.Time) *AccountCreate {
 	if t != nil {
 		ac.SetCreatedAt(*t)
@@ -142,13 +142,13 @@ func (ac *AccountCreate) SetNillableCreatedAt(t *time.Time) *AccountCreate {
 	return ac
 }
 
-// SetUpdatedAt sets the updated_at field.
+// SetUpdatedAt sets the "updated_at" field.
 func (ac *AccountCreate) SetUpdatedAt(t time.Time) *AccountCreate {
 	ac.mutation.SetUpdatedAt(t)
 	return ac
 }
 
-// SetNillableUpdatedAt sets the updated_at field if the given value is not nil.
+// SetNillableUpdatedAt sets the "updated_at" field if the given value is not nil.
 func (ac *AccountCreate) SetNillableUpdatedAt(t *time.Time) *AccountCreate {
 	if t != nil {
 		ac.SetUpdatedAt(*t)
@@ -156,13 +156,13 @@ func (ac *AccountCreate) SetNillableUpdatedAt(t *time.Time) *AccountCreate {
 	return ac
 }
 
-// SetVersion sets the version field.
+// SetVersion sets the "version" field.
 func (ac *AccountCreate) SetVersion(i int) *AccountCreate {
 	ac.mutation.SetVersion(i)
 	return ac
 }
 
-// SetNillableVersion sets the version field if the given value is not nil.
+// SetNillableVersion sets the "version" field if the given value is not nil.
 func (ac *AccountCreate) SetNillableVersion(i *int) *AccountCreate {
 	if i != nil {
 		ac.SetVersion(*i)
@@ -170,37 +170,37 @@ func (ac *AccountCreate) SetNillableVersion(i *int) *AccountCreate {
 	return ac
 }
 
-// SetString1 sets the string_1 field.
+// SetString1 sets the "string_1" field.
 func (ac *AccountCreate) SetString1(s string) *AccountCreate {
 	ac.mutation.SetString1(s)
 	return ac
 }
 
-// SetString2 sets the string_2 field.
+// SetString2 sets the "string_2" field.
 func (ac *AccountCreate) SetString2(s string) *AccountCreate {
 	ac.mutation.SetString2(s)
 	return ac
 }
 
-// SetString3 sets the string_3 field.
+// SetString3 sets the "string_3" field.
 func (ac *AccountCreate) SetString3(s string) *AccountCreate {
 	ac.mutation.SetString3(s)
 	return ac
 }
 
-// SetNumber1 sets the number_1 field.
+// SetNumber1 sets the "number_1" field.
 func (ac *AccountCreate) SetNumber1(i int) *AccountCreate {
 	ac.mutation.SetNumber1(i)
 	return ac
 }
 
-// SetNumber2 sets the number_2 field.
+// SetNumber2 sets the "number_2" field.
 func (ac *AccountCreate) SetNumber2(i int) *AccountCreate {
 	ac.mutation.SetNumber2(i)
 	return ac
 }
 
-// SetNumber3 sets the number_3 field.
+// SetNumber3 sets the "number_3" field.
 func (ac *AccountCreate) SetNumber3(i int) *AccountCreate {
 	ac.mutation.SetNumber3(i)
 	return ac
@@ -213,101 +213,24 @@ func (ac *AccountCreate) Mutation() *AccountMutation {
 
 // Save creates the Account in the database.
 func (ac *AccountCreate) Save(ctx context.Context) (*Account, error) {
-	if _, ok := ac.mutation.Pid(); !ok {
-		return nil, &ValidationError{Name: "pid", err: errors.New("ent: missing required field \"pid\"")}
-	}
-	if _, ok := ac.mutation.Account(); !ok {
-		return nil, &ValidationError{Name: "account", err: errors.New("ent: missing required field \"account\"")}
-	}
-	if _, ok := ac.mutation.AccountTyp(); !ok {
-		return nil, &ValidationError{Name: "account_typ", err: errors.New("ent: missing required field \"account_typ\"")}
-	}
-	if _, ok := ac.mutation.AccountKid(); !ok {
-		return nil, &ValidationError{Name: "account_kid", err: errors.New("ent: missing required field \"account_kid\"")}
-	}
-	if _, ok := ac.mutation.Password(); !ok {
-		return nil, &ValidationError{Name: "password", err: errors.New("ent: missing required field \"password\"")}
-	}
-	if _, ok := ac.mutation.PasswordSalt(); !ok {
-		return nil, &ValidationError{Name: "password_salt", err: errors.New("ent: missing required field \"password_salt\"")}
-	}
-	if _, ok := ac.mutation.PasswordType(); !ok {
-		return nil, &ValidationError{Name: "password_type", err: errors.New("ent: missing required field \"password_type\"")}
-	}
-	if _, ok := ac.mutation.VerifySecret(); !ok {
-		return nil, &ValidationError{Name: "verify_secret", err: errors.New("ent: missing required field \"verify_secret\"")}
-	}
-	if _, ok := ac.mutation.VerifyType(); !ok {
-		return nil, &ValidationError{Name: "verify_type", err: errors.New("ent: missing required field \"verify_type\"")}
-	}
-	if _, ok := ac.mutation.UserID(); !ok {
-		return nil, &ValidationError{Name: "user_id", err: errors.New("ent: missing required field \"user_id\"")}
-	}
-	if _, ok := ac.mutation.RoleID(); !ok {
-		return nil, &ValidationError{Name: "role_id", err: errors.New("ent: missing required field \"role_id\"")}
-	}
-	if _, ok := ac.mutation.Status(); !ok {
-		return nil, &ValidationError{Name: "status", err: errors.New("ent: missing required field \"status\"")}
-	}
-	if _, ok := ac.mutation.Description(); !ok {
-		return nil, &ValidationError{Name: "description", err: errors.New("ent: missing required field \"description\"")}
-	}
-	if _, ok := ac.mutation.Oa2Token(); !ok {
-		return nil, &ValidationError{Name: "oa2_token", err: errors.New("ent: missing required field \"oa2_token\"")}
-	}
-	if _, ok := ac.mutation.Oa2Expired(); !ok {
-		return nil, &ValidationError{Name: "oa2_expired", err: errors.New("ent: missing required field \"oa2_expired\"")}
-	}
-	if _, ok := ac.mutation.Oa2Fake(); !ok {
-		return nil, &ValidationError{Name: "oa2_fake", err: errors.New("ent: missing required field \"oa2_fake\"")}
-	}
-	if _, ok := ac.mutation.Oa2Client(); !ok {
-		return nil, &ValidationError{Name: "oa2_client", err: errors.New("ent: missing required field \"oa2_client\"")}
-	}
-	if _, ok := ac.mutation.Creator(); !ok {
-		return nil, &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
-	}
-	if _, ok := ac.mutation.CreatedAt(); !ok {
-		v := account.DefaultCreatedAt()
-		ac.mutation.SetCreatedAt(v)
-	}
-	if _, ok := ac.mutation.UpdatedAt(); !ok {
-		v := account.DefaultUpdatedAt()
-		ac.mutation.SetUpdatedAt(v)
-	}
-	if _, ok := ac.mutation.Version(); !ok {
-		v := account.DefaultVersion
-		ac.mutation.SetVersion(v)
-	}
-	if _, ok := ac.mutation.String1(); !ok {
-		return nil, &ValidationError{Name: "string_1", err: errors.New("ent: missing required field \"string_1\"")}
-	}
-	if _, ok := ac.mutation.String2(); !ok {
-		return nil, &ValidationError{Name: "string_2", err: errors.New("ent: missing required field \"string_2\"")}
-	}
-	if _, ok := ac.mutation.String3(); !ok {
-		return nil, &ValidationError{Name: "string_3", err: errors.New("ent: missing required field \"string_3\"")}
-	}
-	if _, ok := ac.mutation.Number1(); !ok {
-		return nil, &ValidationError{Name: "number_1", err: errors.New("ent: missing required field \"number_1\"")}
-	}
-	if _, ok := ac.mutation.Number2(); !ok {
-		return nil, &ValidationError{Name: "number_2", err: errors.New("ent: missing required field \"number_2\"")}
-	}
-	if _, ok := ac.mutation.Number3(); !ok {
-		return nil, &ValidationError{Name: "number_3", err: errors.New("ent: missing required field \"number_3\"")}
-	}
 	var (
 		err  error
 		node *Account
 	)
+	ac.defaults()
 	if len(ac.hooks) == 0 {
+		if err = ac.check(); err != nil {
+			return nil, err
+		}
 		node, err = ac.sqlSave(ctx)
 	} else {
 		var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
 			mutation, ok := m.(*AccountMutation)
 			if !ok {
 				return nil, fmt.Errorf("unexpected mutation type %T", m)
+			}
+			if err = ac.check(); err != nil {
+				return nil, err
 			}
 			ac.mutation = mutation
 			node, err = ac.sqlSave(ctx)
@@ -333,8 +256,110 @@ func (ac *AccountCreate) SaveX(ctx context.Context) *Account {
 	return v
 }
 
+// defaults sets the default values of the builder before save.
+func (ac *AccountCreate) defaults() {
+	if _, ok := ac.mutation.CreatedAt(); !ok {
+		v := account.DefaultCreatedAt()
+		ac.mutation.SetCreatedAt(v)
+	}
+	if _, ok := ac.mutation.UpdatedAt(); !ok {
+		v := account.DefaultUpdatedAt()
+		ac.mutation.SetUpdatedAt(v)
+	}
+	if _, ok := ac.mutation.Version(); !ok {
+		v := account.DefaultVersion
+		ac.mutation.SetVersion(v)
+	}
+}
+
+// check runs all checks and user-defined validators on the builder.
+func (ac *AccountCreate) check() error {
+	if _, ok := ac.mutation.Pid(); !ok {
+		return &ValidationError{Name: "pid", err: errors.New("ent: missing required field \"pid\"")}
+	}
+	if _, ok := ac.mutation.Account(); !ok {
+		return &ValidationError{Name: "account", err: errors.New("ent: missing required field \"account\"")}
+	}
+	if _, ok := ac.mutation.AccountTyp(); !ok {
+		return &ValidationError{Name: "account_typ", err: errors.New("ent: missing required field \"account_typ\"")}
+	}
+	if _, ok := ac.mutation.AccountKid(); !ok {
+		return &ValidationError{Name: "account_kid", err: errors.New("ent: missing required field \"account_kid\"")}
+	}
+	if _, ok := ac.mutation.Password(); !ok {
+		return &ValidationError{Name: "password", err: errors.New("ent: missing required field \"password\"")}
+	}
+	if _, ok := ac.mutation.PasswordSalt(); !ok {
+		return &ValidationError{Name: "password_salt", err: errors.New("ent: missing required field \"password_salt\"")}
+	}
+	if _, ok := ac.mutation.PasswordType(); !ok {
+		return &ValidationError{Name: "password_type", err: errors.New("ent: missing required field \"password_type\"")}
+	}
+	if _, ok := ac.mutation.VerifySecret(); !ok {
+		return &ValidationError{Name: "verify_secret", err: errors.New("ent: missing required field \"verify_secret\"")}
+	}
+	if _, ok := ac.mutation.VerifyType(); !ok {
+		return &ValidationError{Name: "verify_type", err: errors.New("ent: missing required field \"verify_type\"")}
+	}
+	if _, ok := ac.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New("ent: missing required field \"user_id\"")}
+	}
+	if _, ok := ac.mutation.RoleID(); !ok {
+		return &ValidationError{Name: "role_id", err: errors.New("ent: missing required field \"role_id\"")}
+	}
+	if _, ok := ac.mutation.Status(); !ok {
+		return &ValidationError{Name: "status", err: errors.New("ent: missing required field \"status\"")}
+	}
+	if _, ok := ac.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New("ent: missing required field \"description\"")}
+	}
+	if _, ok := ac.mutation.Oa2Token(); !ok {
+		return &ValidationError{Name: "oa2_token", err: errors.New("ent: missing required field \"oa2_token\"")}
+	}
+	if _, ok := ac.mutation.Oa2Expired(); !ok {
+		return &ValidationError{Name: "oa2_expired", err: errors.New("ent: missing required field \"oa2_expired\"")}
+	}
+	if _, ok := ac.mutation.Oa2Fake(); !ok {
+		return &ValidationError{Name: "oa2_fake", err: errors.New("ent: missing required field \"oa2_fake\"")}
+	}
+	if _, ok := ac.mutation.Oa2Client(); !ok {
+		return &ValidationError{Name: "oa2_client", err: errors.New("ent: missing required field \"oa2_client\"")}
+	}
+	if _, ok := ac.mutation.Creator(); !ok {
+		return &ValidationError{Name: "creator", err: errors.New("ent: missing required field \"creator\"")}
+	}
+	if _, ok := ac.mutation.CreatedAt(); !ok {
+		return &ValidationError{Name: "created_at", err: errors.New("ent: missing required field \"created_at\"")}
+	}
+	if _, ok := ac.mutation.UpdatedAt(); !ok {
+		return &ValidationError{Name: "updated_at", err: errors.New("ent: missing required field \"updated_at\"")}
+	}
+	if _, ok := ac.mutation.Version(); !ok {
+		return &ValidationError{Name: "version", err: errors.New("ent: missing required field \"version\"")}
+	}
+	if _, ok := ac.mutation.String1(); !ok {
+		return &ValidationError{Name: "string_1", err: errors.New("ent: missing required field \"string_1\"")}
+	}
+	if _, ok := ac.mutation.String2(); !ok {
+		return &ValidationError{Name: "string_2", err: errors.New("ent: missing required field \"string_2\"")}
+	}
+	if _, ok := ac.mutation.String3(); !ok {
+		return &ValidationError{Name: "string_3", err: errors.New("ent: missing required field \"string_3\"")}
+	}
+	if _, ok := ac.mutation.Number1(); !ok {
+		return &ValidationError{Name: "number_1", err: errors.New("ent: missing required field \"number_1\"")}
+	}
+	if _, ok := ac.mutation.Number2(); !ok {
+		return &ValidationError{Name: "number_2", err: errors.New("ent: missing required field \"number_2\"")}
+	}
+	if _, ok := ac.mutation.Number3(); !ok {
+		return &ValidationError{Name: "number_3", err: errors.New("ent: missing required field \"number_3\"")}
+	}
+	return nil
+}
+
 func (ac *AccountCreate) sqlSave(ctx context.Context) (*Account, error) {
-	a, _spec := ac.createSpec()
+	_node, _spec := ac.createSpec()
 	if err := sqlgraph.CreateNode(ctx, ac.driver, _spec); err != nil {
 		if cerr, ok := isSQLConstraintError(err); ok {
 			err = cerr
@@ -342,13 +367,13 @@ func (ac *AccountCreate) sqlSave(ctx context.Context) (*Account, error) {
 		return nil, err
 	}
 	id := _spec.ID.Value.(int64)
-	a.ID = int(id)
-	return a, nil
+	_node.ID = int(id)
+	return _node, nil
 }
 
 func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 	var (
-		a     = &Account{config: ac.config}
+		_node = &Account{config: ac.config}
 		_spec = &sqlgraph.CreateSpec{
 			Table: account.Table,
 			ID: &sqlgraph.FieldSpec{
@@ -363,7 +388,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldPid,
 		})
-		a.Pid = value
+		_node.Pid = value
 	}
 	if value, ok := ac.mutation.Account(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -371,7 +396,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldAccount,
 		})
-		a.Account = value
+		_node.Account = value
 	}
 	if value, ok := ac.mutation.AccountTyp(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -379,7 +404,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldAccountTyp,
 		})
-		a.AccountTyp = value
+		_node.AccountTyp = value
 	}
 	if value, ok := ac.mutation.AccountKid(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -387,7 +412,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldAccountKid,
 		})
-		a.AccountKid = value
+		_node.AccountKid = value
 	}
 	if value, ok := ac.mutation.Password(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -395,7 +420,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldPassword,
 		})
-		a.Password = value
+		_node.Password = value
 	}
 	if value, ok := ac.mutation.PasswordSalt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -403,7 +428,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldPasswordSalt,
 		})
-		a.PasswordSalt = value
+		_node.PasswordSalt = value
 	}
 	if value, ok := ac.mutation.PasswordType(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -411,7 +436,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldPasswordType,
 		})
-		a.PasswordType = value
+		_node.PasswordType = value
 	}
 	if value, ok := ac.mutation.VerifySecret(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -419,7 +444,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldVerifySecret,
 		})
-		a.VerifySecret = value
+		_node.VerifySecret = value
 	}
 	if value, ok := ac.mutation.VerifyType(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -427,7 +452,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldVerifyType,
 		})
-		a.VerifyType = value
+		_node.VerifyType = value
 	}
 	if value, ok := ac.mutation.UserID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -435,7 +460,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldUserID,
 		})
-		a.UserID = value
+		_node.UserID = value
 	}
 	if value, ok := ac.mutation.RoleID(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -443,7 +468,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldRoleID,
 		})
-		a.RoleID = value
+		_node.RoleID = value
 	}
 	if value, ok := ac.mutation.Status(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -451,7 +476,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldStatus,
 		})
-		a.Status = value
+		_node.Status = value
 	}
 	if value, ok := ac.mutation.Description(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -459,7 +484,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldDescription,
 		})
-		a.Description = value
+		_node.Description = value
 	}
 	if value, ok := ac.mutation.Oa2Token(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -467,7 +492,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldOa2Token,
 		})
-		a.Oa2Token = value
+		_node.Oa2Token = value
 	}
 	if value, ok := ac.mutation.Oa2Expired(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -475,7 +500,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldOa2Expired,
 		})
-		a.Oa2Expired = value
+		_node.Oa2Expired = value
 	}
 	if value, ok := ac.mutation.Oa2Fake(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -483,7 +508,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldOa2Fake,
 		})
-		a.Oa2Fake = value
+		_node.Oa2Fake = value
 	}
 	if value, ok := ac.mutation.Oa2Client(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -491,7 +516,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldOa2Client,
 		})
-		a.Oa2Client = value
+		_node.Oa2Client = value
 	}
 	if value, ok := ac.mutation.Creator(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -499,7 +524,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldCreator,
 		})
-		a.Creator = value
+		_node.Creator = value
 	}
 	if value, ok := ac.mutation.CreatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -507,7 +532,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldCreatedAt,
 		})
-		a.CreatedAt = value
+		_node.CreatedAt = value
 	}
 	if value, ok := ac.mutation.UpdatedAt(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -515,7 +540,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldUpdatedAt,
 		})
-		a.UpdatedAt = value
+		_node.UpdatedAt = value
 	}
 	if value, ok := ac.mutation.Version(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -523,7 +548,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldVersion,
 		})
-		a.Version = value
+		_node.Version = value
 	}
 	if value, ok := ac.mutation.String1(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -531,7 +556,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldString1,
 		})
-		a.String1 = value
+		_node.String1 = value
 	}
 	if value, ok := ac.mutation.String2(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -539,7 +564,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldString2,
 		})
-		a.String2 = value
+		_node.String2 = value
 	}
 	if value, ok := ac.mutation.String3(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -547,7 +572,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldString3,
 		})
-		a.String3 = value
+		_node.String3 = value
 	}
 	if value, ok := ac.mutation.Number1(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -555,7 +580,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldNumber1,
 		})
-		a.Number1 = value
+		_node.Number1 = value
 	}
 	if value, ok := ac.mutation.Number2(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -563,7 +588,7 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldNumber2,
 		})
-		a.Number2 = value
+		_node.Number2 = value
 	}
 	if value, ok := ac.mutation.Number3(); ok {
 		_spec.Fields = append(_spec.Fields, &sqlgraph.FieldSpec{
@@ -571,7 +596,74 @@ func (ac *AccountCreate) createSpec() (*Account, *sqlgraph.CreateSpec) {
 			Value:  value,
 			Column: account.FieldNumber3,
 		})
-		a.Number3 = value
+		_node.Number3 = value
 	}
-	return a, _spec
+	return _node, _spec
+}
+
+// AccountCreateBulk is the builder for creating many Account entities in bulk.
+type AccountCreateBulk struct {
+	config
+	builders []*AccountCreate
+}
+
+// Save creates the Account entities in the database.
+func (acb *AccountCreateBulk) Save(ctx context.Context) ([]*Account, error) {
+	specs := make([]*sqlgraph.CreateSpec, len(acb.builders))
+	nodes := make([]*Account, len(acb.builders))
+	mutators := make([]Mutator, len(acb.builders))
+	for i := range acb.builders {
+		func(i int, root context.Context) {
+			builder := acb.builders[i]
+			builder.defaults()
+			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
+				mutation, ok := m.(*AccountMutation)
+				if !ok {
+					return nil, fmt.Errorf("unexpected mutation type %T", m)
+				}
+				if err := builder.check(); err != nil {
+					return nil, err
+				}
+				builder.mutation = mutation
+				nodes[i], specs[i] = builder.createSpec()
+				var err error
+				if i < len(mutators)-1 {
+					_, err = mutators[i+1].Mutate(root, acb.builders[i+1].mutation)
+				} else {
+					// Invoke the actual operation on the latest mutation in the chain.
+					if err = sqlgraph.BatchCreate(ctx, acb.driver, &sqlgraph.BatchCreateSpec{Nodes: specs}); err != nil {
+						if cerr, ok := isSQLConstraintError(err); ok {
+							err = cerr
+						}
+					}
+				}
+				mutation.done = true
+				if err != nil {
+					return nil, err
+				}
+				id := specs[i].ID.Value.(int64)
+				nodes[i].ID = int(id)
+				return nodes[i], nil
+			})
+			for i := len(builder.hooks) - 1; i >= 0; i-- {
+				mut = builder.hooks[i](mut)
+			}
+			mutators[i] = mut
+		}(i, ctx)
+	}
+	if len(mutators) > 0 {
+		if _, err := mutators[0].Mutate(ctx, acb.builders[0].mutation); err != nil {
+			return nil, err
+		}
+	}
+	return nodes, nil
+}
+
+// SaveX is like Save, but panics if an error occurs.
+func (acb *AccountCreateBulk) SaveX(ctx context.Context) []*Account {
+	v, err := acb.Save(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return v
 }

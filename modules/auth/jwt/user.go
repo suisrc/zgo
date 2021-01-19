@@ -13,26 +13,21 @@ import (
 // NewTokenID new ID
 func NewTokenID(_ati string) string {
 	var builder strings.Builder
+	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix())) // 7位
 	if ati, err := strconv.Atoi(_ati); err != nil {
 		builder.WriteString(_ati)
 	} else {
 		builder.WriteString(crypto.EncodeBaseX32(int64(ati)))
 	}
-	builder.WriteRune('t')
-	builder.WriteString(crypto.UUID(20))                         // 20位
-	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix())) // 7位
+	builder.WriteString(crypto.UUID(21)) // 21位
 	return builder.String()
 }
 
 // NewRefreshToken new refresh token
 func NewRefreshToken(_ati string) string {
 	var builder strings.Builder
-	if ati, err := strconv.Atoi(_ati); err != nil {
-		builder.WriteString(_ati)
-	} else {
-		builder.WriteString(crypto.EncodeBaseX32(int64(ati)))
-	}
-	builder.WriteRune('r')
+	builder.WriteString(_ati)
+	builder.WriteRune('_')
 	builder.WriteString(crypto.UUID(20))                         // 20位
 	builder.WriteString(crypto.EncodeBaseX32(time.Now().Unix())) // 7位
 	builder.WriteString(crypto.UUID(12))                         // 12位
@@ -45,11 +40,10 @@ func NewUserInfo(user auth.UserInfo) *UserClaims {
 
 	tokenID := user.GetTokenID()
 	if tokenID == "" {
-		tokenID = NewTokenID(user.GetAccountID())
+		tokenID = NewTokenID(user.GetAccount())
 	}
 	claims.Id = tokenID
-	claims.AccountID = user.GetAccountID()
-	claims.UserIdxID = user.GetUserIdxID()
+	claims.Account = user.GetAccount()
 
 	claims.Subject = user.GetUserID()
 	claims.UserName = user.GetUserName()
@@ -73,18 +67,14 @@ type UserClaims struct {
 	jwt.StandardClaims
 
 	// TokenID -> Id
-	AccountID string `json:"ati,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式, 使用token反向加密
-	UserIdxID string `json:"idx,omitempty"` // 用户的一种扩展ID, 为用户索引ID, 使用token反向加密
-
 	// UserID -> Subject -> sub, GetOrgCode为空，提供用户平台ID， 否则提供用户租户ID
+	Account   string   `json:"ati,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式, 使用token反向加密
 	UserName  string   `json:"nam,omitempty"` // 用户名
 	UserRoles []string `json:"ros,omitempty"` // 角色ID, 该角色是平台角色， 也可以理解为平台给机构的角色
-
-	OrgCode  string `json:"ogc,omitempty"` // 组织code
-	OrgAdmin string `json:"oga,omitempty"` // admin'为用户管理员， GetOrgCode为空，提供
-	OrgUsrID string `json:"ogu,omitempty"` // 用户自定义ID
-
-	Domain string `json:"dom,omitempty"` // 业务域，主要用户当前用户跨应用的业务关联，暂时不使用
+	OrgCode   string   `json:"ogc,omitempty"` // 组织/租户code
+	OrgAdmin  string   `json:"oga,omitempty"` // admin'为用户管理员， GetOrgCode为空，提供
+	OrgUsrID  string   `json:"ogu,omitempty"` // 用户自定义ID
+	Domain    string   `json:"dom,omitempty"` // 业务域，主要用户当前用户跨应用的业务关联，暂时不使用
 	// Issuer -> Issuer
 	// Audience -> Audience
 
@@ -96,14 +86,9 @@ func (u *UserClaims) GetTokenID() string {
 	return u.Id
 }
 
-// GetAccountID xxx
-func (u *UserClaims) GetAccountID() string {
-	return u.AccountID
-}
-
-// GetUserIdxID xxx
-func (u *UserClaims) GetUserIdxID() string {
-	return u.UserIdxID
+// GetAccount xxx
+func (u *UserClaims) GetAccount() string {
+	return u.Account
 }
 
 // GetUserID xxx

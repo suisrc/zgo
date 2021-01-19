@@ -5,6 +5,6 @@ package runtime
 // The schema-stitching logic is generated in github.com/suisrc/zgo/app/model/ent/runtime.go
 
 const (
-	Version = "v0.2.7"                                          // Version of ent codegen.
-	Sum     = "h1:8aBKtC2cBnjbu2y0LnHHYhfJhWXHVvyCbxtNO6jyBm4=" // Sum of ent codegen.
+	Version = "v0.5.4"                                          // Version of ent codegen.
+	Sum     = "h1:kIf2BQUdRJ7XrlTXzCyJCg69ar1K1FjFR2UQWRo/M8M=" // Sum of ent codegen.
 )

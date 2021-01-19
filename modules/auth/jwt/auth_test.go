@@ -93,13 +93,8 @@ func (u *UserInfo) GetTokenID() string {
 	return u.TokenID
 }
 
-// GetAccountID xxx
-func (u *UserInfo) GetAccountID() string {
-	return ""
-}
-
-// GetUserIdxID xxx
-func (u *UserInfo) GetUserIdxID() string {
+// GetAccount xxx
+func (u *UserInfo) GetAccount() string {
 	return ""
 }
 

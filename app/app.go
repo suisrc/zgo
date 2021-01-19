@@ -7,9 +7,8 @@ import (
 	cmd "github.com/suisrc/zgo/modules/app"
 
 	"github.com/gin-gonic/gin"
-
-	// 引入swagger
-	_ "github.com/suisrc/zgo/app/swagger"
+	// 引入swagger, 测试过程中， 使用restclient更方便一些， 先移除对swagger的支持
+	// _ "github.com/suisrc/zgo/app/swagger"
 )
 
 // SetConfigFile 设定配置文件
@@ -26,7 +25,7 @@ func SetVersion(s string) cmd.Option {
 	}
 }
 
-// SetBuildInjector 设定版本号
+// SetBuildInjector 设定注入助手
 func SetBuildInjector(f cmd.BuildInjector) cmd.Option {
 	return func(o *cmd.Options) {
 		o.BuildInjector = f

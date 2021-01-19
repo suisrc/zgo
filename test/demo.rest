@@ -5,12 +5,12 @@
 @base_url2=http://lhdg3.dev.k8s.local
 @base_url3=http://end-zgo-svc.test.svc.cluster.local
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTA1OTMzNTksImp0aSI6IjZ0YzVic2ZpbHVna2pnOGFxNGxwZTExZnZ2OWh2IiwiaWF0IjoxNjEwNTg5NzU5LCJpc3MiOiIxMjcuMC4wLjEiLCJuYmYiOjE2MTA1ODk3NTksInN1YiI6InUwMDB4eDEwMDAwMTIwMjEwMTEyeHgxMDAwMDIxMTExMDAwMDAwMDEiLCJhdGkiOiI2IiwiaWR4IjoiMTAwMDAyIiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsInJvcyI6WyIiXSwib2djIjoiT1JHQ00zNTU4Iiwib2dhIjoiYWRtaW4iLCJvZ3UiOiIxMjMifQ.z9dUWan2QWWfrDvMcm92iWGmqGmcpT7zRuWJMSkbYtesxvFb5s6q6HWgSbXSpyFcfjZ85EuefkJ8HX5RQjCAng
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJlbmQtemdvLXN2Yy50ZXN0LnN2Yy5jbHVzdGVyLmxvY2FsIiwiZXhwIjoxNjEwNzExMzA3LCJqdGkiOiI2dDI4MThzbWlhZmNhaDUweXU4djJ1MWcwMnNuciIsImlhdCI6MTYxMDcwNzcwNywiaXNzIjoiZW5kLXpnby1zdmMudGVzdC5zdmMuY2x1c3Rlci5sb2NhbCIsIm5iZiI6MTYxMDcwNzcwNywic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6IjYiLCJpZHgiOiIxMDAwMDIiLCJuYW0iOiLotaLov6rmtYvor5UyIiwib2djIjoiT1JHQ00zNTU4Iiwib2dhIjoiYWRtaW4iLCJvZ3UiOiIxMjMifQ.nur0ximZyQP0yRB1uj_bFI3wIRQjlpKEiwP33Np41-N4ax-VoeKCz4LAe2tw2pr_LO8LfrxMIifgb24uQOUlfQ
 
-@refresh_token=6ra5m2l32uqli4lyfe3ooy1fvu29lae1deiumox2z
+@refresh_token=6rjzfml01qzps8ot8i4o221g02snryxex1egppp3y
 
 ###
-POST {{base_url}}/api/ka/v1/signin
+POST {{base_url3}}/api/ka/v1/signin
 Content-Type: application/json
 
 {
@@ -34,7 +34,7 @@ Content-Type: application/json
 Authorization: Bearer {{bearer}}
 
 ###
-GET {{base_url}}/authz
+GET {{base_url3}}/authz
 Content-Type: application/json
 Authorization: Bearer {{bearer}}
 X-Request-Origin-Path: /api/lhdg/v2/user

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/suisrc/zgo/app/model/ent/account"
+	"github.com/suisrc/zgo/app/model/ent/predicate"
 
 	"github.com/facebook/ent"
 )
@@ -25,8 +26,7 @@ const (
 	TypeAccount = "Account"
 )
 
-// AccountMutation represents an operation that mutate the Accounts
-// nodes in the graph.
+// AccountMutation represents an operation that mutates the Account nodes in the graph.
 type AccountMutation struct {
 	config
 	op            Op
@@ -70,14 +70,15 @@ type AccountMutation struct {
 	clearedFields map[string]struct{}
 	done          bool
 	oldValue      func(context.Context) (*Account, error)
+	predicates    []predicate.Account
 }
 
 var _ ent.Mutation = (*AccountMutation)(nil)
 
-// accountOption allows to manage the mutation configuration using functional options.
+// accountOption allows management of the mutation configuration using functional options.
 type accountOption func(*AccountMutation)
 
-// newAccountMutation creates new mutation for $n.Name.
+// newAccountMutation creates new mutation for the Account entity.
 func newAccountMutation(c config, op Op, opts ...accountOption) *AccountMutation {
 	m := &AccountMutation{
 		config:        c,
@@ -91,7 +92,7 @@ func newAccountMutation(c config, op Op, opts ...accountOption) *AccountMutation
 	return m
 }
 
-// withAccountID sets the id field of the mutation.
+// withAccountID sets the ID field of the mutation.
 func withAccountID(id int) accountOption {
 	return func(m *AccountMutation) {
 		var (
@@ -142,8 +143,8 @@ func (m AccountMutation) Tx() (*Tx, error) {
 	return tx, nil
 }
 
-// ID returns the id value in the mutation. Note that, the id
-// is available only if it was provided to the builder.
+// ID returns the ID value in the mutation. Note that the ID
+// is only available if it was provided to the builder.
 func (m *AccountMutation) ID() (id int, exists bool) {
 	if m.id == nil {
 		return
@@ -151,12 +152,12 @@ func (m *AccountMutation) ID() (id int, exists bool) {
 	return *m.id, true
 }
 
-// SetPid sets the pid field.
+// SetPid sets the "pid" field.
 func (m *AccountMutation) SetPid(s string) {
 	m.pid = &s
 }
 
-// Pid returns the pid value in the mutation.
+// Pid returns the value of the "pid" field in the mutation.
 func (m *AccountMutation) Pid() (r string, exists bool) {
 	v := m.pid
 	if v == nil {
@@ -165,13 +166,12 @@ func (m *AccountMutation) Pid() (r string, exists bool) {
 	return *v, true
 }
 
-// OldPid returns the old pid value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldPid returns the old "pid" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldPid(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldPid is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldPid is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldPid requires an ID field in the mutation")
@@ -183,17 +183,17 @@ func (m *AccountMutation) OldPid(ctx context.Context) (v string, err error) {
 	return oldValue.Pid, nil
 }
 
-// ResetPid reset all changes of the "pid" field.
+// ResetPid resets all changes to the "pid" field.
 func (m *AccountMutation) ResetPid() {
 	m.pid = nil
 }
 
-// SetAccount sets the account field.
+// SetAccount sets the "account" field.
 func (m *AccountMutation) SetAccount(s string) {
 	m.account = &s
 }
 
-// Account returns the account value in the mutation.
+// Account returns the value of the "account" field in the mutation.
 func (m *AccountMutation) Account() (r string, exists bool) {
 	v := m.account
 	if v == nil {
@@ -202,13 +202,12 @@ func (m *AccountMutation) Account() (r string, exists bool) {
 	return *v, true
 }
 
-// OldAccount returns the old account value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldAccount returns the old "account" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldAccount(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldAccount is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldAccount is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldAccount requires an ID field in the mutation")
@@ -220,17 +219,17 @@ func (m *AccountMutation) OldAccount(ctx context.Context) (v string, err error) 
 	return oldValue.Account, nil
 }
 
-// ResetAccount reset all changes of the "account" field.
+// ResetAccount resets all changes to the "account" field.
 func (m *AccountMutation) ResetAccount() {
 	m.account = nil
 }
 
-// SetAccountTyp sets the account_typ field.
+// SetAccountTyp sets the "account_typ" field.
 func (m *AccountMutation) SetAccountTyp(s string) {
 	m.account_typ = &s
 }
 
-// AccountTyp returns the account_typ value in the mutation.
+// AccountTyp returns the value of the "account_typ" field in the mutation.
 func (m *AccountMutation) AccountTyp() (r string, exists bool) {
 	v := m.account_typ
 	if v == nil {
@@ -239,13 +238,12 @@ func (m *AccountMutation) AccountTyp() (r string, exists bool) {
 	return *v, true
 }
 
-// OldAccountTyp returns the old account_typ value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldAccountTyp returns the old "account_typ" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldAccountTyp(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldAccountTyp is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldAccountTyp is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldAccountTyp requires an ID field in the mutation")
@@ -257,17 +255,17 @@ func (m *AccountMutation) OldAccountTyp(ctx context.Context) (v string, err erro
 	return oldValue.AccountTyp, nil
 }
 
-// ResetAccountTyp reset all changes of the "account_typ" field.
+// ResetAccountTyp resets all changes to the "account_typ" field.
 func (m *AccountMutation) ResetAccountTyp() {
 	m.account_typ = nil
 }
 
-// SetAccountKid sets the account_kid field.
+// SetAccountKid sets the "account_kid" field.
 func (m *AccountMutation) SetAccountKid(s string) {
 	m.account_kid = &s
 }
 
-// AccountKid returns the account_kid value in the mutation.
+// AccountKid returns the value of the "account_kid" field in the mutation.
 func (m *AccountMutation) AccountKid() (r string, exists bool) {
 	v := m.account_kid
 	if v == nil {
@@ -276,13 +274,12 @@ func (m *AccountMutation) AccountKid() (r string, exists bool) {
 	return *v, true
 }
 
-// OldAccountKid returns the old account_kid value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldAccountKid returns the old "account_kid" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldAccountKid(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldAccountKid is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldAccountKid is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldAccountKid requires an ID field in the mutation")
@@ -294,17 +291,17 @@ func (m *AccountMutation) OldAccountKid(ctx context.Context) (v string, err erro
 	return oldValue.AccountKid, nil
 }
 
-// ResetAccountKid reset all changes of the "account_kid" field.
+// ResetAccountKid resets all changes to the "account_kid" field.
 func (m *AccountMutation) ResetAccountKid() {
 	m.account_kid = nil
 }
 
-// SetPassword sets the password field.
+// SetPassword sets the "password" field.
 func (m *AccountMutation) SetPassword(s string) {
 	m.password = &s
 }
 
-// Password returns the password value in the mutation.
+// Password returns the value of the "password" field in the mutation.
 func (m *AccountMutation) Password() (r string, exists bool) {
 	v := m.password
 	if v == nil {
@@ -313,13 +310,12 @@ func (m *AccountMutation) Password() (r string, exists bool) {
 	return *v, true
 }
 
-// OldPassword returns the old password value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldPassword returns the old "password" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldPassword(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldPassword is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldPassword is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldPassword requires an ID field in the mutation")
@@ -331,17 +327,17 @@ func (m *AccountMutation) OldPassword(ctx context.Context) (v string, err error)
 	return oldValue.Password, nil
 }
 
-// ResetPassword reset all changes of the "password" field.
+// ResetPassword resets all changes to the "password" field.
 func (m *AccountMutation) ResetPassword() {
 	m.password = nil
 }
 
-// SetPasswordSalt sets the password_salt field.
+// SetPasswordSalt sets the "password_salt" field.
 func (m *AccountMutation) SetPasswordSalt(s string) {
 	m.password_salt = &s
 }
 
-// PasswordSalt returns the password_salt value in the mutation.
+// PasswordSalt returns the value of the "password_salt" field in the mutation.
 func (m *AccountMutation) PasswordSalt() (r string, exists bool) {
 	v := m.password_salt
 	if v == nil {
@@ -350,13 +346,12 @@ func (m *AccountMutation) PasswordSalt() (r string, exists bool) {
 	return *v, true
 }
 
-// OldPasswordSalt returns the old password_salt value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldPasswordSalt returns the old "password_salt" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldPasswordSalt(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldPasswordSalt is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldPasswordSalt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldPasswordSalt requires an ID field in the mutation")
@@ -368,17 +363,17 @@ func (m *AccountMutation) OldPasswordSalt(ctx context.Context) (v string, err er
 	return oldValue.PasswordSalt, nil
 }
 
-// ResetPasswordSalt reset all changes of the "password_salt" field.
+// ResetPasswordSalt resets all changes to the "password_salt" field.
 func (m *AccountMutation) ResetPasswordSalt() {
 	m.password_salt = nil
 }
 
-// SetPasswordType sets the password_type field.
+// SetPasswordType sets the "password_type" field.
 func (m *AccountMutation) SetPasswordType(s string) {
 	m.password_type = &s
 }
 
-// PasswordType returns the password_type value in the mutation.
+// PasswordType returns the value of the "password_type" field in the mutation.
 func (m *AccountMutation) PasswordType() (r string, exists bool) {
 	v := m.password_type
 	if v == nil {
@@ -387,13 +382,12 @@ func (m *AccountMutation) PasswordType() (r string, exists bool) {
 	return *v, true
 }
 
-// OldPasswordType returns the old password_type value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldPasswordType returns the old "password_type" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldPasswordType(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldPasswordType is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldPasswordType is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldPasswordType requires an ID field in the mutation")
@@ -405,17 +399,17 @@ func (m *AccountMutation) OldPasswordType(ctx context.Context) (v string, err er
 	return oldValue.PasswordType, nil
 }
 
-// ResetPasswordType reset all changes of the "password_type" field.
+// ResetPasswordType resets all changes to the "password_type" field.
 func (m *AccountMutation) ResetPasswordType() {
 	m.password_type = nil
 }
 
-// SetVerifySecret sets the verify_secret field.
+// SetVerifySecret sets the "verify_secret" field.
 func (m *AccountMutation) SetVerifySecret(s string) {
 	m.verify_secret = &s
 }
 
-// VerifySecret returns the verify_secret value in the mutation.
+// VerifySecret returns the value of the "verify_secret" field in the mutation.
 func (m *AccountMutation) VerifySecret() (r string, exists bool) {
 	v := m.verify_secret
 	if v == nil {
@@ -424,13 +418,12 @@ func (m *AccountMutation) VerifySecret() (r string, exists bool) {
 	return *v, true
 }
 
-// OldVerifySecret returns the old verify_secret value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldVerifySecret returns the old "verify_secret" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldVerifySecret(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldVerifySecret is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldVerifySecret is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldVerifySecret requires an ID field in the mutation")
@@ -442,17 +435,17 @@ func (m *AccountMutation) OldVerifySecret(ctx context.Context) (v string, err er
 	return oldValue.VerifySecret, nil
 }
 
-// ResetVerifySecret reset all changes of the "verify_secret" field.
+// ResetVerifySecret resets all changes to the "verify_secret" field.
 func (m *AccountMutation) ResetVerifySecret() {
 	m.verify_secret = nil
 }
 
-// SetVerifyType sets the verify_type field.
+// SetVerifyType sets the "verify_type" field.
 func (m *AccountMutation) SetVerifyType(s string) {
 	m.verify_type = &s
 }
 
-// VerifyType returns the verify_type value in the mutation.
+// VerifyType returns the value of the "verify_type" field in the mutation.
 func (m *AccountMutation) VerifyType() (r string, exists bool) {
 	v := m.verify_type
 	if v == nil {
@@ -461,13 +454,12 @@ func (m *AccountMutation) VerifyType() (r string, exists bool) {
 	return *v, true
 }
 
-// OldVerifyType returns the old verify_type value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldVerifyType returns the old "verify_type" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldVerifyType(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldVerifyType is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldVerifyType is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldVerifyType requires an ID field in the mutation")
@@ -479,18 +471,18 @@ func (m *AccountMutation) OldVerifyType(ctx context.Context) (v string, err erro
 	return oldValue.VerifyType, nil
 }
 
-// ResetVerifyType reset all changes of the "verify_type" field.
+// ResetVerifyType resets all changes to the "verify_type" field.
 func (m *AccountMutation) ResetVerifyType() {
 	m.verify_type = nil
 }
 
-// SetUserID sets the user_id field.
+// SetUserID sets the "user_id" field.
 func (m *AccountMutation) SetUserID(i int) {
 	m.user_id = &i
 	m.adduser_id = nil
 }
 
-// UserID returns the user_id value in the mutation.
+// UserID returns the value of the "user_id" field in the mutation.
 func (m *AccountMutation) UserID() (r int, exists bool) {
 	v := m.user_id
 	if v == nil {
@@ -499,13 +491,12 @@ func (m *AccountMutation) UserID() (r int, exists bool) {
 	return *v, true
 }
 
-// OldUserID returns the old user_id value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldUserID returns the old "user_id" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldUserID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldUserID is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldUserID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldUserID requires an ID field in the mutation")
@@ -517,7 +508,7 @@ func (m *AccountMutation) OldUserID(ctx context.Context) (v int, err error) {
 	return oldValue.UserID, nil
 }
 
-// AddUserID adds i to user_id.
+// AddUserID adds i to the "user_id" field.
 func (m *AccountMutation) AddUserID(i int) {
 	if m.adduser_id != nil {
 		*m.adduser_id += i
@@ -526,7 +517,7 @@ func (m *AccountMutation) AddUserID(i int) {
 	}
 }
 
-// AddedUserID returns the value that was added to the user_id field in this mutation.
+// AddedUserID returns the value that was added to the "user_id" field in this mutation.
 func (m *AccountMutation) AddedUserID() (r int, exists bool) {
 	v := m.adduser_id
 	if v == nil {
@@ -535,19 +526,19 @@ func (m *AccountMutation) AddedUserID() (r int, exists bool) {
 	return *v, true
 }
 
-// ResetUserID reset all changes of the "user_id" field.
+// ResetUserID resets all changes to the "user_id" field.
 func (m *AccountMutation) ResetUserID() {
 	m.user_id = nil
 	m.adduser_id = nil
 }
 
-// SetRoleID sets the role_id field.
+// SetRoleID sets the "role_id" field.
 func (m *AccountMutation) SetRoleID(i int) {
 	m.role_id = &i
 	m.addrole_id = nil
 }
 
-// RoleID returns the role_id value in the mutation.
+// RoleID returns the value of the "role_id" field in the mutation.
 func (m *AccountMutation) RoleID() (r int, exists bool) {
 	v := m.role_id
 	if v == nil {
@@ -556,13 +547,12 @@ func (m *AccountMutation) RoleID() (r int, exists bool) {
 	return *v, true
 }
 
-// OldRoleID returns the old role_id value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldRoleID returns the old "role_id" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldRoleID(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldRoleID is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldRoleID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldRoleID requires an ID field in the mutation")
@@ -574,7 +564,7 @@ func (m *AccountMutation) OldRoleID(ctx context.Context) (v int, err error) {
 	return oldValue.RoleID, nil
 }
 
-// AddRoleID adds i to role_id.
+// AddRoleID adds i to the "role_id" field.
 func (m *AccountMutation) AddRoleID(i int) {
 	if m.addrole_id != nil {
 		*m.addrole_id += i
@@ -583,7 +573,7 @@ func (m *AccountMutation) AddRoleID(i int) {
 	}
 }
 
-// AddedRoleID returns the value that was added to the role_id field in this mutation.
+// AddedRoleID returns the value that was added to the "role_id" field in this mutation.
 func (m *AccountMutation) AddedRoleID() (r int, exists bool) {
 	v := m.addrole_id
 	if v == nil {
@@ -592,19 +582,19 @@ func (m *AccountMutation) AddedRoleID() (r int, exists bool) {
 	return *v, true
 }
 
-// ResetRoleID reset all changes of the "role_id" field.
+// ResetRoleID resets all changes to the "role_id" field.
 func (m *AccountMutation) ResetRoleID() {
 	m.role_id = nil
 	m.addrole_id = nil
 }
 
-// SetStatus sets the status field.
+// SetStatus sets the "status" field.
 func (m *AccountMutation) SetStatus(i int) {
 	m.status = &i
 	m.addstatus = nil
 }
 
-// Status returns the status value in the mutation.
+// Status returns the value of the "status" field in the mutation.
 func (m *AccountMutation) Status() (r int, exists bool) {
 	v := m.status
 	if v == nil {
@@ -613,13 +603,12 @@ func (m *AccountMutation) Status() (r int, exists bool) {
 	return *v, true
 }
 
-// OldStatus returns the old status value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldStatus returns the old "status" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldStatus(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldStatus is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldStatus is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldStatus requires an ID field in the mutation")
@@ -631,7 +620,7 @@ func (m *AccountMutation) OldStatus(ctx context.Context) (v int, err error) {
 	return oldValue.Status, nil
 }
 
-// AddStatus adds i to status.
+// AddStatus adds i to the "status" field.
 func (m *AccountMutation) AddStatus(i int) {
 	if m.addstatus != nil {
 		*m.addstatus += i
@@ -640,7 +629,7 @@ func (m *AccountMutation) AddStatus(i int) {
 	}
 }
 
-// AddedStatus returns the value that was added to the status field in this mutation.
+// AddedStatus returns the value that was added to the "status" field in this mutation.
 func (m *AccountMutation) AddedStatus() (r int, exists bool) {
 	v := m.addstatus
 	if v == nil {
@@ -649,18 +638,18 @@ func (m *AccountMutation) AddedStatus() (r int, exists bool) {
 	return *v, true
 }
 
-// ResetStatus reset all changes of the "status" field.
+// ResetStatus resets all changes to the "status" field.
 func (m *AccountMutation) ResetStatus() {
 	m.status = nil
 	m.addstatus = nil
 }
 
-// SetDescription sets the description field.
+// SetDescription sets the "description" field.
 func (m *AccountMutation) SetDescription(s string) {
 	m.description = &s
 }
 
-// Description returns the description value in the mutation.
+// Description returns the value of the "description" field in the mutation.
 func (m *AccountMutation) Description() (r string, exists bool) {
 	v := m.description
 	if v == nil {
@@ -669,13 +658,12 @@ func (m *AccountMutation) Description() (r string, exists bool) {
 	return *v, true
 }
 
-// OldDescription returns the old description value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldDescription returns the old "description" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldDescription(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldDescription is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldDescription is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldDescription requires an ID field in the mutation")
@@ -687,17 +675,17 @@ func (m *AccountMutation) OldDescription(ctx context.Context) (v string, err err
 	return oldValue.Description, nil
 }
 
-// ResetDescription reset all changes of the "description" field.
+// ResetDescription resets all changes to the "description" field.
 func (m *AccountMutation) ResetDescription() {
 	m.description = nil
 }
 
-// SetOa2Token sets the oa2_token field.
+// SetOa2Token sets the "oa2_token" field.
 func (m *AccountMutation) SetOa2Token(s string) {
 	m.oa2_token = &s
 }
 
-// Oa2Token returns the oa2_token value in the mutation.
+// Oa2Token returns the value of the "oa2_token" field in the mutation.
 func (m *AccountMutation) Oa2Token() (r string, exists bool) {
 	v := m.oa2_token
 	if v == nil {
@@ -706,13 +694,12 @@ func (m *AccountMutation) Oa2Token() (r string, exists bool) {
 	return *v, true
 }
 
-// OldOa2Token returns the old oa2_token value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldOa2Token returns the old "oa2_token" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldOa2Token(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldOa2Token is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldOa2Token is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldOa2Token requires an ID field in the mutation")
@@ -724,17 +711,17 @@ func (m *AccountMutation) OldOa2Token(ctx context.Context) (v string, err error)
 	return oldValue.Oa2Token, nil
 }
 
-// ResetOa2Token reset all changes of the "oa2_token" field.
+// ResetOa2Token resets all changes to the "oa2_token" field.
 func (m *AccountMutation) ResetOa2Token() {
 	m.oa2_token = nil
 }
 
-// SetOa2Expired sets the oa2_expired field.
+// SetOa2Expired sets the "oa2_expired" field.
 func (m *AccountMutation) SetOa2Expired(t time.Time) {
 	m.oa2_expired = &t
 }
 
-// Oa2Expired returns the oa2_expired value in the mutation.
+// Oa2Expired returns the value of the "oa2_expired" field in the mutation.
 func (m *AccountMutation) Oa2Expired() (r time.Time, exists bool) {
 	v := m.oa2_expired
 	if v == nil {
@@ -743,13 +730,12 @@ func (m *AccountMutation) Oa2Expired() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldOa2Expired returns the old oa2_expired value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldOa2Expired returns the old "oa2_expired" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldOa2Expired(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldOa2Expired is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldOa2Expired is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldOa2Expired requires an ID field in the mutation")
@@ -761,17 +747,17 @@ func (m *AccountMutation) OldOa2Expired(ctx context.Context) (v time.Time, err e
 	return oldValue.Oa2Expired, nil
 }
 
-// ResetOa2Expired reset all changes of the "oa2_expired" field.
+// ResetOa2Expired resets all changes to the "oa2_expired" field.
 func (m *AccountMutation) ResetOa2Expired() {
 	m.oa2_expired = nil
 }
 
-// SetOa2Fake sets the oa2_fake field.
+// SetOa2Fake sets the "oa2_fake" field.
 func (m *AccountMutation) SetOa2Fake(s string) {
 	m.oa2_fake = &s
 }
 
-// Oa2Fake returns the oa2_fake value in the mutation.
+// Oa2Fake returns the value of the "oa2_fake" field in the mutation.
 func (m *AccountMutation) Oa2Fake() (r string, exists bool) {
 	v := m.oa2_fake
 	if v == nil {
@@ -780,13 +766,12 @@ func (m *AccountMutation) Oa2Fake() (r string, exists bool) {
 	return *v, true
 }
 
-// OldOa2Fake returns the old oa2_fake value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldOa2Fake returns the old "oa2_fake" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldOa2Fake(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldOa2Fake is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldOa2Fake is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldOa2Fake requires an ID field in the mutation")
@@ -798,18 +783,18 @@ func (m *AccountMutation) OldOa2Fake(ctx context.Context) (v string, err error) 
 	return oldValue.Oa2Fake, nil
 }
 
-// ResetOa2Fake reset all changes of the "oa2_fake" field.
+// ResetOa2Fake resets all changes to the "oa2_fake" field.
 func (m *AccountMutation) ResetOa2Fake() {
 	m.oa2_fake = nil
 }
 
-// SetOa2Client sets the oa2_client field.
+// SetOa2Client sets the "oa2_client" field.
 func (m *AccountMutation) SetOa2Client(i int) {
 	m.oa2_client = &i
 	m.addoa2_client = nil
 }
 
-// Oa2Client returns the oa2_client value in the mutation.
+// Oa2Client returns the value of the "oa2_client" field in the mutation.
 func (m *AccountMutation) Oa2Client() (r int, exists bool) {
 	v := m.oa2_client
 	if v == nil {
@@ -818,13 +803,12 @@ func (m *AccountMutation) Oa2Client() (r int, exists bool) {
 	return *v, true
 }
 
-// OldOa2Client returns the old oa2_client value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldOa2Client returns the old "oa2_client" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldOa2Client(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldOa2Client is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldOa2Client is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldOa2Client requires an ID field in the mutation")
@@ -836,7 +820,7 @@ func (m *AccountMutation) OldOa2Client(ctx context.Context) (v int, err error) {
 	return oldValue.Oa2Client, nil
 }
 
-// AddOa2Client adds i to oa2_client.
+// AddOa2Client adds i to the "oa2_client" field.
 func (m *AccountMutation) AddOa2Client(i int) {
 	if m.addoa2_client != nil {
 		*m.addoa2_client += i
@@ -845,7 +829,7 @@ func (m *AccountMutation) AddOa2Client(i int) {
 	}
 }
 
-// AddedOa2Client returns the value that was added to the oa2_client field in this mutation.
+// AddedOa2Client returns the value that was added to the "oa2_client" field in this mutation.
 func (m *AccountMutation) AddedOa2Client() (r int, exists bool) {
 	v := m.addoa2_client
 	if v == nil {
@@ -854,18 +838,18 @@ func (m *AccountMutation) AddedOa2Client() (r int, exists bool) {
 	return *v, true
 }
 
-// ResetOa2Client reset all changes of the "oa2_client" field.
+// ResetOa2Client resets all changes to the "oa2_client" field.
 func (m *AccountMutation) ResetOa2Client() {
 	m.oa2_client = nil
 	m.addoa2_client = nil
 }
 
-// SetCreator sets the creator field.
+// SetCreator sets the "creator" field.
 func (m *AccountMutation) SetCreator(s string) {
 	m.creator = &s
 }
 
-// Creator returns the creator value in the mutation.
+// Creator returns the value of the "creator" field in the mutation.
 func (m *AccountMutation) Creator() (r string, exists bool) {
 	v := m.creator
 	if v == nil {
@@ -874,13 +858,12 @@ func (m *AccountMutation) Creator() (r string, exists bool) {
 	return *v, true
 }
 
-// OldCreator returns the old creator value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldCreator returns the old "creator" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldCreator(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldCreator is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldCreator is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldCreator requires an ID field in the mutation")
@@ -892,17 +875,17 @@ func (m *AccountMutation) OldCreator(ctx context.Context) (v string, err error) 
 	return oldValue.Creator, nil
 }
 
-// ResetCreator reset all changes of the "creator" field.
+// ResetCreator resets all changes to the "creator" field.
 func (m *AccountMutation) ResetCreator() {
 	m.creator = nil
 }
 
-// SetCreatedAt sets the created_at field.
+// SetCreatedAt sets the "created_at" field.
 func (m *AccountMutation) SetCreatedAt(t time.Time) {
 	m.created_at = &t
 }
 
-// CreatedAt returns the created_at value in the mutation.
+// CreatedAt returns the value of the "created_at" field in the mutation.
 func (m *AccountMutation) CreatedAt() (r time.Time, exists bool) {
 	v := m.created_at
 	if v == nil {
@@ -911,13 +894,12 @@ func (m *AccountMutation) CreatedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldCreatedAt returns the old created_at value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldCreatedAt returns the old "created_at" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldCreatedAt is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldCreatedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldCreatedAt requires an ID field in the mutation")
@@ -929,17 +911,17 @@ func (m *AccountMutation) OldCreatedAt(ctx context.Context) (v time.Time, err er
 	return oldValue.CreatedAt, nil
 }
 
-// ResetCreatedAt reset all changes of the "created_at" field.
+// ResetCreatedAt resets all changes to the "created_at" field.
 func (m *AccountMutation) ResetCreatedAt() {
 	m.created_at = nil
 }
 
-// SetUpdatedAt sets the updated_at field.
+// SetUpdatedAt sets the "updated_at" field.
 func (m *AccountMutation) SetUpdatedAt(t time.Time) {
 	m.updated_at = &t
 }
 
-// UpdatedAt returns the updated_at value in the mutation.
+// UpdatedAt returns the value of the "updated_at" field in the mutation.
 func (m *AccountMutation) UpdatedAt() (r time.Time, exists bool) {
 	v := m.updated_at
 	if v == nil {
@@ -948,13 +930,12 @@ func (m *AccountMutation) UpdatedAt() (r time.Time, exists bool) {
 	return *v, true
 }
 
-// OldUpdatedAt returns the old updated_at value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldUpdatedAt returns the old "updated_at" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldUpdatedAt is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldUpdatedAt is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldUpdatedAt requires an ID field in the mutation")
@@ -966,18 +947,18 @@ func (m *AccountMutation) OldUpdatedAt(ctx context.Context) (v time.Time, err er
 	return oldValue.UpdatedAt, nil
 }
 
-// ResetUpdatedAt reset all changes of the "updated_at" field.
+// ResetUpdatedAt resets all changes to the "updated_at" field.
 func (m *AccountMutation) ResetUpdatedAt() {
 	m.updated_at = nil
 }
 
-// SetVersion sets the version field.
+// SetVersion sets the "version" field.
 func (m *AccountMutation) SetVersion(i int) {
 	m.version = &i
 	m.addversion = nil
 }
 
-// Version returns the version value in the mutation.
+// Version returns the value of the "version" field in the mutation.
 func (m *AccountMutation) Version() (r int, exists bool) {
 	v := m.version
 	if v == nil {
@@ -986,13 +967,12 @@ func (m *AccountMutation) Version() (r int, exists bool) {
 	return *v, true
 }
 
-// OldVersion returns the old version value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldVersion returns the old "version" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldVersion(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldVersion is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldVersion is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldVersion requires an ID field in the mutation")
@@ -1004,7 +984,7 @@ func (m *AccountMutation) OldVersion(ctx context.Context) (v int, err error) {
 	return oldValue.Version, nil
 }
 
-// AddVersion adds i to version.
+// AddVersion adds i to the "version" field.
 func (m *AccountMutation) AddVersion(i int) {
 	if m.addversion != nil {
 		*m.addversion += i
@@ -1013,7 +993,7 @@ func (m *AccountMutation) AddVersion(i int) {
 	}
 }
 
-// AddedVersion returns the value that was added to the version field in this mutation.
+// AddedVersion returns the value that was added to the "version" field in this mutation.
 func (m *AccountMutation) AddedVersion() (r int, exists bool) {
 	v := m.addversion
 	if v == nil {
@@ -1022,18 +1002,18 @@ func (m *AccountMutation) AddedVersion() (r int, exists bool) {
 	return *v, true
 }
 
-// ResetVersion reset all changes of the "version" field.
+// ResetVersion resets all changes to the "version" field.
 func (m *AccountMutation) ResetVersion() {
 	m.version = nil
 	m.addversion = nil
 }
 
-// SetString1 sets the string_1 field.
+// SetString1 sets the "string_1" field.
 func (m *AccountMutation) SetString1(s string) {
 	m.string_1 = &s
 }
 
-// String1 returns the string_1 value in the mutation.
+// String1 returns the value of the "string_1" field in the mutation.
 func (m *AccountMutation) String1() (r string, exists bool) {
 	v := m.string_1
 	if v == nil {
@@ -1042,13 +1022,12 @@ func (m *AccountMutation) String1() (r string, exists bool) {
 	return *v, true
 }
 
-// OldString1 returns the old string_1 value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldString1 returns the old "string_1" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldString1(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldString1 is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldString1 is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldString1 requires an ID field in the mutation")
@@ -1060,17 +1039,17 @@ func (m *AccountMutation) OldString1(ctx context.Context) (v string, err error) 
 	return oldValue.String1, nil
 }
 
-// ResetString1 reset all changes of the "string_1" field.
+// ResetString1 resets all changes to the "string_1" field.
 func (m *AccountMutation) ResetString1() {
 	m.string_1 = nil
 }
 
-// SetString2 sets the string_2 field.
+// SetString2 sets the "string_2" field.
 func (m *AccountMutation) SetString2(s string) {
 	m.string_2 = &s
 }
 
-// String2 returns the string_2 value in the mutation.
+// String2 returns the value of the "string_2" field in the mutation.
 func (m *AccountMutation) String2() (r string, exists bool) {
 	v := m.string_2
 	if v == nil {
@@ -1079,13 +1058,12 @@ func (m *AccountMutation) String2() (r string, exists bool) {
 	return *v, true
 }
 
-// OldString2 returns the old string_2 value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldString2 returns the old "string_2" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldString2(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldString2 is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldString2 is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldString2 requires an ID field in the mutation")
@@ -1097,17 +1075,17 @@ func (m *AccountMutation) OldString2(ctx context.Context) (v string, err error) 
 	return oldValue.String2, nil
 }
 
-// ResetString2 reset all changes of the "string_2" field.
+// ResetString2 resets all changes to the "string_2" field.
 func (m *AccountMutation) ResetString2() {
 	m.string_2 = nil
 }
 
-// SetString3 sets the string_3 field.
+// SetString3 sets the "string_3" field.
 func (m *AccountMutation) SetString3(s string) {
 	m.string_3 = &s
 }
 
-// String3 returns the string_3 value in the mutation.
+// String3 returns the value of the "string_3" field in the mutation.
 func (m *AccountMutation) String3() (r string, exists bool) {
 	v := m.string_3
 	if v == nil {
@@ -1116,13 +1094,12 @@ func (m *AccountMutation) String3() (r string, exists bool) {
 	return *v, true
 }
 
-// OldString3 returns the old string_3 value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldString3 returns the old "string_3" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldString3(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldString3 is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldString3 is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldString3 requires an ID field in the mutation")
@@ -1134,18 +1111,18 @@ func (m *AccountMutation) OldString3(ctx context.Context) (v string, err error) 
 	return oldValue.String3, nil
 }
 
-// ResetString3 reset all changes of the "string_3" field.
+// ResetString3 resets all changes to the "string_3" field.
 func (m *AccountMutation) ResetString3() {
 	m.string_3 = nil
 }
 
-// SetNumber1 sets the number_1 field.
+// SetNumber1 sets the "number_1" field.
 func (m *AccountMutation) SetNumber1(i int) {
 	m.number_1 = &i
 	m.addnumber_1 = nil
 }
 
-// Number1 returns the number_1 value in the mutation.
+// Number1 returns the value of the "number_1" field in the mutation.
 func (m *AccountMutation) Number1() (r int, exists bool) {
 	v := m.number_1
 	if v == nil {
@@ -1154,13 +1131,12 @@ func (m *AccountMutation) Number1() (r int, exists bool) {
 	return *v, true
 }
 
-// OldNumber1 returns the old number_1 value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldNumber1 returns the old "number_1" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldNumber1(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldNumber1 is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldNumber1 is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldNumber1 requires an ID field in the mutation")
@@ -1172,7 +1148,7 @@ func (m *AccountMutation) OldNumber1(ctx context.Context) (v int, err error) {
 	return oldValue.Number1, nil
 }
 
-// AddNumber1 adds i to number_1.
+// AddNumber1 adds i to the "number_1" field.
 func (m *AccountMutation) AddNumber1(i int) {
 	if m.addnumber_1 != nil {
 		*m.addnumber_1 += i
@@ -1181,7 +1157,7 @@ func (m *AccountMutation) AddNumber1(i int) {
 	}
 }
 
-// AddedNumber1 returns the value that was added to the number_1 field in this mutation.
+// AddedNumber1 returns the value that was added to the "number_1" field in this mutation.
 func (m *AccountMutation) AddedNumber1() (r int, exists bool) {
 	v := m.addnumber_1
 	if v == nil {
@@ -1190,19 +1166,19 @@ func (m *AccountMutation) AddedNumber1() (r int, exists bool) {
 	return *v, true
 }
 
-// ResetNumber1 reset all changes of the "number_1" field.
+// ResetNumber1 resets all changes to the "number_1" field.
 func (m *AccountMutation) ResetNumber1() {
 	m.number_1 = nil
 	m.addnumber_1 = nil
 }
 
-// SetNumber2 sets the number_2 field.
+// SetNumber2 sets the "number_2" field.
 func (m *AccountMutation) SetNumber2(i int) {
 	m.number_2 = &i
 	m.addnumber_2 = nil
 }
 
-// Number2 returns the number_2 value in the mutation.
+// Number2 returns the value of the "number_2" field in the mutation.
 func (m *AccountMutation) Number2() (r int, exists bool) {
 	v := m.number_2
 	if v == nil {
@@ -1211,13 +1187,12 @@ func (m *AccountMutation) Number2() (r int, exists bool) {
 	return *v, true
 }
 
-// OldNumber2 returns the old number_2 value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldNumber2 returns the old "number_2" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldNumber2(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldNumber2 is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldNumber2 is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldNumber2 requires an ID field in the mutation")
@@ -1229,7 +1204,7 @@ func (m *AccountMutation) OldNumber2(ctx context.Context) (v int, err error) {
 	return oldValue.Number2, nil
 }
 
-// AddNumber2 adds i to number_2.
+// AddNumber2 adds i to the "number_2" field.
 func (m *AccountMutation) AddNumber2(i int) {
 	if m.addnumber_2 != nil {
 		*m.addnumber_2 += i
@@ -1238,7 +1213,7 @@ func (m *AccountMutation) AddNumber2(i int) {
 	}
 }
 
-// AddedNumber2 returns the value that was added to the number_2 field in this mutation.
+// AddedNumber2 returns the value that was added to the "number_2" field in this mutation.
 func (m *AccountMutation) AddedNumber2() (r int, exists bool) {
 	v := m.addnumber_2
 	if v == nil {
@@ -1247,19 +1222,19 @@ func (m *AccountMutation) AddedNumber2() (r int, exists bool) {
 	return *v, true
 }
 
-// ResetNumber2 reset all changes of the "number_2" field.
+// ResetNumber2 resets all changes to the "number_2" field.
 func (m *AccountMutation) ResetNumber2() {
 	m.number_2 = nil
 	m.addnumber_2 = nil
 }
 
-// SetNumber3 sets the number_3 field.
+// SetNumber3 sets the "number_3" field.
 func (m *AccountMutation) SetNumber3(i int) {
 	m.number_3 = &i
 	m.addnumber_3 = nil
 }
 
-// Number3 returns the number_3 value in the mutation.
+// Number3 returns the value of the "number_3" field in the mutation.
 func (m *AccountMutation) Number3() (r int, exists bool) {
 	v := m.number_3
 	if v == nil {
@@ -1268,13 +1243,12 @@ func (m *AccountMutation) Number3() (r int, exists bool) {
 	return *v, true
 }
 
-// OldNumber3 returns the old number_3 value of the Account.
-// If the Account object wasn't provided to the builder, the object is fetched
-// from the database.
-// An error is returned if the mutation operation is not UpdateOne, or database query fails.
+// OldNumber3 returns the old "number_3" field's value of the Account entity.
+// If the Account object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
 func (m *AccountMutation) OldNumber3(ctx context.Context) (v int, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, fmt.Errorf("OldNumber3 is allowed only on UpdateOne operations")
+		return v, fmt.Errorf("OldNumber3 is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
 		return v, fmt.Errorf("OldNumber3 requires an ID field in the mutation")
@@ -1286,7 +1260,7 @@ func (m *AccountMutation) OldNumber3(ctx context.Context) (v int, err error) {
 	return oldValue.Number3, nil
 }
 
-// AddNumber3 adds i to number_3.
+// AddNumber3 adds i to the "number_3" field.
 func (m *AccountMutation) AddNumber3(i int) {
 	if m.addnumber_3 != nil {
 		*m.addnumber_3 += i
@@ -1295,7 +1269,7 @@ func (m *AccountMutation) AddNumber3(i int) {
 	}
 }
 
-// AddedNumber3 returns the value that was added to the number_3 field in this mutation.
+// AddedNumber3 returns the value that was added to the "number_3" field in this mutation.
 func (m *AccountMutation) AddedNumber3() (r int, exists bool) {
 	v := m.addnumber_3
 	if v == nil {
@@ -1304,7 +1278,7 @@ func (m *AccountMutation) AddedNumber3() (r int, exists bool) {
 	return *v, true
 }
 
-// ResetNumber3 reset all changes of the "number_3" field.
+// ResetNumber3 resets all changes to the "number_3" field.
 func (m *AccountMutation) ResetNumber3() {
 	m.number_3 = nil
 	m.addnumber_3 = nil
@@ -1320,9 +1294,9 @@ func (m *AccountMutation) Type() string {
 	return m.typ
 }
 
-// Fields returns all fields that were changed during
-// this mutation. Note that, in order to get all numeric
-// fields that were in/decremented, call AddedFields().
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
 func (m *AccountMutation) Fields() []string {
 	fields := make([]string, 0, 27)
 	if m.pid != nil {
@@ -1409,9 +1383,9 @@ func (m *AccountMutation) Fields() []string {
 	return fields
 }
 
-// Field returns the value of a field with the given name.
-// The second boolean value indicates that this field was
-// not set, or was not define in the schema.
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
 func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case account.FieldPid:
@@ -1472,9 +1446,9 @@ func (m *AccountMutation) Field(name string) (ent.Value, bool) {
 	return nil, false
 }
 
-// OldField returns the old value of the field from the database.
-// An error is returned if the mutation operation is not UpdateOne,
-// or the query to the database was failed.
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
 func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
 	case account.FieldPid:
@@ -1535,9 +1509,9 @@ func (m *AccountMutation) OldField(ctx context.Context, name string) (ent.Value,
 	return nil, fmt.Errorf("unknown Account field %s", name)
 }
 
-// SetField sets the value for the given name. It returns an
-// error if the field is not defined in the schema, or if the
-// type mismatch the field type.
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
 func (m *AccountMutation) SetField(name string, value ent.Value) error {
 	switch name {
 	case account.FieldPid:
@@ -1733,8 +1707,8 @@ func (m *AccountMutation) SetField(name string, value ent.Value) error {
 	return fmt.Errorf("unknown Account field %s", name)
 }
 
-// AddedFields returns all numeric fields that were incremented
-// or decremented during this mutation.
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
 func (m *AccountMutation) AddedFields() []string {
 	var fields []string
 	if m.adduser_id != nil {
@@ -1764,9 +1738,9 @@ func (m *AccountMutation) AddedFields() []string {
 	return fields
 }
 
-// AddedField returns the numeric value that was in/decremented
-// from a field with the given name. The second value indicates
-// that this field was not set, or was not define in the schema.
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
 func (m *AccountMutation) AddedField(name string) (ent.Value, bool) {
 	switch name {
 	case account.FieldUserID:
@@ -1789,9 +1763,9 @@ func (m *AccountMutation) AddedField(name string) (ent.Value, bool) {
 	return nil, false
 }
 
-// AddField adds the value for the given name. It returns an
-// error if the field is not defined in the schema, or if the
-// type mismatch the field type.
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
 func (m *AccountMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	case account.FieldUserID:
@@ -1854,28 +1828,27 @@ func (m *AccountMutation) AddField(name string, value ent.Value) error {
 	return fmt.Errorf("unknown Account numeric field %s", name)
 }
 
-// ClearedFields returns all nullable fields that were cleared
-// during this mutation.
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
 func (m *AccountMutation) ClearedFields() []string {
 	return nil
 }
 
-// FieldCleared returns a boolean indicates if this field was
+// FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
 func (m *AccountMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
-// ClearField clears the value for the given name. It returns an
+// ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *AccountMutation) ClearField(name string) error {
 	return fmt.Errorf("unknown Account nullable field %s", name)
 }
 
-// ResetField resets all changes in the mutation regarding the
-// given field name. It returns an error if the field is not
-// defined in the schema.
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
 func (m *AccountMutation) ResetField(name string) error {
 	switch name {
 	case account.FieldPid:
@@ -1963,54 +1936,50 @@ func (m *AccountMutation) ResetField(name string) error {
 	return fmt.Errorf("unknown Account field %s", name)
 }
 
-// AddedEdges returns all edge names that were set/added in this
-// mutation.
+// AddedEdges returns all edge names that were set/added in this mutation.
 func (m *AccountMutation) AddedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
-// AddedIDs returns all ids (to other nodes) that were added for
-// the given edge name.
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
 func (m *AccountMutation) AddedIDs(name string) []ent.Value {
 	return nil
 }
 
-// RemovedEdges returns all edge names that were removed in this
-// mutation.
+// RemovedEdges returns all edge names that were removed in this mutation.
 func (m *AccountMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
-// RemovedIDs returns all ids (to other nodes) that were removed for
-// the given edge name.
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
 func (m *AccountMutation) RemovedIDs(name string) []ent.Value {
 	return nil
 }
 
-// ClearedEdges returns all edge names that were cleared in this
-// mutation.
+// ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *AccountMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
-// EdgeCleared returns a boolean indicates if this edge was
-// cleared in this mutation.
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
 func (m *AccountMutation) EdgeCleared(name string) bool {
 	return false
 }
 
-// ClearEdge clears the value for the given name. It returns an
-// error if the edge name is not defined in the schema.
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
 func (m *AccountMutation) ClearEdge(name string) error {
 	return fmt.Errorf("unknown Account unique edge %s", name)
 }
 
-// ResetEdge resets all changes in the mutation regarding the
-// given edge name. It returns an error if the edge is not
-// defined in the schema.
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
 func (m *AccountMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Account edge %s", name)
 }

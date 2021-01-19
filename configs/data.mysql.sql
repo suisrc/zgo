@@ -16,7 +16,7 @@ ALTER TABLE `zgo_user` AUTO_INCREMENT = 100000001;
 
 
 -- 租户 code=P6M， 为平台租户
-INSERT INTO `zgo_organization`(`id`, `code`) VALUES
+INSERT INTO `zgo_tenant`(`id`, `code`) VALUES
 (1,      "P6M"),
 (100001, "ORGCM3558");
 
@@ -28,7 +28,7 @@ INSERT INTO `zgo_person`(`id`, `unique_name`, `first_name`, `last_name`) VALUES
 
 -- 租户用户
 -- 租户编码(40)： u<助记符3位><租户ID编码8位><时间编码8位><用户ID编码8位><机器码4位><随机码8位>
-INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
 (100002, "ORGCM3558", "u000xx10000120210112xx100002111100000001", "赢迪测试2", null),
 (100003, "ORGCM3558", "u000xx10000120210112xx100003111100000001", "赢迪测试3", null);
 

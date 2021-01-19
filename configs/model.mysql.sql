@@ -85,18 +85,18 @@ CREATE TABLE `zgo_person` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
 -- 租户实体
-CREATE TABLE `zgo_organization` (
+CREATE TABLE `zgo_tenant` (
   `id` int(11) NOT NULL COMMENT '唯一标识',
   `code` varchar(64) NOT NULL COMMENT '租户标识',
   `hosted` tinyint(4) DEFAULT 0 COMMENT '租户被托管',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE udx_organization_code(`code`)
+  UNIQUE udx_tenant_code(`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 -- -------------------------------------------------------
 -- 租户用户主键
-CREATE TABLE `zgo_organization_user` (
+CREATE TABLE `zgo_tenant_user` (
   `user_id` int(11) NOT NULL COMMENT '用户ID',
   `org_cod` varchar(64) NOT NULL COMMENT '租户ID',
   `union_kid` varchar(64) NOT NULL COMMENT '唯一标识',
@@ -404,7 +404,7 @@ CREATE TABLE `zgo_i18n_language` (
 -- 表外键
 -- -------------------------------------------------------
 ALTER TABLE `zgo_account`
-ADD CONSTRAINT `fk_account_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`),
+ADD CONSTRAINT `fk_account_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_account_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_account` (`id`),
 ADD CONSTRAINT `fk_account_platform_kid` FOREIGN KEY (`platform_kid`)  REFERENCES `zgo_platform` (`kid`),
 ADD CONSTRAINT `fk_account_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
@@ -420,64 +420,64 @@ ALTER TABLE `zgo_user_security`
 ADD CONSTRAINT `fk_user_security` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
 
 ALTER TABLE `zgo_person`
-ADD CONSTRAINT `fk_person_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`),
+ADD CONSTRAINT `fk_person_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_person_id` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
 
-ALTER TABLE `zgo_organization`
-ADD CONSTRAINT `fk_organization_id` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
+ALTER TABLE `zgo_tenant`
+ADD CONSTRAINT `fk_tenant_id` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
 
-ALTER TABLE `zgo_organization_user`
+ALTER TABLE `zgo_tenant_user`
 ADD CONSTRAINT `fk_org_user_uid` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
-ADD CONSTRAINT `fk_org_user_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
+ADD CONSTRAINT `fk_org_user_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_user_union`
 ADD CONSTRAINT `fk_user_union_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_user_union` (`id`),
-ADD CONSTRAINT `fk_user_union_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`),
+ADD CONSTRAINT `fk_user_union_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_user_union_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`);
 
 ALTER TABLE `zgo_app_service_org`
 ADD CONSTRAINT `fk_app_service_org_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`),
-ADD CONSTRAINT `fk_app_service_org_orcd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
+ADD CONSTRAINT `fk_app_service_org_orcd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_app_service_audience`
-ADD CONSTRAINT `fk_app_service_audience_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`),
+ADD CONSTRAINT `fk_app_service_audience_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_app_service_audience_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`);
 
 ALTER TABLE `zgo_role`
-ADD CONSTRAINT `fk_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`),
+ADD CONSTRAINT `fk_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_role_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`);
 
 ALTER TABLE `zgo_role_role`
 ADD CONSTRAINT `fk_role_role_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_role` (`id`),
 ADD CONSTRAINT `fk_role_role_cid` FOREIGN KEY (`cid`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_role_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
+ADD CONSTRAINT `fk_role_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_user_role`
 ADD CONSTRAINT `fk_user_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
 ADD CONSTRAINT `fk_user_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_user_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
+ADD CONSTRAINT `fk_user_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_role_policy`
 ADD CONSTRAINT `fk_role_policy_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
 ADD CONSTRAINT `fk_role_policy_plcy_id` FOREIGN KEY (`plcy_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_role_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
+ADD CONSTRAINT `fk_role_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_user_policy`
 ADD CONSTRAINT `fk_role_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
 ADD CONSTRAINT `fk_role_role_plcy_id` FOREIGN KEY (`plcy_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_user_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
+ADD CONSTRAINT `fk_user_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_policy_service_action`
 ADD CONSTRAINT `fk_policy_service_action_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`);
 
 ALTER TABLE `zgo_policy`
-ADD CONSTRAINT `fk_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`code`);
+ADD CONSTRAINT `fk_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_policy_statement`
 ADD CONSTRAINT `fk_policy_statement_plcy_id` FOREIGN KEY (`plcy_id`)  REFERENCES `zgo_policy` (`id`);
 
 ALTER TABLE `zgo_platform`
-ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_organization` (`cod`);
+ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`cod`);
 
 -- -------------------------------------------------------
 -- -------------------------------------------------------
@@ -488,8 +488,8 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_or
 -- INSERT INTO `zgo_user_detail`(`id`, `avatar`, `description`, `creator`, `created_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_user_security`(`id`, `mfa13`, `phone`, `email`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_person`(`id`, `unique_name`, `first_name`, `last_name`, `org_cod`, `version`, `string_1`, `number_1`) VALUES ();
--- INSERT INTO `zgo_organization`(`id`, `code`, `hosted`, `version`, `string_1`, `number_1`) VALUES ();
--- INSERT INTO `zgo_organization_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`, `status`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_tenant`(`id`, `code`, `hosted`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`, `status`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_user_union`(`id`, `pid`, `org_cod`, `user_id`, `type`, `type_id`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_app_service`(`id`, `name`, `code`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_app_service_org`(`svc_id`, `org_cod`, `expired`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
@@ -527,9 +527,9 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_or
 -- ALTER TABLE `zgo_person`
 -- DROP FOREIGN KEY `fk_person_id`,
 -- DROP FOREIGN KEY `fk_person_org_cod`;
--- ALTER TABLE `zgo_organization`
--- DROP FOREIGN KEY `fk_organization_id`;
--- ALTER TABLE `zgo_organization_user`
+-- ALTER TABLE `zgo_tenant`
+-- DROP FOREIGN KEY `fk_tenant_id`;
+-- ALTER TABLE `zgo_tenant_user`
 -- DROP FOREIGN KEY `fk_org_user_ocd`,
 -- DROP FOREIGN KEY `fk_org_user_uid`;
 -- ALTER TABLE `zgo_user_union`
@@ -575,8 +575,8 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_or
 -- DROP TABLE IF EXISTS `zgo_user_detail`;
 -- DROP TABLE IF EXISTS `zgo_user_security`;
 -- DROP TABLE IF EXISTS `zgo_person`;
--- DROP TABLE IF EXISTS `zgo_organization`;
--- DROP TABLE IF EXISTS `zgo_organization_user`;
+-- DROP TABLE IF EXISTS `zgo_tenant`;
+-- DROP TABLE IF EXISTS `zgo_tenant_user`;
 -- DROP TABLE IF EXISTS `zgo_user_union`;
 -- DROP TABLE IF EXISTS `zgo_app_service`;
 -- DROP TABLE IF EXISTS `zgo_app_service_org`;

@@ -16,14 +16,13 @@ import (
 // AccountDelete is the builder for deleting a Account entity.
 type AccountDelete struct {
 	config
-	hooks      []Hook
-	mutation   *AccountMutation
-	predicates []predicate.Account
+	hooks    []Hook
+	mutation *AccountMutation
 }
 
-// Where adds a new predicate to the delete builder.
+// Where adds a new predicate to the AccountDelete builder.
 func (ad *AccountDelete) Where(ps ...predicate.Account) *AccountDelete {
-	ad.predicates = append(ad.predicates, ps...)
+	ad.mutation.predicates = append(ad.mutation.predicates, ps...)
 	return ad
 }
 
@@ -75,7 +74,7 @@ func (ad *AccountDelete) sqlExec(ctx context.Context) (int, error) {
 			},
 		},
 	}
-	if ps := ad.predicates; len(ps) > 0 {
+	if ps := ad.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
 				ps[i](selector)
