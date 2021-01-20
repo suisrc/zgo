@@ -11,63 +11,12 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-// SigninBody 登陆参数
-type SigninBody struct {
-	Username string `json:"username" binding:"required"` // 账户
-	Password string `json:"password"`                    // 密码
-	Captcha  string `json:"captcha"`                     // 验证码
-	Code     string `json:"code"`                        // 标识码
-	KID      string `json:"kid"`                         // 授权平台
-	Org      string `json:"org"`                         // 租户
-	Role     string `json:"role"`                        // 角色
-	Domain   string `json:"host"`                        // 域, 如果无,使用c.Reqest.Host代替
-}
-
-// SigninOfCaptcha 使用登陆发生认证信息
-type SigninOfCaptcha struct {
-	Mobile string `form:"mobile"` // 手机
-	Email  string `form:"email"`  // 邮箱
-	Openid string `form:"openid"` // openid
-	KID    string `form:"kid"`    // 平台标识
-}
-
-// SigninOfOAuth2 登陆参数
-type SigninOfOAuth2 struct {
-	Code     string `form:"code"`     // 票据
-	State    string `form:"state"`    // 验签
-	Scope    string `form:"scope"`    // 作用域
-	KID      string `form:"kid"`      // kid
-	Org      string `form:"org"`      // 租户
-	Role     string `form:"role"`     // 角色
-	Domain   string `form:"host"`     // 域, 如果无,使用c.Reqest.Host代替
-	Redirect string `form:"redirect"` // redirect
-}
-
-// SigninResult 登陆返回值
-type SigninResult struct {
-	TokenStatus  string        `json:"status" default:"ok"`                   // 'ok' | 'error' 不适用boolean类型是为了以后可以增加扩展
-	TokenID      string        `json:"token_id,omitempty"`                    // 访问令牌ID
-	AccessToken  string        `json:"access_token,omitempty"`                // 访问令牌
-	TokenType    string        `json:"token_type,omitempty" default:"bearer"` // 令牌类型
-	ExpiresAt    int64         `json:"expires_at,omitempty"`                  // 过期时间
-	ExpiresIn    int64         `json:"expires_in,omitempty"`                  // 过期时间
-	RefreshToken string        `json:"refresh_token,omitempty"`               // 刷新令牌
-	RefreshExpAt int64         `json:"refresh_expires,omitempty"`             // 刷新令牌过期时间
-	Redirect     string        `json:"redirect_uri,omitempty"`                // redirect_uri
-	Message      string        `json:"message,omitempty"`                     // 消息,有限显示 // Message 和 Datas 一般用户发生异常后回显
-	Params       []interface{} `json:"params,omitempty"`                      // 多租户多角色的时候，返回角色，重新确认登录
-}
-
-//=========================================================================
-//=========================================================================
-//=========================================================================
-
 // SigninGpaUser user
 type SigninGpaUser struct {
 	ID     int        `db:"id" json:"-"`
 	KID    string     `db:"kid" json:"id"`
 	Name   string     `db:"name" json:"name"`
-	Type   string     `db:"type" json:"-"`
+	Type   UserType   `db:"type" json:"-"`
 	Status StatusType `db:"status" json:"-"`
 }
 
@@ -83,54 +32,25 @@ func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int, typ string) error {
 	return sqlx.Get(a, SQL, params...)
 }
 
-// SigninGpaRole role
-type SigninGpaRole struct {
-	ID     int     `db:"id" json:"-"`
-	KID    string  `db:"kid" json:"id"`
-	Name   string  `db:"name" json:"name"`
-	Domain *string `db:"domain" json:"domain"`
-	//Domain sql.NullString `db:"domain" json:"domain"`
-}
-
-// QueryByID sql select
-func (a *SigninGpaRole) QueryByID(sqlx *sqlx.DB, id int) error {
-	SQL := "select id, kid, name, domain from {{TP}}role where id=? and status=1"
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Get(a, SQL, id)
-}
-
-// QueryByKID sql select
-func (a *SigninGpaRole) QueryByKID(sqlx *sqlx.DB, kid string) error {
-	SQL := "select id, kid, name, domain from {{TP}}role where kid=? and status=1"
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Get(a, SQL, kid)
-}
-
-// QueryByUserID sql select
-func (a *SigninGpaRole) QueryByUserID(sqlx *sqlx.DB, dest *[]SigninGpaRole, userid int) error {
-	SQL := "select r.id, r.kid, r.name, r.domain from {{TP}}user_role ur inner join {{TP}}role r on r.id=ur.role_id where ur.user_id=? and r.status=1"
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	log.Println(SQL)
-	return sqlx.Select(dest, SQL, userid)
-}
-
 //=========================================================================
 //=========================================================================
 //=========================================================================
 
 // SigninGpaOrgUser user
 type SigninGpaOrgUser struct {
-	UserID   int            `db:"user_id"`
-	OrgCode  string         `db:"org_cod"`
-	UnionKID string         `db:"union_kid"`
-	Name     string         `db:"name"`
-	CustomID sql.NullString `db:"custom_id"`
-	Status   StatusType     `db:"status"`
+	ID       int            `tbl:"u" db:"id"`
+	Type     UserType       `tbl:"u" db:"type"`
+	UserID   int            `tbl:"t" db:"user_id"`
+	OrgCode  string         `tbl:"t" db:"org_cod"`
+	UnionKID string         `tbl:"t" db:"union_kid"`
+	Name     string         `tbl:"t" db:"name"`
+	CustomID sql.NullString `tbl:"t" db:"custom_id"`
+	Status   StatusType     `tbl:"t" db:"status"`
 }
 
 // QueryByUserAndOrg sql select
 func (a *SigninGpaOrgUser) QueryByUserAndOrg(sqlx *sqlx.DB, userid int, orgcode string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}tenant_user where user_id=? and org_cod=?"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}tenant_user t inner join {{TP}}user u on u.id = t.user_id where t.user_id=? and t.org_cod=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, userid, orgcode)
 }
@@ -161,7 +81,7 @@ type SigninGpaAccount struct {
 
 // QueryByID 查询
 func (a *SigninGpaAccount) QueryByID(sqlx *sqlx.DB, id int) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}account where id=?"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}account where id=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, id)
 }
@@ -169,7 +89,7 @@ func (a *SigninGpaAccount) QueryByID(sqlx *sqlx.DB, id int) error {
 // QueryByAccount sql select
 func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, kid string) error {
 	sqr := strings.Builder{}
-	sqr.WriteString("select " + sqlxc.SelectColumns(a, ""))
+	sqr.WriteString("select " + sqlxc.SelectColumns(a))
 	sqr.WriteString(" from {{TP}}account")
 	sqr.WriteString(" where account=? and account_type=?")
 
@@ -212,7 +132,7 @@ func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ i
 // QueryByAccountSkipStatus sql select
 func (a *SigninGpaAccount) QueryByAccountSkipStatus(sqlx *sqlx.DB, acc string, typ int, kid string) error {
 	sqr := strings.Builder{}
-	sqr.WriteString("select " + sqlxc.SelectColumns(a, ""))
+	sqr.WriteString("select " + sqlxc.SelectColumns(a))
 	sqr.WriteString(" from {{TP}}account")
 	sqr.WriteString(" where account=? and account_type=?")
 
@@ -230,7 +150,7 @@ func (a *SigninGpaAccount) QueryByAccountSkipStatus(sqlx *sqlx.DB, acc string, t
 // QueryByUserAndKind user and kid
 func (a *SigninGpaAccount) QueryByUserAndKind(sqlx *sqlx.DB, uid int, typ int, kid string) error {
 	sqr := strings.Builder{}
-	sqr.WriteString("select " + sqlxc.SelectColumns(a, ""))
+	sqr.WriteString("select " + sqlxc.SelectColumns(a))
 	sqr.WriteString(" from {{TP}}account")
 	sqr.WriteString(" where user_id=? and account_type=?")
 
@@ -298,10 +218,13 @@ func (a *SigninGpaAccount) UpdateAndSaveX(sqlx *sqlx.DB) error {
 type SigninGpaAccountToken struct {
 	TokenID      string         `db:"token_kid"`
 	AccountID    int            `db:"account_id"`
+	DelayToken   sql.NullString `db:"delay_token"`
+	DelayExpAt   sql.NullInt64  `db:"delay_exp"`
+	OrgCode      sql.NullString `db:"org_cod"`
 	AccessToken  sql.NullString `db:"access_token"`
 	ExpiresAt    sql.NullInt64  `db:"expires_at"`
 	RefreshToken sql.NullString `db:"refresh_token"`
-	RefreshExpAt sql.NullInt64  `db:"refresh_expires"`
+	RefreshExpAt sql.NullInt64  `db:"refresh_exp"`
 	CallCount    sql.NullInt64  `db:"call_count"`
 	RefreshCount sql.NullInt64  `db:"refresh_count" set:"=refresh_count+1"`
 	LastIP       sql.NullString `db:"last_ip"`
@@ -315,21 +238,28 @@ type SigninGpaAccountToken struct {
 
 // QueryByRefreshToken rtk
 func (a *SigninGpaAccountToken) QueryByRefreshToken(sqlx *sqlx.DB, token string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token where refresh_token=?"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where refresh_token=?"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, token)
+}
+
+// QueryByDelayToken rtk
+func (a *SigninGpaAccountToken) QueryByDelayToken(sqlx *sqlx.DB, token string) error {
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where delay_token=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, token)
 }
 
 // QueryByTokenKID kid
 func (a *SigninGpaAccountToken) QueryByTokenKID(sqlx *sqlx.DB, kid string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token where token_kid=?"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, kid)
 }
 
 // QueryByAccountAndClient kid
 func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, accountID int, clientIP string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token where account_id=?"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where account_id=?"
 	params := []interface{}{accountID}
 	if clientIP != "" {
 		SQL += " and last_ip=?"
@@ -354,4 +284,45 @@ func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, update bo
 	// tx := sqlx.MustBegin()
 	// tx.MustExec(SQL, params)
 	// tx.Commit()
+}
+
+//=========================================================================
+//=========================================================================
+//=========================================================================
+
+// type SigninGpaUserRole struct {
+// 	UserID  int            `tbl:"ur" db:"user_id"`
+// 	RoleID  int            `tbl:"ur" db:"role_id"`
+// 	OrgCode string         `tbl:"ur" db:"org_cod"`
+// 	OrgAdm  bool           `tbl:"ro" db:"org_adm"`
+// 	KID     string         `tbl:"ro" db:"kid"`
+// 	Name    string         `tbl:"ro" db:"name"`
+// 	Status  StatusType     `tbl:"ro" db:"status"`
+// 	SvcID   sql.NullInt64  `tbl:"ro" db:"svc_id"`
+// 	SvcCode sql.NullString `tbl:"sv" db:"code"`
+// }
+
+// SigninGpaUserRole role
+type SigninGpaUserRole struct {
+	OrgAdm  bool           `tbl:"ro" db:"org_adm"`
+	KID     string         `tbl:"ro" db:"kid"`
+	Name    string         `tbl:"ro" db:"name"`
+	SvcCode sql.NullString `tbl:"sv" db:"code"`
+}
+
+// QueryAllByUserID user -> user id / code -> org code
+func (a *SigninGpaUserRole) QueryAllByUserID(sqlx *sqlx.DB, dest *[]SigninGpaUserRole, user int, code string) error {
+	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}user_role ur 
+		inner join {{TP}}role ro on ro.id = ur.role_id 
+		left  join {{TP}}app_service sv on sv.id = ro.svc_id 
+		where ro.status = 1 and ur.user_id=?`
+	params := []interface{}{user}
+	if code != "" {
+		SQL += " and ur.org_cod=?"
+		params = append(params, code)
+	} else {
+		SQL += " and ur.org_cod is null"
+	}
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Select(dest, SQL, params...)
 }

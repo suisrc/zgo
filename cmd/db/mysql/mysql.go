@@ -353,8 +353,7 @@ func (a *entity) build(fixStr func(string, string) string) (string, error) {
 	//	}
 	//	content += "),\n"
 	//}
-
-	if strings.Contains(content, "AUTO_INCREMENT") {
+	if len(a.primary) > 0 {
 		content += "  PRIMARY KEY ("
 		for i, p := range a.primary {
 			if i == 0 {
@@ -364,10 +363,14 @@ func (a *entity) build(fixStr func(string, string) string) (string, error) {
 			}
 		}
 		content += ")\n"
-		content += ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;"
+		if strings.Contains(content, "AUTO_INCREMENT") {
+			content += ") ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;"
+		} else {
+			content += ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
+		}
 	} else {
 		content = content[:len(content)-2] + "\n"
-		content += ") ENGINE=InnoDB DEFAULT CHARSET=utf8;"
+		content += ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;"
 	}
 	return content, nil
 }

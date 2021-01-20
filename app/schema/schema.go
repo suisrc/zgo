@@ -6,6 +6,13 @@ const (
 	WhereIS     = false
 )
 
+const (
+	// SuperUser 超级用户
+	SuperUser string = "su"
+	// PlatformCode 平台
+	PlatformCode string = "P6M"
+)
+
 // AccountType 账户类型
 type AccountType int
 
@@ -41,4 +48,19 @@ const (
 	StatusRevoked
 	// StatusDeleted 删除
 	StatusDeleted
+)
+
+// UserType 用户类型
+type UserType string
+
+// usr(用户), org(租户), app(应用), sto(门店)
+const (
+	// USR 用户
+	USR UserType = "usr"
+	// ORG 租户/机构
+	ORG UserType = "org"
+	// 门店
+	STO UserType = "sto"
+	// 应用
+	APP UserType = "app"
 )

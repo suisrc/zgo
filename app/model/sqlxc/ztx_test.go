@@ -44,10 +44,10 @@ func TestSelectColumns(t *testing.T) {
 
 	o2a := SigninGpaAccountToken{}
 
-	m := SelectColumns(&o2a, "t.")
+	m := SelectColumns(&o2a)
 	log.Println(m)
 
-	assert.Nil(t, nil)
+	assert.NotNil(t, nil)
 }
 func TestCreateUpdateSQLByNamed(t *testing.T) {
 
@@ -119,7 +119,7 @@ func TestCreateUpdateSQLByNamedSkipNilAndSet(t *testing.T) {
 
 // SigninGpaAccountToken account
 type SigninGpaAccountToken struct {
-	ID           int            `db:"id"`
+	ID           int            `tbl:"u" db:"id"`
 	AccountID    int            `db:"account_id"`
 	UserKID      string         `db:"user_kid"`
 	TokenID      string         `db:"token_kid"`

@@ -128,7 +128,7 @@ func Struct2Map(obj interface{}) map[string]interface{} {
 }
 
 // SelectColumns select column
-func SelectColumns(obj interface{}, prefix string) string {
+func SelectColumns(obj interface{}) string {
 	t := reflect.TypeOf(obj)
 	if t.Kind() == reflect.Ptr {
 		t = t.Elem()
@@ -152,8 +152,14 @@ func SelectColumns(obj interface{}, prefix string) string {
 			column = strings.ToLower(t.Field(i).Name)
 		}
 		c.WriteString(", ")
-		if prefix != "" {
-			c.WriteString(prefix)
+
+		if tbl := strings.TrimSpace(t.Field(i).Tag.Get("tbl")); tbl != "" && tbl != "-" {
+			c.WriteString(tbl)
+			if !strings.ContainsRune(tbl, '.') {
+				c.WriteRune('.')
+				c.WriteString(column)
+			}
+			c.WriteString(" as ")
 		}
 		c.WriteString(column)
 	}

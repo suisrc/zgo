@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2021-01-14 10:03:28 CST
+-- time: 2021-01-20 18:02:14 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -28,7 +28,7 @@ CREATE TABLE `zgo_account` (
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
   UNIQUE udx_account(`account`,`account_type`,`platform_kid`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 用户实体
 CREATE TABLE `zgo_user` (
@@ -46,7 +46,7 @@ CREATE TABLE `zgo_user` (
   INDEX idx_user_type(`type`),
   INDEX idx_user_name(`name`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 用户详情实体
 CREATE TABLE `zgo_user_detail` (
@@ -57,8 +57,9 @@ CREATE TABLE `zgo_user_detail` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
-  `number_1` int(11) DEFAULT NULL COMMENT '备用字段'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 用户安全实体
 CREATE TABLE `zgo_user_security` (
@@ -68,8 +69,9 @@ CREATE TABLE `zgo_user_security` (
   `email` varchar(128) DEFAULT NULL COMMENT '备用邮箱',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
-  `number_1` int(11) DEFAULT NULL COMMENT '备用字段'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 人员实体
 CREATE TABLE `zgo_person` (
@@ -81,10 +83,11 @@ CREATE TABLE `zgo_person` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE udx_person_unique_name(`unique_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  UNIQUE udx_person_unique_name(`unique_name`),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
--- 租户实体
+-- 租户/组织/机构实体
 CREATE TABLE `zgo_tenant` (
   `id` int(11) NOT NULL COMMENT '唯一标识',
   `code` varchar(64) NOT NULL COMMENT '租户标识',
@@ -92,8 +95,19 @@ CREATE TABLE `zgo_tenant` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE udx_tenant_code(`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  UNIQUE udx_tenant_code(`code`),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+-- -------------------------------------------------------
+-- 门店账户
+CREATE TABLE `zgo_store` (
+  `id` int(11) NOT NULL COMMENT '唯一标识',
+  `org_cod` varchar(64) NOT NULL COMMENT '门店归属机构',
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
+  `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 租户用户主键
 CREATE TABLE `zgo_tenant_user` (
@@ -106,10 +120,10 @@ CREATE TABLE `zgo_tenant_user` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE udx_org_user_kid(`user_id`,`org_cod`),
   UNIQUE udx_org_user_union_kid(`org_cod`,`union_kid`),
-  UNIQUE udx_org_user_name(`org_cod`,`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  UNIQUE udx_org_user_name(`org_cod`,`name`),
+  PRIMARY KEY (`user_id`,`org_cod`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 人归一方式
 CREATE TABLE `zgo_user_union` (
@@ -128,7 +142,7 @@ CREATE TABLE `zgo_user_union` (
   INDEX idx_user_union_type(`type`),
   INDEX idx_user_union_type_id(`type_id`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 策略服务实体
 CREATE TABLE `zgo_app_service` (
@@ -141,10 +155,9 @@ CREATE TABLE `zgo_app_service` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  UNIQUE udx_app_service_name(`name`),
   UNIQUE udx_app_service_code(`code`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 策略服务实体
 CREATE TABLE `zgo_app_service_org` (
@@ -156,8 +169,9 @@ CREATE TABLE `zgo_app_service_org` (
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
-  `version` int(11) DEFAULT 0 COMMENT '数据版本'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  PRIMARY KEY (`svc_id`,`org_cod`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 策略服务受众实体
 CREATE TABLE `zgo_app_service_audience` (
@@ -174,7 +188,33 @@ CREATE TABLE `zgo_app_service_audience` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   UNIQUE udx_app_service_audience(`audience`,`resource`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+-- -------------------------------------------------------
+-- 服务实体
+CREATE TABLE `zgo_app_client` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
+  `kid` varchar(64)  NOT NULL COMMENT '客户端标识',
+  `secret` varchar(1024) DEFAULT NULL COMMENT '客户端密钥',
+  `org_cod` int(11) DEFAULT NULL COMMENT '租户标识',
+  `status` tinyint(4) DEFAULT 1 COMMENT '状态',
+  `jwt_audience` varchar(255) DEFAULT NULL COMMENT '令牌接受平台',
+  `jwt_issuer` varchar(255) DEFAULT NULL COMMENT '令牌签发平台',
+  `jwt_expired` int(11) DEFAULT 7200 COMMENT '令牌有效期',
+  `jwt_type` varchar(32) DEFAULT 'JWT' COMMENT '令牌类型',
+  `jwt_method` varchar(32) DEFAULT 'HS512' COMMENT '令牌方法',
+  `jwt_secret` varchar(255) NOT NULL COMMENT '令牌密钥',
+  `jwt_getter` varchar(32) DEFAULT NULL COMMENT '令牌获取方法',
+  `signin_url` varchar(2048) DEFAULT NULL COMMENT '登陆地址',
+  `signin_check` tinyint(4) DEFAULT 0 COMMENT '登陆确认',
+  `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
+  `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
+  `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
+  `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
+  UNIQUE udx_app_client_kid(`kid`),
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 角色实体
 CREATE TABLE `zgo_role` (
@@ -195,53 +235,57 @@ CREATE TABLE `zgo_role` (
   UNIQUE udx_role_kid(`kid`),
   UNIQUE udx_role_name(`name`,`org_cod`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 角色角色实体
 CREATE TABLE `zgo_role_role` (
-  `pid` int(11) DEFAULT NULL COMMENT '父节点标识',
-  `cid` int(11) DEFAULT NULL COMMENT '子节点标识',
+  `pid` int(11) NOT NULL COMMENT '父节点标识',
+  `cid` int(11) NOT NULL COMMENT '子节点标识',
   `org_cod` varchar(64) DEFAULT NULL COMMENT '租户标识',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
-  `version` int(11) DEFAULT 0 COMMENT '数据版本'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  PRIMARY KEY (`pid`,`cid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 用户角色实体
 CREATE TABLE `zgo_user_role` (
-  `user_id` int(11) DEFAULT NULL COMMENT '账户标识',
-  `role_id` int(11) DEFAULT NULL COMMENT '角色标识',
+  `user_id` int(11) NOT NULL COMMENT '账户标识',
+  `role_id` int(11) NOT NULL COMMENT '角色标识',
   `org_cod` varchar(64) DEFAULT NULL COMMENT '租户标识',
   `expired` timestamp DEFAULT NULL COMMENT '授权有效期',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
-  `version` int(11) DEFAULT 0 COMMENT '数据版本'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  PRIMARY KEY (`user_id`,`role_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 用户角色实体
 CREATE TABLE `zgo_role_policy` (
-  `role_id` int(11) DEFAULT NULL COMMENT '角色标识',
-  `plcy_id` int(11) DEFAULT NULL COMMENT '策略标识',
+  `role_id` int(11) NOT NULL COMMENT '角色标识',
+  `plcy_id` int(11) NOT NULL COMMENT '策略标识',
   `org_cod` varchar(64) DEFAULT NULL COMMENT '租户标识',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
-  `version` int(11) DEFAULT 0 COMMENT '数据版本'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  PRIMARY KEY (`role_id`,`plcy_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 用户角色实体
 CREATE TABLE `zgo_user_policy` (
-  `user_id` int(11) DEFAULT NULL COMMENT '账户标识',
-  `plcy_id` int(11) DEFAULT NULL COMMENT '策略标识',
+  `user_id` int(11) NOT NULL COMMENT '账户标识',
+  `plcy_id` int(11) NOT NULL COMMENT '策略标识',
   `org_cod` varchar(64) DEFAULT NULL COMMENT '租户标识',
   `expired` timestamp DEFAULT NULL COMMENT '授权有效期',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
-  `version` int(11) DEFAULT 0 COMMENT '数据版本'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  `version` int(11) DEFAULT 0 COMMENT '数据版本',
+  PRIMARY KEY (`user_id`,`plcy_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 策略服务操作实体
 CREATE TABLE `zgo_policy_service_action` (
@@ -257,12 +301,12 @@ CREATE TABLE `zgo_policy_service_action` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   UNIQUE udx_policy_service_action_name(`name`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 策略实体
 CREATE TABLE `zgo_policy` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '唯一标识',
-  `ver` varchar(16) DEFAULT '1' COMMENT '版本',
+  `use_ver` varchar(16) DEFAULT '1' COMMENT '版本',
   `org_cod` varchar(64) DEFAULT NULL COMMENT '组织标识',
   `name` varchar(64) DEFAULT NULL COMMENT '策略名称',
   `status` tinyint(4) DEFAULT 1 COMMENT '状态',
@@ -273,21 +317,19 @@ CREATE TABLE `zgo_policy` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   UNIQUE udx_policy_name(`org_cod`,`name`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 策略声明
 CREATE TABLE `zgo_policy_statement` (
-  `plcy_id` int(11) DEFAULT NULL COMMENT '策略标识',
+  `plcy_id` int(11) NOT NULL COMMENT '策略标识',
+  `plcy_ver` int(11) NOT NULL COMMENT '数据版本',
   `effect` tinyint(4) DEFAULT NULL COMMENT '相应',
   `action` varchar(255) DEFAULT NULL COMMENT '操作',
   `resource` varchar(255) DEFAULT NULL COMMENT '资源',
   `condition` varchar(255) DEFAULT NULL COMMENT '条件',
   `description` varchar(255) DEFAULT NULL COMMENT '描述',
-  `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
-  `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
-  `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
-  `version` int(11) DEFAULT 0 COMMENT '数据版本'
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  INDEX idx_policy_statement(`plcy_id`,`plcy_ver`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 第三方登陆实体
 CREATE TABLE `zgo_platform` (
@@ -325,16 +367,19 @@ CREATE TABLE `zgo_platform` (
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
   UNIQUE udx_oauth2_platform_kid(`kid`),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 通信令牌实体
 CREATE TABLE `zgo_token` (
-  `token_kid` varchar(64) DEFAULT NULL COMMENT '角色标识',
+  `token_kid` varchar(64) NOT NULL COMMENT '角色标识',
   `account_id` int(11) DEFAULT NULL COMMENT '令牌归属',
+  `delay_token` varchar(255) DEFAULT NULL COMMENT '延迟令牌',
+  `delay_exp` int(11) DEFAULT NULL COMMENT '延迟令牌',
+  `org_cod` varchar(64) DEFAULT NULL COMMENT '组织标识',
   `access_token` varchar(4096) DEFAULT NULL COMMENT '访问令牌',
-  `expires_at` int(11) DEFAULT 7200 COMMENT '访问令牌',
+  `expires_at` int(11) DEFAULT NULL COMMENT '访问令牌',
   `refresh_token` varchar(255) DEFAULT NULL COMMENT '刷新令牌',
-  `refresh_expires` int(11) DEFAULT 604800 COMMENT '刷新令牌',
+  `refresh_exp` int(11) DEFAULT NULL COMMENT '刷新令牌',
   `call_count` int(11) DEFAULT 0 COMMENT '调用次数',
   `sync_lock` int(11) DEFAULT NULL COMMENT '同步锁',
   `refresh_count` int(11) DEFAULT 0 COMMENT '刷新次数',
@@ -348,40 +393,41 @@ CREATE TABLE `zgo_token` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE udx_token_kid(`token_kid`),
   INDEX idx_token_account_id(`account_id`),
-  INDEX idx_token_refresh_token(`refresh_token`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  INDEX idx_token_delay_token(`delay_token`),
+  INDEX idx_token_refresh_token(`refresh_token`),
+  PRIMARY KEY (`token_kid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 系统标签实体
 CREATE TABLE `zgo_tag_system` (
-  `type` varchar(64) DEFAULT NULL COMMENT '标签类型',
-  `bid` int(11) DEFAULT NULL COMMENT '归属id',
-  `tag` varchar(64) DEFAULT NULL COMMENT '标签',
+  `type` varchar(64) NOT NULL COMMENT '标签类型',
+  `bid` int(11) NOT NULL COMMENT '归属id',
+  `tag` varchar(64) NOT NULL COMMENT '标签',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  UNIQUE udx_tag_system(`type`,`bid`,`tag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`type`,`bid`,`tag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 通用标签实体
 CREATE TABLE `zgo_tag_custom` (
-  `type` varchar(64) DEFAULT NULL COMMENT '标签类型',
-  `bid` int(11) DEFAULT NULL COMMENT '归属id',
-  `tag` varchar(64) DEFAULT NULL COMMENT '标签',
+  `type` varchar(64) NOT NULL COMMENT '标签类型',
+  `bid` int(11) NOT NULL COMMENT '归属id',
+  `tag` varchar(64) NOT NULL COMMENT '标签',
   `deleted` tinyint(4) DEFAULT 0 COMMENT '删除标识',
   `creator` varchar(64) DEFAULT NULL COMMENT '创建人',
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  UNIQUE udx_tag_custom(`type`,`bid`,`tag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`type`,`bid`,`tag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 -- 国际化实体
 CREATE TABLE `zgo_i18n_language` (
-  `mid` varchar(255) DEFAULT NULL COMMENT 'message id',
-  `lang` varchar(16) DEFAULT NULL COMMENT '语言',
+  `mid` varchar(255) NOT NULL COMMENT 'message id',
+  `lang` varchar(16) NOT NULL COMMENT '语言',
   `description` varchar(64) DEFAULT NULL COMMENT '描述',
   `left_delim` varchar(16) DEFAULT NULL COMMENT '定界符',
   `right_delim` varchar(16) DEFAULT NULL COMMENT '定界符',
@@ -396,19 +442,19 @@ CREATE TABLE `zgo_i18n_language` (
   `created_at` timestamp DEFAULT NULL COMMENT '创建时间',
   `updated_at` timestamp DEFAULT NULL COMMENT '更新时间',
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
-  UNIQUE udx_i18n_message_id(`mid`,`lang`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`mid`,`lang`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
 
 -- -------------------------------------------------------
 -- 表外键
 -- -------------------------------------------------------
 ALTER TABLE `zgo_account`
-ADD CONSTRAINT `fk_account_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_account_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_account` (`id`),
 ADD CONSTRAINT `fk_account_platform_kid` FOREIGN KEY (`platform_kid`)  REFERENCES `zgo_platform` (`kid`),
 ADD CONSTRAINT `fk_account_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
-ADD CONSTRAINT `fk_account_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_user_role` (`id`);
+ADD CONSTRAINT `fk_account_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_user_role` (`id`),
+ADD CONSTRAINT `fk_account_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_user`
 ADD CONSTRAINT `fk_user_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_user` (`id`);
@@ -420,32 +466,39 @@ ALTER TABLE `zgo_user_security`
 ADD CONSTRAINT `fk_user_security` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
 
 ALTER TABLE `zgo_person`
-ADD CONSTRAINT `fk_person_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
-ADD CONSTRAINT `fk_person_id` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
+ADD CONSTRAINT `fk_person_id` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`),
+ADD CONSTRAINT `fk_person_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_tenant`
 ADD CONSTRAINT `fk_tenant_id` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`);
+
+ALTER TABLE `zgo_store`
+ADD CONSTRAINT `fk_store_id` FOREIGN KEY (`id`)  REFERENCES `zgo_user` (`id`),
+ADD CONSTRAINT `fk_store_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_tenant_user`
 ADD CONSTRAINT `fk_org_user_uid` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
 ADD CONSTRAINT `fk_org_user_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_user_union`
-ADD CONSTRAINT `fk_user_union_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_user_union` (`id`),
 ADD CONSTRAINT `fk_user_union_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
-ADD CONSTRAINT `fk_user_union_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`);
+ADD CONSTRAINT `fk_user_union_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
+ADD CONSTRAINT `fk_user_union_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_user_union` (`id`);
 
 ALTER TABLE `zgo_app_service_org`
 ADD CONSTRAINT `fk_app_service_org_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`),
 ADD CONSTRAINT `fk_app_service_org_orcd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_app_service_audience`
-ADD CONSTRAINT `fk_app_service_audience_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
-ADD CONSTRAINT `fk_app_service_audience_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`);
+ADD CONSTRAINT `fk_app_service_audience_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`),
+ADD CONSTRAINT `fk_app_service_audience_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
+
+ALTER TABLE `zgo_app_client`
+ADD CONSTRAINT `fk_app_client_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`id`);
 
 ALTER TABLE `zgo_role`
-ADD CONSTRAINT `fk_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
-ADD CONSTRAINT `fk_role_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`);
+ADD CONSTRAINT `fk_role_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`),
+ADD CONSTRAINT `fk_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_role_role`
 ADD CONSTRAINT `fk_role_role_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_role` (`id`),
@@ -458,9 +511,9 @@ ADD CONSTRAINT `fk_user_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_r
 ADD CONSTRAINT `fk_user_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_role_policy`
+ADD CONSTRAINT `fk_role_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_role_policy_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_role_policy_plcy_id` FOREIGN KEY (`plcy_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_role_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
+ADD CONSTRAINT `fk_role_policy_plcy_id` FOREIGN KEY (`plcy_id`)  REFERENCES `zgo_role` (`id`);
 
 ALTER TABLE `zgo_user_policy`
 ADD CONSTRAINT `fk_role_role_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
@@ -489,21 +542,23 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- INSERT INTO `zgo_user_security`(`id`, `mfa13`, `phone`, `email`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_person`(`id`, `unique_name`, `first_name`, `last_name`, `org_cod`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_tenant`(`id`, `code`, `hosted`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_store`(`id`, `org_cod`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`, `status`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_user_union`(`id`, `pid`, `org_cod`, `user_id`, `type`, `type_id`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_app_service`(`id`, `name`, `code`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_app_service_org`(`svc_id`, `org_cod`, `expired`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_app_service_audience`(`id`, `svc_id`, `org_cod`, `audience`, `resource`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `zgo_app_client`(`id`, `kid`, `secret`, `org_cod`, `status`, `jwt_audience`, `jwt_issuer`, `jwt_expired`, `jwt_type`, `jwt_method`, `jwt_secret`, `jwt_getter`, `signin_url`, `signin_check`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_role`(`id`, `kid`, `svc_id`, `name`, `org_cod`, `org_adm`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_role_role`(`pid`, `cid`, `org_cod`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_user_role`(`user_id`, `role_id`, `org_cod`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_role_policy`(`role_id`, `plcy_id`, `org_cod`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_user_policy`(`user_id`, `plcy_id`, `org_cod`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_policy_service_action`(`id`, `svc_id`, `name`, `resource`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
--- INSERT INTO `zgo_policy`(`id`, `ver`, `org_cod`, `name`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
--- INSERT INTO `zgo_policy_statement`(`plcy_id`, `effect`, `action`, `resource`, `condition`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `zgo_policy`(`id`, `use_ver`, `org_cod`, `name`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
+-- INSERT INTO `zgo_policy_statement`(`plcy_id`, `plcy_ver`, `effect`, `action`, `resource`, `condition`, `description`) VALUES ();
 -- INSERT INTO `zgo_platform`(`id`, `kid`, `type`, `signin`, `org_cod`, `avatar`, `status`, `description`, `app_id`, `app_secret`, `agent_id`, `agent_secret`, `suite_id`, `suite_secret`, `authorize_url`, `token_url`, `profile_url`, `signin_url`, `js_secret`, `state_secret`, `callback`, `cb_domain`, `cb_scheme`, `cb_encrypt`, `cb_token`, `cb_encoding`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
--- INSERT INTO `zgo_token`(`token_kid`, `account_id`, `access_token`, `expires_at`, `refresh_token`, `refresh_expires`, `call_count`, `sync_lock`, `refresh_count`, `last_ip`, `last_at`, `error_code`, `error_message`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_token`(`token_kid`, `account_id`, `delay_token`, `delay_exp`, `org_cod`, `access_token`, `expires_at`, `refresh_token`, `refresh_exp`, `call_count`, `sync_lock`, `refresh_count`, `last_ip`, `last_at`, `error_code`, `error_message`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_tag_system`(`type`, `bid`, `tag`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_tag_custom`(`type`, `bid`, `tag`, `deleted`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_i18n_language`(`mid`, `lang`, `description`, `left_delim`, `right_delim`, `zero`, `one`, `two`, `few`, `many`, `other`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
@@ -513,11 +568,11 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- drop table 
 -- -------------------------------------------------------
 -- ALTER TABLE `zgo_account`
--- DROP FOREIGN KEY `fk_account_org_cod`,
 -- DROP FOREIGN KEY `fk_account_pid`,
 -- DROP FOREIGN KEY `fk_account_platform_kid`,
 -- DROP FOREIGN KEY `fk_account_user_id`,
--- DROP FOREIGN KEY `fk_account_role_id`;
+-- DROP FOREIGN KEY `fk_account_role_id`,
+-- DROP FOREIGN KEY `fk_account_org_cod`;
 -- ALTER TABLE `zgo_user`
 -- DROP FOREIGN KEY `fk_user_pid`;
 -- ALTER TABLE `zgo_user_detail`
@@ -529,9 +584,12 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- DROP FOREIGN KEY `fk_person_org_cod`;
 -- ALTER TABLE `zgo_tenant`
 -- DROP FOREIGN KEY `fk_tenant_id`;
+-- ALTER TABLE `zgo_store`
+-- DROP FOREIGN KEY `fk_store_id`,
+-- DROP FOREIGN KEY `fk_store_org_cod`;
 -- ALTER TABLE `zgo_tenant_user`
--- DROP FOREIGN KEY `fk_org_user_ocd`,
--- DROP FOREIGN KEY `fk_org_user_uid`;
+-- DROP FOREIGN KEY `fk_org_user_uid`,
+-- DROP FOREIGN KEY `fk_org_user_ocd`;
 -- ALTER TABLE `zgo_user_union`
 -- DROP FOREIGN KEY `fk_user_union_pid`,
 -- DROP FOREIGN KEY `fk_user_union_org_cod`,
@@ -540,23 +598,25 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- DROP FOREIGN KEY `fk_app_service_org_sid`,
 -- DROP FOREIGN KEY `fk_app_service_org_orcd`;
 -- ALTER TABLE `zgo_app_service_audience`
--- DROP FOREIGN KEY `fk_app_service_audience_ocd`,
--- DROP FOREIGN KEY `fk_app_service_audience_sid`;
+-- DROP FOREIGN KEY `fk_app_service_audience_sid`,
+-- DROP FOREIGN KEY `fk_app_service_audience_ocd`;
+-- ALTER TABLE `zgo_app_client`
+-- DROP FOREIGN KEY `fk_app_client_org_cod`;
 -- ALTER TABLE `zgo_role`
 -- DROP FOREIGN KEY `fk_role_sid`,
 -- DROP FOREIGN KEY `fk_role_org_cod`;
 -- ALTER TABLE `zgo_role_role`
--- DROP FOREIGN KEY `fk_role_role_pid`,
 -- DROP FOREIGN KEY `fk_role_role_cid`,
--- DROP FOREIGN KEY `fk_role_role_org_cod`;
+-- DROP FOREIGN KEY `fk_role_role_org_cod`,
+-- DROP FOREIGN KEY `fk_role_role_pid`;
 -- ALTER TABLE `zgo_user_role`
+-- DROP FOREIGN KEY `fk_user_role_user_id`,
 -- DROP FOREIGN KEY `fk_user_role_role_id`,
--- DROP FOREIGN KEY `fk_user_role_org_cod`,
--- DROP FOREIGN KEY `fk_user_role_user_id`;
+-- DROP FOREIGN KEY `fk_user_role_org_cod`;
 -- ALTER TABLE `zgo_role_policy`
--- DROP FOREIGN KEY `fk_role_policy_role_id`,
 -- DROP FOREIGN KEY `fk_role_policy_plcy_id`,
--- DROP FOREIGN KEY `fk_role_policy_org_cod`;
+-- DROP FOREIGN KEY `fk_role_policy_org_cod`,
+-- DROP FOREIGN KEY `fk_role_policy_role_id`;
 -- ALTER TABLE `zgo_user_policy`
 -- DROP FOREIGN KEY `fk_role_role_user_id`,
 -- DROP FOREIGN KEY `fk_role_role_plcy_id`,
@@ -576,11 +636,13 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- DROP TABLE IF EXISTS `zgo_user_security`;
 -- DROP TABLE IF EXISTS `zgo_person`;
 -- DROP TABLE IF EXISTS `zgo_tenant`;
+-- DROP TABLE IF EXISTS `zgo_store`;
 -- DROP TABLE IF EXISTS `zgo_tenant_user`;
 -- DROP TABLE IF EXISTS `zgo_user_union`;
 -- DROP TABLE IF EXISTS `zgo_app_service`;
 -- DROP TABLE IF EXISTS `zgo_app_service_org`;
 -- DROP TABLE IF EXISTS `zgo_app_service_audience`;
+-- DROP TABLE IF EXISTS `zgo_app_client`;
 -- DROP TABLE IF EXISTS `zgo_role`;
 -- DROP TABLE IF EXISTS `zgo_role_role`;
 -- DROP TABLE IF EXISTS `zgo_user_role`;

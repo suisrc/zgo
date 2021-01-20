@@ -49,21 +49,21 @@ type ServerOAuth2Token struct {
 
 // QueryByTokenID kid
 func (a *ServerOAuth2Token) QueryByTokenID(sqlx *sqlx.DB, id string) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token_oauth2 where token_kid=?"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token_oauth2 where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, id)
 }
 
 // QueryByPlatform platform
 func (a *ServerOAuth2Token) QueryByPlatform(sqlx *sqlx.DB, platform int) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token_oauth2 where oauth2_id=? order by expires_at desc limit 1"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token_oauth2 where oauth2_id=? order by expires_at desc limit 1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, platform)
 }
 
 // QueryByPlatformMust platform
 func (a *ServerOAuth2Token) QueryByPlatformMust(sqlx *sqlx.DB, platform int) error {
-	SQL := "select " + sqlxc.SelectColumns(a, "") + " from {{TP}}token_oauth2 where oauth2_id=? and expires_at > ? order by expires_at desc limit 1"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token_oauth2 where oauth2_id=? and expires_at > ? order by expires_at desc limit 1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, platform, time.Now())
 }

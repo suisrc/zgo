@@ -2,7 +2,6 @@ package schema
 
 import (
 	"database/sql"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -11,10 +10,11 @@ import (
 type JwtGpaOpts struct {
 	ID          int            `db:"id"`
 	KID         string         `db:"kid"`
+	Secret      string         `db:"secret"`
 	Expired     int            `db:"expired"`
-	Secret      string         `db:"token_secret"`
-	Audience    sql.NullString `db:"audience"`
+	Refresh     int            `db:"refresh"`
 	Issuer      sql.NullString `db:"issuer"`
+	Audience    sql.NullString `db:"audience"`
 	SigninURL   sql.NullString `db:"signin_url"`
 	SigninForce sql.NullBool   `db:"signin_force"`
 	SigninCheck sql.NullBool   `db:"signin_check"`
@@ -23,21 +23,15 @@ type JwtGpaOpts struct {
 
 // QueryAll sql select
 func (*JwtGpaOpts) QueryAll(sqlx *sqlx.DB, dest *[]JwtGpaOpts) error {
-	SQL := "select id, kid, expired, audience, issuer, token_secret, signin_url, signin_force, signin_check from {{TP}}oauth2_client where status=1"
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL)
+	return nil
 }
 
 // QueryByKID kid
 func (a *JwtGpaOpts) QueryByKID(sqlx *sqlx.DB, kid string) error {
-	SQL := "select id, kid, expired, audience, issuer, token_secret, signin_url, signin_force, signin_check from {{TP}}oauth2_client where kid=? and status=1"
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Get(a, SQL, kid)
+	return nil
 }
 
 // QueryByAudience kid
-func (a *JwtGpaOpts) QueryByAudience(sqlx *sqlx.DB, audience string) error {
-	SQL := "select id, kid, expired, audience, issuer, token_secret, signin_url, signin_force, signin_check from {{TP}}oauth2_client where audience=? and status=1 limit 1"
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Get(a, SQL, audience)
+func (a *JwtGpaOpts) QueryByAudience(sqlx *sqlx.DB, audience string, org string) error {
+	return nil
 }

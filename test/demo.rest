@@ -5,21 +5,15 @@
 @base_url2=http://lhdg3.dev.k8s.local
 @base_url3=http://end-zgo-svc.test.svc.cluster.local
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJlbmQtemdvLXN2Yy50ZXN0LnN2Yy5jbHVzdGVyLmxvY2FsIiwiZXhwIjoxNjEwNzExMzA3LCJqdGkiOiI2dDI4MThzbWlhZmNhaDUweXU4djJ1MWcwMnNuciIsImlhdCI6MTYxMDcwNzcwNywiaXNzIjoiZW5kLXpnby1zdmMudGVzdC5zdmMuY2x1c3Rlci5sb2NhbCIsIm5iZiI6MTYxMDcwNzcwNywic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6IjYiLCJpZHgiOiIxMDAwMDIiLCJuYW0iOiLotaLov6rmtYvor5UyIiwib2djIjoiT1JHQ00zNTU4Iiwib2dhIjoiYWRtaW4iLCJvZ3UiOiIxMjMifQ.nur0ximZyQP0yRB1uj_bFI3wIRQjlpKEiwP33Np41-N4ax-VoeKCz4LAe2tw2pr_LO8LfrxMIifgb24uQOUlfQ
+@bearer=
 
-@refresh_token=6rjzfml01qzps8ot8i4o221g02snryxex1egppp3y
+@refresh_token=
 
 ###
 POST {{base_url3}}/api/ka/v1/signin
 Content-Type: application/json
 
 {
-  //"captcha": "",
-  //"client": "",
-  //"code": "",
-  //"host": "",
-  //"kid": "",
-  //"role": "",
   "password": "123456",
   "username": "it-100002"
 }

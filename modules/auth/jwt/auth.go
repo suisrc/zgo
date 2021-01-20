@@ -227,8 +227,15 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 }
 
 // RefreshToken 刷新令牌
-func (a *Auther) RefreshToken(c context.Context, tokenString string, check func(auth.UserInfo, int) error) (auth.TokenInfo, auth.UserInfo, error) {
-	claims, err := a.opts.parseRefreshFunc(c, tokenString)
+func (a *Auther) RefreshToken(c context.Context, tkn string, check func(auth.UserInfo, int) error) (auth.TokenInfo, auth.UserInfo, error) {
+	if tkn == "" {
+		// 没有给定令牌， 使用当前用户访问令牌
+		var err error
+		if tkn, err = a.opts.tokenFunc(c); err != nil {
+			return nil, nil, err
+		}
+	}
+	claims, err := a.opts.parseRefreshFunc(c, tkn)
 	if err != nil {
 		var e *jwt.ValidationError
 		if errors.As(err, &e) {
