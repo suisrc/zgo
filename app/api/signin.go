@@ -188,7 +188,6 @@ func (a *Signin) logSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, up
 		RefreshExpAt: sql.NullInt64{Valid: t.GetRefreshExpAt() > 0, Int64: t.GetRefreshExpAt()},
 		LastIP:       sql.NullString{Valid: true, String: helper.GetClientIP(c)},
 		LastAt:       sql.NullTime{Valid: true, Time: time.Now()},
-		DelayExpAt:   sql.NullInt64{Valid: true, Int64: -1},
 	}
 	if fix != nil {
 		fix(&o2a)
@@ -223,10 +222,9 @@ func (a *Signin) logSignOut(c *gin.Context, u auth.UserInfo, t string) {
 // @Success 200 {object} helper.Success
 // @Router /signin/refresh [get]
 func (a *Signin) refresh(c *gin.Context) {
-	o2a := a.getSigninGpaAccountToken(c)
+	o2a := a.getSigninGpaAccountTokenByRefresh(c)
 	if o2a == nil {
-		// 无法处理， 结束
-		return
+		return // 结束处理
 	}
 	if config.C.JWTAuth.LimitTime > 0 && o2a.LastAt.Valid && time.Now().Unix()-o2a.LastAt.Time.Unix() < config.C.JWTAuth.LimitTime {
 		// 登陆时间非常短,直接返回上次签名结果, 注意, 如果用于在很短时间从两个不同的设备登陆,会导致签发的令牌相同,并且可能会发生同时退出的问题
@@ -279,7 +277,7 @@ func (a *Signin) refresh(c *gin.Context) {
 }
 
 // 获取旧的访问令牌
-func (a *Signin) getSigninGpaAccountToken(c *gin.Context) *schema.SigninGpaAccountToken {
+func (a *Signin) getSigninGpaAccountTokenByRefresh(c *gin.Context) *schema.SigninGpaAccountToken {
 	// 需要注意, 刷新令牌只有一次有效
 	rid := c.Request.FormValue("refresh_token")
 	if rid == "" {
@@ -413,63 +411,17 @@ func (a *Signin) token3rdNew(c *gin.Context) {
 
 // 获取3方令牌
 func (a *Signin) token3rdGet(c *gin.Context) {
-	// 需要注意, 刷新令牌只有一次有效
-	tid := c.Request.FormValue("token")
-	if tid == "" {
-		helper.ResError(c, helper.Err401Unauthorized)
-		return
+	o2a := a.getSigninGpaAccountTokenByDelay(c)
+	if o2a == nil {
+		return // 结束处理
 	}
-	o2a := schema.SigninGpaAccountToken{}
-	if err := o2a.QueryByDelayToken(a.Sqlx, tid); err != nil {
-		if sqlxc.IsNotFound(err) {
-			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID", Other: "令牌无效"}))
-		} else {
-			helper.FixResponse500Error(c, err, func() { logger.Errorf(c, logger.ErrorWW(err)) })
-		}
-		return
-	}
-	if o2a.DelayExpAt.Int64 == -1 {
-		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-USED", Other: "令牌已被使用"}))
-		return
-	} else if o2a.DelayExpAt.Int64 < time.Now().Unix() {
-		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "令牌过期"}))
-		return
-	}
-	if o2a.AccessToken.Valid {
-		result := schema.SigninResult{
-			TokenStatus:  "ok",
-			TokenType:    "Bearer",
-			TokenID:      o2a.TokenID,
-			AccessToken:  o2a.AccessToken.String,
-			ExpiresAt:    o2a.ExpiresAt.Int64,
-			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
-			RefreshToken: o2a.RefreshToken.String,
-			RefreshExpAt: o2a.RefreshExpAt.Int64,
-		}
-		helper.ResSuccess(c, &result)
-		return
-	}
-	o2b := schema.SigninGpaAccountToken{}
-	if err := o2b.QueryByTokenKID(a.Sqlx, o2a.String1.String); err != nil {
-		if sqlxc.IsNotFound(err) {
-			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID2", Other: "原始令牌无效"}))
-		} else {
-			helper.FixResponse500Error(c, err, func() { logger.Errorf(c, logger.ErrorWW(err)) })
-		}
-		return
-	}
-	if o2b.ErrCode.Valid && o2b.ErrCode.String != "" {
-		// 令牌已经被禁用, 回显令牌禁用原因
-		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: o2a.ErrCode.String, Other: o2a.ErrMessage.String}))
-		return
-	}
-
 	// 通过刷新令牌生成新令牌
-	token, user, err := a.Auther.RefreshToken(c, o2b.AccessToken.String, func(usrInfo auth.UserInfo, expIn int) error {
+	token, user, err := a.Auther.RefreshToken(c, o2a.AccessToken.String, func(usrInfo auth.UserInfo, expIn int) error {
 		if usr, b := usrInfo.(*jwt.UserClaims); b {
 			// 修正数据
 			usr.Id = o2a.TokenID
 			usr.Account, _ = service.EncryptAccountWithUser(c, o2a.AccountID, int(o2a.Number1.Int64), o2a.TokenID)
+			usr.Audience = c.Request.Host
 		}
 		return nil
 	})
@@ -498,6 +450,62 @@ func (a *Signin) token3rdGet(c *gin.Context) {
 	}
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
+}
+
+// 获取旧的访问令牌
+func (a *Signin) getSigninGpaAccountTokenByDelay(c *gin.Context) *schema.SigninGpaAccountToken {
+	// 需要注意, 刷新令牌只有一次有效
+	tid := c.Request.FormValue("token")
+	if tid == "" {
+		helper.ResError(c, helper.Err401Unauthorized)
+		return nil
+	}
+	o2a := schema.SigninGpaAccountToken{}
+	if err := o2a.QueryByDelayToken(a.Sqlx, tid); err != nil {
+		if sqlxc.IsNotFound(err) {
+			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID", Other: "令牌无效"}))
+		} else {
+			helper.FixResponse500Error(c, err, func() { logger.Errorf(c, logger.ErrorWW(err)) })
+		}
+		return nil
+	}
+	if o2a.DelayExpAt.Int64 == -1 {
+		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-USED", Other: "令牌已被使用"}))
+		return nil
+	} else if o2a.DelayExpAt.Int64 < time.Now().Unix() {
+		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "令牌过期"}))
+		return nil
+	}
+	if o2a.AccessToken.Valid {
+		result := schema.SigninResult{
+			TokenStatus:  "ok",
+			TokenType:    "Bearer",
+			TokenID:      o2a.TokenID,
+			AccessToken:  o2a.AccessToken.String,
+			ExpiresAt:    o2a.ExpiresAt.Int64,
+			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
+			RefreshToken: o2a.RefreshToken.String,
+			RefreshExpAt: o2a.RefreshExpAt.Int64,
+		}
+		helper.ResSuccess(c, &result)
+		return nil
+	}
+	o2b := schema.SigninGpaAccountToken{}
+	if err := o2b.QueryByTokenKID(a.Sqlx, o2a.String1.String); err != nil {
+		if sqlxc.IsNotFound(err) {
+			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID2", Other: "原始令牌无效"}))
+		} else {
+			helper.FixResponse500Error(c, err, func() { logger.Errorf(c, logger.ErrorWW(err)) })
+		}
+		return nil
+	}
+	if o2b.ErrCode.Valid && o2b.ErrCode.String != "" {
+		// 令牌已经被禁用, 回显令牌禁用原因
+		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: o2a.ErrCode.String, Other: o2a.ErrMessage.String}))
+		return nil
+	}
+	o2a.AccessToken = o2b.AccessToken
+	return &o2a
 }
 
 //==================================================================================================================
