@@ -3,10 +3,12 @@ package api
 import (
 	"database/sql"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
 	i18n "github.com/suisrc/gin-i18n"
+	"github.com/suisrc/zgo/modules/auth/jwt"
 	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/crypto"
 	"github.com/suisrc/zgo/modules/logger"
@@ -31,12 +33,12 @@ type Signin struct {
 // sign 开头的路由会被全局casbin放行
 func (a *Signin) Register(r gin.IRouter) {
 
-	r.POST("signin", a.signin)            // 登录系统， 获取令牌 POST请求
-	r.GET("signout", a.signout)           // 登出系统， 注销令牌（访问令牌和刷新令牌）
-	r.GET("signin/refresh", a.refresh)    // 刷新令牌
-	r.GET("signin/captcha", a.captcha)    // 发送验证码
-	r.GET("signin/token/new", a.tokenNew) // 构建新的访问令牌
-	r.GET("signin/token/get", a.tokenGet) // 获取新的访问令牌
+	r.POST("signin", a.signin)                // 登录系统， 获取令牌 POST请求
+	r.GET("signout", a.signout)               // 登出系统， 注销令牌（访问令牌和刷新令牌）
+	r.GET("signin/refresh", a.refresh)        // 刷新令牌
+	r.GET("signin/captcha", a.captcha)        // 发送验证码
+	r.GET("pub/3rd/token/new", a.token3rdNew) // 构建新的访问令牌
+	r.GET("pub/3rd/token/get", a.token3rdGet) // 获取新的访问令牌
 	//r.GET("signin/mfa", a.signinMFA)
 	//r.POST("signup", a.signup) // 注册
 	//r.GET("signin/oauth2/:kid", a.oauth2) // OAUTH2登陆使用GET请求
@@ -80,7 +82,7 @@ func (a *Signin) signin(c *gin.Context) {
 	}
 
 	// 记录登录
-	a.logSignIn(c, usr, token, true, "")
+	a.logSignIn(c, usr, token, false, nil)
 	// 登陆结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
@@ -167,7 +169,7 @@ func (a *Signin) lastSignIn(c *gin.Context, aid int) (*schema.SigninGpaAccountTo
 }
 
 // 日志记录
-func (a *Signin) logSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, n bool, delay string) {
+func (a *Signin) logSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, update bool, fix func(*schema.SigninGpaAccountToken)) {
 	// c.SetCookie("signin", u.GetTokenID(), -1, "", u.GetAudience(), false, false) // 标记登陆信息
 
 	// aid, _ := strconv.Atoi(u.GetAccount())
@@ -180,16 +182,18 @@ func (a *Signin) logSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, n 
 		TokenID:      u.GetTokenID(),
 		AccountID:    aid,
 		OrgCode:      sql.NullString{Valid: u.GetOrgCode() != "", String: u.GetOrgCode()},
-		DelayToken:   sql.NullString{Valid: delay != "", String: delay},
-		DelayExpAt:   sql.NullInt64{Valid: delay != "", Int64: time.Now().Unix() + 300},
 		AccessToken:  sql.NullString{Valid: t.GetAccessToken() != "", String: t.GetAccessToken()},
 		ExpiresAt:    sql.NullInt64{Valid: t.GetExpiresAt() > 0, Int64: t.GetExpiresAt()},
 		RefreshToken: sql.NullString{Valid: t.GetRefreshToken() != "", String: t.GetRefreshToken()},
 		RefreshExpAt: sql.NullInt64{Valid: t.GetRefreshExpAt() > 0, Int64: t.GetRefreshExpAt()},
 		LastIP:       sql.NullString{Valid: true, String: helper.GetClientIP(c)},
 		LastAt:       sql.NullTime{Valid: true, Time: time.Now()},
+		DelayExpAt:   sql.NullInt64{Valid: true, Int64: -1},
 	}
-	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, !n); err != nil {
+	if fix != nil {
+		fix(&o2a)
+	}
+	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, update); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err))
 	}
 }
@@ -258,7 +262,7 @@ func (a *Signin) refresh(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.logSignIn(c, user, token, false, "")
+	a.logSignIn(c, user, token, true, nil)
 	// 登录结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
@@ -313,9 +317,11 @@ func (a *Signin) getSigninGpaAccountToken(c *gin.Context) *schema.SigninGpaAccou
 					logger.Errorf(c, logger.ErrorWW(err))
 				})
 			}
+			return nil
 		} else if o2a.RefreshToken.String != rid {
 			// 如果令牌已经被使用
-			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID-2", Other: "令牌已经被消费"}))
+			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-USED", Other: "令牌已被使用"}))
+			return nil
 		}
 	}
 	if o2a.ErrCode.Valid && o2a.ErrCode.String != "" {
@@ -368,28 +374,45 @@ func (a *Signin) captcha(c *gin.Context) {
 
 // 新建3方令牌
 // 该方法不好在于， 签发令牌后， 令牌有可能一次也不会使用， 所以这里应该对令牌进行二次签名
-func (a *Signin) tokenNew(c *gin.Context) {
+func (a *Signin) token3rdNew(c *gin.Context) {
 
-	// 通过刷新令牌生成新令牌
-	token, user, err := a.Auther.RefreshToken(c, "", nil)
-	// 刷新令牌放生了异常， 直接结束
+	// 确定登陆用户的身份
+	usr, err := a.Auther.GetUserInfo(c)
 	if err != nil {
+		if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
+			helper.ResError(c, helper.Err401Unauthorized)
+			return
+		}
+		helper.ResError(c, helper.Err400BadRequest)
+		return
+	}
+	aid, uid, _ := service.DecryptAccountWithUser(c, usr.GetAccount(), usr.GetTokenID())
+	tid := jwt.NewTokenID(strconv.Itoa(aid))
+	tkn := tid + "_" + crypto.UUID(21)
+
+	// a.logSignIn(c
+	o2a := schema.SigninGpaAccountToken{
+		TokenID:    tid,
+		AccountID:  aid,
+		OrgCode:    sql.NullString{Valid: usr.GetOrgCode() != "", String: usr.GetOrgCode()},
+		Number1:    sql.NullInt64{Valid: true, Int64: int64(uid)},
+		String1:    sql.NullString{Valid: true, String: usr.GetTokenID()},
+		DelayToken: sql.NullString{Valid: true, String: tkn},
+		DelayExpAt: sql.NullInt64{Valid: true, Int64: time.Now().Unix() + 300},
+	}
+	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, false); err != nil {
 		helper.FixResponse500Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
 		})
 		return
 	}
-
-	// 登陆日志
-	delay := token.GetTokenID() + "_" + crypto.UUID(21)
-	a.logSignIn(c, user, token, false, delay)
 	// 返回正常结果即可
-	helper.ResSuccess(c, helper.H{"token": delay})
+	helper.ResSuccess(c, helper.H{"status": "ok", "token": tkn})
 
 }
 
 // 获取3方令牌
-func (a *Signin) tokenGet(c *gin.Context) {
+func (a *Signin) token3rdGet(c *gin.Context) {
 	// 需要注意, 刷新令牌只有一次有效
 	tid := c.Request.FormValue("token")
 	if tid == "" {
@@ -401,30 +424,77 @@ func (a *Signin) tokenGet(c *gin.Context) {
 		if sqlxc.IsNotFound(err) {
 			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID", Other: "令牌无效"}))
 		} else {
-			helper.FixResponse500Error(c, err, func() {
-				logger.Errorf(c, logger.ErrorWW(err))
-			})
+			helper.FixResponse500Error(c, err, func() { logger.Errorf(c, logger.ErrorWW(err)) })
 		}
+		return
 	}
-	if o2a.DelayExpAt.Int64 < time.Now().Unix() {
+	if o2a.DelayExpAt.Int64 == -1 {
+		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-USED", Other: "令牌已被使用"}))
+		return
+	} else if o2a.DelayExpAt.Int64 < time.Now().Unix() {
 		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "令牌过期"}))
 		return
 	}
-	if o2a.ErrCode.Valid && o2a.ErrCode.String != "" {
+	if o2a.AccessToken.Valid {
+		result := schema.SigninResult{
+			TokenStatus:  "ok",
+			TokenType:    "Bearer",
+			TokenID:      o2a.TokenID,
+			AccessToken:  o2a.AccessToken.String,
+			ExpiresAt:    o2a.ExpiresAt.Int64,
+			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
+			RefreshToken: o2a.RefreshToken.String,
+			RefreshExpAt: o2a.RefreshExpAt.Int64,
+		}
+		helper.ResSuccess(c, &result)
+		return
+	}
+	o2b := schema.SigninGpaAccountToken{}
+	if err := o2b.QueryByTokenKID(a.Sqlx, o2a.String1.String); err != nil {
+		if sqlxc.IsNotFound(err) {
+			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID2", Other: "原始令牌无效"}))
+		} else {
+			helper.FixResponse500Error(c, err, func() { logger.Errorf(c, logger.ErrorWW(err)) })
+		}
+		return
+	}
+	if o2b.ErrCode.Valid && o2b.ErrCode.String != "" {
 		// 令牌已经被禁用, 回显令牌禁用原因
 		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: o2a.ErrCode.String, Other: o2a.ErrMessage.String}))
 		return
 	}
+
+	// 通过刷新令牌生成新令牌
+	token, user, err := a.Auther.RefreshToken(c, o2b.AccessToken.String, func(usrInfo auth.UserInfo, expIn int) error {
+		if usr, b := usrInfo.(*jwt.UserClaims); b {
+			// 修正数据
+			usr.Id = o2a.TokenID
+			usr.Account, _ = service.EncryptAccountWithUser(c, o2a.AccountID, int(o2a.Number1.Int64), o2a.TokenID)
+		}
+		return nil
+	})
+	// 刷新令牌放生了异常， 直接结束
+	if err != nil {
+		helper.FixResponse500Error(c, err, func() {
+			logger.Errorf(c, logger.ErrorWW(err))
+		})
+		return
+	}
+
+	a.logSignIn(c, user, token, true, func(sga *schema.SigninGpaAccountToken) {
+		// 注销延迟令牌， 延迟令牌只允许使用一次
+		sga.DelayExpAt = sql.NullInt64{Valid: true, Int64: -1}
+	})
 	// 令牌结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
 		TokenType:    "Bearer",
-		TokenID:      o2a.TokenID,
-		AccessToken:  o2a.AccessToken.String,
-		ExpiresAt:    o2a.ExpiresAt.Int64,
-		ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
-		RefreshToken: o2a.RefreshToken.String,
-		RefreshExpAt: o2a.RefreshExpAt.Int64,
+		TokenID:      token.GetTokenID(),
+		AccessToken:  token.GetAccessToken(),
+		ExpiresAt:    token.GetExpiresAt(),
+		ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
+		RefreshToken: token.GetRefreshToken(),
+		RefreshExpAt: token.GetRefreshExpAt(),
 	}
 	// 返回正常结果即可
 	helper.ResSuccess(c, &result)

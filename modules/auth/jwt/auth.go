@@ -227,7 +227,7 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 }
 
 // RefreshToken 刷新令牌
-func (a *Auther) RefreshToken(c context.Context, tkn string, check func(auth.UserInfo, int) error) (auth.TokenInfo, auth.UserInfo, error) {
+func (a *Auther) RefreshToken(c context.Context, tkn string, chk func(auth.UserInfo, int) error) (auth.TokenInfo, auth.UserInfo, error) {
 	if tkn == "" {
 		// 没有给定令牌， 使用当前用户访问令牌
 		var err error
@@ -244,13 +244,10 @@ func (a *Auther) RefreshToken(c context.Context, tkn string, check func(auth.Use
 		return nil, nil, err
 	}
 	// 外部自定义验证令牌
-	if check != nil {
-		if err := check(claims, a.opts.refresh); err != nil {
+	if chk != nil {
+		if err := chk(claims, a.opts.refresh); err != nil {
 			return nil, nil, err
 		}
-	}
-	if err != nil {
-		return nil, nil, err
 	}
 
 	// 修正令牌时间

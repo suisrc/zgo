@@ -1,10 +1,12 @@
 @base_url=http://127.0.0.1
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTExMzE1MjcsImp0aSI6IjFnMGZuM24xMmxvenVvb2lyNHhnMHZlOTUzeHMzeHoiLCJpYXQiOjE2MTExMjc5MjcsImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTEyNzkyNywic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6IkdnSkxaemRPeDJqZlF3UVhXbFlzUktlYVFxRkJGVnJQS0ZKS3k0MnVuUTg9IiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsInJvcyI6WyJPcGVyYXRvciIsIk9wZXJhdG9yT3JnIl0sIm9nYyI6Ik9SR0NNMzU1OCIsIm9ndSI6IjEyMyJ9.yPeLEq0HsXAWYn26vGhHf0OAO7RUbmaskVJyOX6q3KX58UaV6Gmjx0P6JlB5jSl9zFDvLO-C_opdFUUeZJPM-A
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTEyMTY1MzYsImp0aSI6IjFnMGlhNDgxMmxjN3ZyNHB0dTZ5a3U5Zjh2bnFmcmUiLCJpYXQiOjE2MTEyMTI5MzYsImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTIxMjkzNiwic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6IkVEanZVVXA3V3hnVlRrd2NHeHoydWRlZ0RIX29yeGlzWXVKUGhSUlJuVDA9IiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsInJvcyI6WyJPcGVyYXRvciIsIk9wZXJhdG9yT3JnIl0sIm9nYyI6Ik9SR0NNMzU1OCJ9.QFKwuwS7QySDFc5vO20PmYX5V_qPqOLSDEA-Z0eq5mNC_ZHuFTuHvkrYdF6gcSBWM1o2x9g0AicwzsJfntLnsA
 
-@refresh_token=1g0dbol12l3y2yfcpi0e34fmixgo4bi_6lqqdje2w2juu2alqmeh1g0dbp5sp21cys3w4y9
+@refresh_token=1g0huum65x8xa8d9kla5bmd20262d_xmdtby46q733k8eg1myf1g0huvjbpglio3pqs3j
 
-###
+@delay_token=1g0ia3b69rzbttafrj5lw1vxnn45w_0xszxzbw6t1f4cpj9qdn1
+
+### 登录接口
 POST {{base_url}}/api/ka/v1/signin
 Content-Type: application/json
 
@@ -13,14 +15,24 @@ Content-Type: application/json
   "username": "it-100002"
 }
 
-###
+### 令牌刷新接口
 GET {{base_url}}/api/ka/v1/signin/refresh?refresh_token={{refresh_token}}
 Content-Type: application/json
 
-###
+### 权限验证接口
 GET {{base_url}}/authz
 Content-Type: application/json
 Authorization: Bearer {{bearer}}
 X-Request-Origin-Path: /api/lhdg/v2/user
 X-Request-Origin-Host:
 X-Request-Origin-Method: GET
+
+
+### 新建第三方令牌
+GET {{base_url}}/api/ka/v1/pub/3rd/token/new
+Content-Type: application/json
+Authorization: Bearer {{bearer}}
+
+### 获取第三方令牌
+GET {{base_url}}/api/ka/v1/pub/3rd/token/get?token={{delay_token}}
+Content-Type: application/json

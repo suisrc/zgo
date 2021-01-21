@@ -234,6 +234,8 @@ type SigninGpaAccountToken struct {
 	CreatedAt    sql.NullTime   `db:"created_at"`
 	UpdatedAt    sql.NullTime   `db:"updated_at"`
 	Version      sql.NullInt64  `db:"version" set:"=version+1"`
+	Number1      sql.NullInt64  `db:"number_1"` // 扩展字段
+	String1      sql.NullString `db:"string_1"` // 扩展字段
 }
 
 // QueryByRefreshToken rtk
