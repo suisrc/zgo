@@ -18,6 +18,7 @@ type SigninUser struct {
 	OrgCode   string
 	OrgAdmin  string
 	OrgUsrID  string
+	OrgAppID  string
 	Domain    string
 	Issuer    string
 	Audience  string
@@ -64,6 +65,11 @@ func (u *SigninUser) GetOrgAdmin() string {
 // GetOrgUsrID xxx
 func (u *SigninUser) GetOrgUsrID() string {
 	return u.OrgUsrID
+}
+
+// GetOrgAppID xxx
+func (u *SigninUser) GetOrgAppID() string {
+	return u.OrgAppID
 }
 
 // GetDomain xxx

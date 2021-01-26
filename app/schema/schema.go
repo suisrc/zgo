@@ -48,6 +48,8 @@ const (
 	StatusRevoked
 	// StatusDeleted 删除
 	StatusDeleted
+	// StatusExpired 过期
+	StatusExpired
 )
 
 // UserType 用户类型

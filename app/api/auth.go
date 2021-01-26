@@ -6,44 +6,40 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/casbin/casbin/v2"
 	"github.com/gin-gonic/gin"
 	i18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/app/service"
-	"github.com/suisrc/zgo/middleware"
-	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/helper"
 )
 
 // Auth auth
 type Auth struct {
-	Enforcer *casbin.SyncedEnforcer
-	Auther   auth.Auther
+	CasbinAuther *service.CasbinAuther
 }
 
 // RegisterWithUAC 注册路由,认证接口特殊,需要独立注册
 func (a *Auth) RegisterWithUAC(r gin.IRouter) {
-	uac := middleware.UserAuthCasbinMiddlewareByPathFunc(a.Auther, a.Enforcer, func(c *gin.Context, k string) (string, error) {
-		// X-Reqeust-Origin-Path
-		// nginx.ingress.kubernetes.io/configuration-snippet: |
-		//   proxy_set_header X-Request-Origin-Host $host;
-		//   proxy_set_header X-Request-Origin-Path $request_uri;
-		//   proxy_set_header X-Request-Origin-Method $request_method;
-		value := c.GetHeader(k)
-		if value == "" {
-			if k == helper.XReqOriginHostKey {
-				return "default", nil
-			}
-			return "", errors.New("invalid " + k)
-		} else if offset := strings.IndexRune(value, '?'); offset > 0 {
-			value = value[:offset]
-		}
-		return value, nil
-	})
-
+	uac := a.CasbinAuther.UserAuthCasbinMiddlewareByOrigin(fixRequestHeaderParam)
 	r.GET("authz", uac, a.authorize)
-	// r.GET("authz/signin", uac, a.signin)
-	// r.GET(middleware.JoinPath(config.C.HTTP.ContextPath, "authz"), uac, a.authorize)
+}
+
+// fixRequestHeaderParam 修复请求头的内容
+func fixRequestHeaderParam(c *gin.Context, k string) (string, error) {
+	// X-Reqeust-Origin-Path
+	// nginx.ingress.kubernetes.io/configuration-snippet: |
+	//   proxy_set_header X-Request-Origin-Host $host;
+	//   proxy_set_header X-Request-Origin-Path $request_uri;
+	//   proxy_set_header X-Request-Origin-Method $request_method;
+	value := c.GetHeader(k)
+	if value == "" {
+		if k == helper.XReqOriginHostKey {
+			return "default", nil
+		}
+		return "", errors.New("invalid " + k)
+	} else if offset := strings.IndexRune(value, '?'); offset > 0 {
+		value = value[:offset]
+	}
+	return value, nil
 }
 
 // Register 主路由必须包含UAC内容
@@ -96,6 +92,7 @@ func (a *Auth) authorize(c *gin.Context) {
 	h.Set("X-Request-Z-Org-Code", user.GetOrgCode())
 	h.Set("X-Request-Z-Org-Admin", user.GetOrgAdmin())
 	h.Set("X-Request-Z-Org-Usrid", user.GetOrgUsrID())
+	h.Set("X-Request-Z-Org-Appid", user.GetOrgAppID())
 
 	h.Set("X-Request-Z-Domain", user.GetDomain())
 	h.Set("X-Request-Z-Issuer", user.GetIssuer())

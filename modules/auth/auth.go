@@ -55,6 +55,8 @@ type UserInfo interface {
 	GetOrgAdmin() string
 	// GetOrgUsrID 获取用户ID
 	GetOrgUsrID() string
+	// GetOrgAppID
+	GetOrgAppID() string
 
 	// GetDomain 领域标识
 	GetDomain() string

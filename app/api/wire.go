@@ -1,13 +1,11 @@
 package api
 
 import (
-	"github.com/casbin/casbin/v2"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/app/api/manager"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/middlewire"
-	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/config"
 
 	"github.com/gin-gonic/gin"
@@ -40,10 +38,8 @@ var EndpointSet = wire.NewSet(
 
 // Options options
 type Options struct {
-	Engine   *gin.Engine            // 服务器
-	Router   middlewire.Router      // 根路由
-	Enforcer *casbin.SyncedEnforcer // 权限认证
-	Auther   auth.Auther            // 令牌控制
+	Engine *gin.Engine       // 服务器
+	Router middlewire.Router // 根路由
 
 	// 接口注入
 	Demo   *Demo
@@ -52,6 +48,9 @@ type Options struct {
 	User   *User
 	System *System
 	Use3rd *Use3rd
+
+	// 权限管理
+	CasbinAuther *service.CasbinAuther
 
 	// 管理界面
 	ManagerWire *manager.Wire
@@ -83,9 +82,7 @@ func InitEndpoints(o *Options) *Endpoints {
 
 	// 服务器授权控制器
 	// 增加权限认证
-	uac := middleware.UserAuthCasbinMiddleware(
-		o.Auther,
-		o.Enforcer,
+	uac := o.CasbinAuther.UserAuthCasbinMiddleware(
 		middleware.AllowPathPrefixSkipper(
 			// sign 登陆接口需要排除
 			// 注意[/api/sign,都会被排除]

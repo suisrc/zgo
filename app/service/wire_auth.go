@@ -17,24 +17,14 @@ import (
 	"github.com/suisrc/zgo/modules/helper"
 	"github.com/suisrc/zgo/modules/logger"
 	"github.com/suisrc/zgo/modules/store"
-	"github.com/suisrc/zgo/modules/store/buntdb"
 )
 
 // AuthOpts 认证配置信息
 // 认证需要频繁操作,所以这里需要使用内存缓存
 type AuthOpts struct {
 	gpa.GPA
-	Store store.Storer
-	Jwts  map[interface{}]*schema.JwtGpaOpts
-}
-
-// NewStorer 全局缓存
-func NewStorer() (store.Storer, func(), error) {
-	store, err := buntdb.NewStore(":memory:") // 使用内存缓存
-	if err != nil {
-		return nil, nil, err
-	}
-	return store, func() { store.Close() }, nil
+	Storer store.Storer
+	Jwts   map[interface{}]*schema.JwtGpaOpts
 }
 
 // NewAuther of auth.Auther
@@ -47,7 +37,7 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 	}
 
 	opts.Jwts = map[interface{}]*schema.JwtGpaOpts{}
-	auther := jwt.New(opts.Store,
+	auther := jwt.New(opts.Storer,
 		jwt.SetKeyFunc(opts.keyFunc),
 		jwt.SetNewClaims(opts.signingFunc),
 		jwt.SetFixClaimsFunc(opts.claimsFunc),
@@ -67,7 +57,7 @@ func (a *AuthOpts) tokenFunc(ctx context.Context) (string, error) {
 	if c, ok := ctx.(*gin.Context); ok {
 		if state := c.Query("state"); state != "" {
 			// 使用state隐藏令牌,一般用于重定向回调上
-			if token, _, _ := a.Store.Get(ctx, state); token != "" {
+			if token, _, _ := a.Storer.Get(ctx, state); token != "" {
 				return token, nil
 			}
 		}

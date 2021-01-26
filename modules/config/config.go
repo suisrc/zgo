@@ -61,7 +61,7 @@ type Casbin struct {
 	Watcher          string // 策略监控器
 	NoRole           bool   // 验证无角色权限
 	NoUser           bool   // 不验证用户权限
-	NoSignin         bool   // 验证无登陆权限
+	NoSign           bool   // 验证无登陆权限
 	AutoLoad         bool   // 自动重新加载权限
 	AutoLoadInternal int    // 刷新权限间隔,单位:秒
 	PolicyType       string // file | mysql | sqlite3 | postgres | redis | restful

@@ -276,7 +276,7 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
 | svc_id        | 服务标识       | 数值     |                                                     | int(11) NOT NULL, fk_app_service_audience_sid->app_service.id |
-| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_app_service_audience_ocd->tenant.code |
+| org_cod       | 租户标识       | 字符串   | 如果不为空， 受众域为租户专有域名                   | varchar(64), fk_app_service_audience_ocd->tenant.code |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | audience      | 受众域         | 字符串   | 绑定服务                                            | varchar(255), udx_app_service_audience               |
 | resource      | 受众源         | 字符串   | 绑定服务                                            | varchar(255), udx_app_service_audience               |
@@ -330,6 +330,11 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 本质上角色是没有域的概念的,但是为了方便管理,所以证件域的选项
 
 gateway -> role -> role -> user -> role -> user
+
+系统具有三种特殊策略： 
+NoSign: 为登录的人可以访问
+NoUser: 没有用户的人可以访问（一般用于第三方登录， 用于用户归一操作前可以访问）
+NoRole: 没有角色的人可以访问
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
@@ -418,6 +423,28 @@ gateway -> role -> role -> user -> role -> user
 | version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
 
 ---
+## 策略模型(`policy_model`)
+
+用于处理策略的模型， 组织可以定制
+
+| 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
+| use_ver       | 版本           | 字符串   |                                                     | varchar(16) DEFAULT '1'                              |
+| org_cod       | 组织标识       | 字符串   | 角色归属的组织， 1表示平台                          | varchar(64), udx_policy_model_name, fk_policy_model_org_cod->tenant.code |
+| ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
+| name          | 策略模型       | 字符串   |                                                     | varchar(64), udx_policy_model_name                   |
+| statement     | 声明           | 字符串   |                                                     | varchar(4096)                                        |
+| description   | 描述           | 字符串   |                                                     | varchar(255)                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
+| created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
+| updated_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
+| version       | 数据版本       | 数值     |                                                     | int(11) DEFAULT 0                                    |
+
+
+
+---
 ## 策略服务操作实体(`policy_service_action`)
 
 是一组API的集合， 专注于一组API的操作
@@ -451,6 +478,41 @@ resource： 为数组结构， 使用“:”进行分割
 2.处理domain/path=service （黏贴性：如果授权租户可以访问一个模块中的一个功能， 那么就可以访问该模块的所有功能， 模块的定义是: 可独立部署）
 3.使用org_code/service， 判断租户是否有对应服务的使用权限
 4.用户访问提供信息， service, role, user, path(relative)
+
+```xml
+policy  = {
+     <version_block>,
+     <statement_block>
+}
+<version_block> = "Version" : ("1")
+<statement_block> = "Statement" : [ <statement>, <statement>, ... ]
+<statement> = { 
+    <effect_block>,
+    <action_block>,
+    <resource_block>,
+    <condition_block?>
+}
+<effect_block> = "Effect" : ("Allow" | "Deny")  
+<action_block> = "Action" : 
+    ("*" | [<action_string>, <action_string>, ...])
+<resource_block> = "Resource" : 
+    ("*" | [<resource_string>, <resource_string>, ...])
+<condition_block> = "Condition" : <condition_map>
+<condition_map> = {
+  <condition_type_string> : { 
+      <condition_key_string> : <condition_value_list>,
+      <condition_key_string> : <condition_value_list>,
+      ...
+  },
+  <condition_type_string> : {
+      <condition_key_string> : <condition_value_list>,
+      <condition_key_string> : <condition_value_list>,
+      ...
+  }, ...
+}  
+<condition_value_list> = [<condition_value>, <condition_value>, ...]
+<condition_value> = ("String" | "Number" | "Boolean" | "Date and time" | "IP address")
+```
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
@@ -505,7 +567,7 @@ condition: 条件， 策略预计成立的条件
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | plcy_id       | 策略标识       | 数值     |                                                     | int(11) NOT NULL, idx_policy_statement, fk_policy_statement_plcy_id->policy.id |
 | plcy_ver      | 数据版本       | 数值     |                                                     | int(11) NOT NULL, idx_policy_statement               |
-| effect        | 相应           | 数值     | 1: allow 0:deny                                     | tinyint(4)                                           |
+| effect        | 相应           | 数值     | 1: allow 0:deny                                     | tinyint(4) DEFAULT 0                                 |
 | action        | 操作           | 字符串   |                                                     | varchar(255)                                         |
 | resource      | 资源           | 字符串   |                                                     | varchar(255)                                         |
 | condition     | 条件           | 字符串   | json                                                | varchar(255)                                         |

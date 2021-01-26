@@ -18,9 +18,10 @@ var ServiceSet = wire.NewSet(
 
 	oauth2.NewSelector, // OAuth2注册
 
-	wire.Struct(new(gpa.GPA), "*"),             // 数据库服务
-	wire.Struct(new(passwd.Validator), "*"),    // 密码验证
-	wire.Struct(new(AuthOpts), "GPA", "Store"), // Auther依赖
+	wire.Struct(new(gpa.GPA), "*"),                            // 数据库服务
+	wire.Struct(new(passwd.Validator), "*"),                   // 密码验证
+	wire.Struct(new(AuthOpts), "GPA", "Storer"),               // Auther依赖
+	wire.Struct(new(CasbinAuther), "GPA", "Storer", "Auther"), // Casbin依赖
 
 	wire.Struct(new(MobileSender), "*"), // 手机发送器
 	wire.Struct(new(EmailSender), "*"),  // 邮件发送器

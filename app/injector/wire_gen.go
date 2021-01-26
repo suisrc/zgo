@@ -14,8 +14,6 @@ import (
 	"github.com/suisrc/zgo/app/oauth2"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middlewire"
-	"github.com/suisrc/zgo/modules/casbin"
-	"github.com/suisrc/zgo/modules/casbin/watcher/mem"
 	"github.com/suisrc/zgo/modules/passwd"
 )
 
@@ -39,33 +37,27 @@ func BuildInjector() (*Injector, func(), error) {
 		Entc: client,
 		Sqlx: db,
 	}
-	casbinAdapter := service.CasbinAdapter{
+	demo := &api.Demo{
 		GPA: gpaGPA,
 	}
-	syncedEnforcer, cleanup3, err := casbin.NewCasbinEnforcer(casbinAdapter)
+	storer, cleanup3, err := service.NewStorer()
 	if err != nil {
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
-	storer, cleanup4, err := service.NewStorer()
-	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	authOpts := &service.AuthOpts{
-		GPA:   gpaGPA,
-		Store: storer,
+		GPA:    gpaGPA,
+		Storer: storer,
 	}
 	auther := service.NewAuther(authOpts)
-	demo := &api.Demo{
-		GPA: gpaGPA,
+	casbinAuther := &service.CasbinAuther{
+		GPA:    gpaGPA,
+		Storer: storer,
+		Auther: auther,
 	}
 	auth := &api.Auth{
-		Enforcer: syncedEnforcer,
-		Auther:   auther,
+		CasbinAuther: casbinAuther,
 	}
 	validator := &passwd.Validator{}
 	mobileSender := service.MobileSender{
@@ -79,7 +71,6 @@ func BuildInjector() (*Injector, func(), error) {
 	}
 	selector, err := oauth2.NewSelector(gpaGPA, storer)
 	if err != nil {
-		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
@@ -138,27 +129,18 @@ func BuildInjector() (*Injector, func(), error) {
 		Gateway: gateway,
 	}
 	options := &api.Options{
-		Engine:      engine,
-		Router:      router,
-		Enforcer:    syncedEnforcer,
-		Auther:      auther,
-		Demo:        demo,
-		Auth:        auth,
-		Signin:      apiSignin,
-		User:        apiUser,
-		System:      system,
-		Use3rd:      use3rd,
-		ManagerWire: wire,
+		Engine:       engine,
+		Router:       router,
+		Demo:         demo,
+		Auth:         auth,
+		Signin:       apiSignin,
+		User:         apiUser,
+		System:       system,
+		Use3rd:       use3rd,
+		CasbinAuther: casbinAuther,
+		ManagerWire:  wire,
 	}
 	endpoints := api.InitEndpoints(options)
-	watcher, cleanup5, err := casbinmem.NewCasbinWatcher(casbinAdapter, syncedEnforcer)
-	if err != nil {
-		cleanup4()
-		cleanup3()
-		cleanup2()
-		cleanup()
-		return nil, nil, err
-	}
 	i18n := &service.I18n{
 		GPA:    gpaGPA,
 		Bundle: bundle,
@@ -170,16 +152,11 @@ func BuildInjector() (*Injector, func(), error) {
 		Engine:     engine,
 		Endpoints:  endpoints,
 		Bundle:     bundle,
-		Enforcer:   syncedEnforcer,
-		Auther:     auther,
-		Watcher:    watcher,
 		I18nLoader: i18nLoader,
 		Swagger:    swagger,
 		Healthz:    healthz,
 	}
 	return injector, func() {
-		cleanup5()
-		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()

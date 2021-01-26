@@ -27,17 +27,12 @@ func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(),
 		return nil, nil, errors.New("casbin model no config")
 	}
 
-	enforcer, err := casbin.NewSyncedEnforcer(c.Model)
+	enforcer, err := casbin.NewSyncedEnforcer(c.Model, adapter)
 	if err != nil {
 		return nil, nil, err
 	}
 	logger.Infof(nil, "loading casbin model[%s]", c.Model)
 	enforcer.EnableLog(c.Debug)
-
-	err = enforcer.InitWithModelAndAdapter(enforcer.GetModel(), adapter)
-	if err != nil {
-		return nil, nil, err
-	}
 	enforcer.EnableEnforce(c.Enable)
 
 	cleanFunc := func() {}
@@ -49,9 +44,9 @@ func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(),
 	}
 
 	// 注册方法
-	enforcer.AddFunction("fdom", DomainMatchFunc)
-	enforcer.AddFunction("fact", ActionMatchFunc)
-	enforcer.AddFunction("fdoma", DomainMatchAudienceFunc)
+	enforcer.AddFunction("domainMatch", DomainMatchFunc)
+	enforcer.AddFunction("actionMatch", ActionMatchFunc)
+	enforcer.AddFunction("audienceMatch", AudienceMatchFunc)
 
 	return enforcer, cleanFunc, nil
 }
@@ -90,8 +85,8 @@ func DomainMatchFunc(args ...interface{}) (interface{}, error) {
 	return DomainMatch(domain1, domain2), nil
 }
 
-// DomainMatchAudienceFunc domain
-func DomainMatchAudienceFunc(args ...interface{}) (interface{}, error) {
+// AudienceMatchFunc domain
+func AudienceMatchFunc(args ...interface{}) (interface{}, error) {
 	domain1 := args[0].(string)
 	domain2 := args[1].(string)
 	audience := args[2].(string)

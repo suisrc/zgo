@@ -45,7 +45,7 @@ var _ persist.Adapter = (*CasbinAdapter)(nil)
 
 // LoadPolicy loads policy from database.
 func (a CasbinAdapter) LoadPolicy(model model.Model) error {
-	//nosignin, norole, nouser := false, false, true
+	// nosign, norole, nouser := false, false, false
 	//// resouces
 	//gateway0 := schema.CasbinGpaGateway{}
 	//gateways := []schema.CasbinGpaGateway{}

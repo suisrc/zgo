@@ -13,7 +13,6 @@ import (
 
 // I18nGpaMessage message
 type I18nGpaMessage struct {
-	ID          int            `db:"id"`
 	MID         string         `db:"mid"`
 	Lang        string         `db:"lang"`
 	Description sql.NullString `db:"description"`
