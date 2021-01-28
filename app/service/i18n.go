@@ -28,19 +28,18 @@ type I18n struct {
 
 // LoadI18nMessage load
 func (a *I18n) LoadI18nMessage() error {
-	i18n0 := schema.I18nGpaMessage{}
-	i18ns := []schema.I18nGpaMessage{}
-	if err := i18n0.QueryAll(a.Sqlx, &i18ns); err != nil {
+	count := 0
+	if i18ns, err := new(schema.I18nGpaMessage).QueryAll(a.Sqlx); err != nil {
 		logger.Errorf(nil, "i18n add message error: %s", logger.ErrorWW(err))
 		return err
-	}
-	count := 0
-	for _, m := range i18ns {
-		message, language := m.I18nMessage()
-		if err := a.Bundle.AddMessages(language, message); err != nil {
-			logger.Errorf(nil, "i18n add message error: %s", logger.ErrorWW(err))
-		} else {
-			count++
+	} else if i18ns != nil {
+		for _, m := range *i18ns {
+			message, language := m.I18nMessage()
+			if err := a.Bundle.AddMessages(language, message); err != nil {
+				logger.Errorf(nil, "i18n add message error: %s", logger.ErrorWW(err))
+			} else {
+				count++
+			}
 		}
 	}
 	logger.Infof(nil, "i18n load message from database, count: %d", count)

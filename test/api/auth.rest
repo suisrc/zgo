@@ -1,10 +1,10 @@
 @base_url=http://127.0.0.1
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTE2MzM4NTUsImp0aSI6IjFnMHYxbGYxMmxueTV2YW82eXhjajJxaHhuOG83YW0iLCJpYXQiOjE2MTE2MzAyNTUsImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTYzMDI1NSwic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6ImJVc1pfd20wV1dXUE1JWE9ud3ZqX25zQm5sT09hRFdZd3lhWi0tSERBZ2c9IiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsInJvcyI6WyJPcGVyYXRvciIsIk9wZXJhdG9yT3JnIl0sIm9nYyI6Ik9SR0NNMzU1OCJ9.iMzAlviDKexmsW2NOU7QHc1xNRuIFVKM79pp21rUHGRzHHubMV6rAPN5JAdT4JZlU4RTtlA_clv-xMDMPtWgJg
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTE3NDYyNDQsImp0aSI6IjFnMTJmZGoxMmxpbjl4cXczNHB2OWRhZG85dWw4ZjYiLCJpYXQiOjE2MTE3NDI2NDQsImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTc0MjY0NCwic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6Imd4dkRVc29kZGhHYjJucldfTV9QcDdzekRjYjZaOEJkWWRUNVphUWw4dUU9IiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsInJvcyI6WyJPcGVyYXRvciIsIk9wZXJhdG9yT3JnIl0sIm9nYyI6Ik9SR0NNMzU1OCJ9.xIFgA0WqFbr0GKekfZbz8xx_QWy6fnfkcx6ROe7atzrEGq7teL4KNFYhSFKvQaEGhEtthOWH9OzFDZuuHI2K2A
 
-@refresh_token=1g0huum65x8xa8d9kla5bmd20262d_xmdtby46q733k8eg1myf1g0huvjbpglio3pqs3j
+@refresh_token=1g12fe569tootc0tp9hlp1f1c764d_xg8q83ti0mr1vtyaw0wb1g12fhlsjekkmpa3fuk
 
-@delay_token=1g0v1s26s8fs26r0et9v8kswpfnlg_mrs4pbs3mvd0q2tybl633
+@code=1g12fe569tootc0tp9hlp1f1c764d_icf32o640emkc0oeet60j
 
 ### 登录接口
 POST {{base_url}}/api/ka/v1/signin
@@ -34,5 +34,19 @@ Content-Type: application/json
 Authorization: Bearer {{bearer}}
 
 ### 获取第三方令牌
-GET {{base_url}}/api/ka/v1/pub/3rd/token/get?token={{delay_token}}
+GET {{base_url}}/api/ka/v1/pub/3rd/token/get?code={{code}}
+Content-Type: application/json
+
+
+### 新建第三方令牌
+POST {{base_url}}/api/ka/v1/pub/3rd/token
+Content-Type: application/json
+
+{
+  "password": "123456",
+  "username": "it-100002"
+}
+
+### 令牌刷新接口
+GET {{base_url}}/api/ka/v1/pub/3rd/token/refresh?refresh_token={{refresh_token}}
 Content-Type: application/json

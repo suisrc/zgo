@@ -60,6 +60,7 @@ func FixResponseError(c *gin.Context, err error) bool {
 		// do nothing
 		return true
 	default:
+		// e := err.Error()
 		return false
 	}
 }

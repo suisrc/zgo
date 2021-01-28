@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	i18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/modules/helper"
 )
@@ -63,19 +62,7 @@ func (a *Auth) authorize(c *gin.Context) {
 	// 仅仅返回正常结果即可
 
 	// 如果通过验证， 当前用户是一定登录的
-	user, exist := helper.GetUserInfo(c)
-	if !exist {
-		// 未登录
-		helper.ResError(c, &helper.ErrorModel{
-			Status:   200,
-			ShowType: helper.ShowWarn,
-			ErrorMessage: &i18n.Message{
-				ID:    "ERR-AUTHORIZE-USERNOEXIST",
-				Other: "登录用户不存在",
-			},
-		})
-		return
-	}
+	user, _ := helper.GetUserInfo(c)
 
 	h := c.Writer.Header()
 	h.Set("X-Request-Z-Token-Kid", user.GetTokenID())
@@ -100,7 +87,7 @@ func (a *Auth) authorize(c *gin.Context) {
 
 	//h.Set("X-Request-Z-Org-Code", "ORGCM3558")
 	if svc := h.Get("X-Request-Z-Svc"); svc != "" {
-		h.Set("X-Request-Z-Svc-Roles", strings.Join(user.GetUserSvcRoles(svc+":"), ";"))
+		h.Set("X-Request-Z-Svc-Role", strings.Join(user.GetUserSvcRoles(svc+":"), ";"))
 	}
 
 	h.Set("X-Request-Z-Xip", helper.GetHostIP(c))

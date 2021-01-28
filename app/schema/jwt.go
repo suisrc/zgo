@@ -22,8 +22,8 @@ type JwtGpaOpts struct {
 }
 
 // QueryAll sql select
-func (*JwtGpaOpts) QueryAll(sqlx *sqlx.DB, dest *[]JwtGpaOpts) error {
-	return nil
+func (*JwtGpaOpts) QueryAll(sqlx *sqlx.DB) (*[]JwtGpaOpts, error) {
+	return nil, nil
 }
 
 // QueryByKID kid

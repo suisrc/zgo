@@ -312,19 +312,40 @@ type SigninGpaUserRole struct {
 	SvcCode sql.NullString `tbl:"sv" db:"code"`
 }
 
-// QueryAllByUserID user -> user id / code -> org code
-func (a *SigninGpaUserRole) QueryAllByUserID(sqlx *sqlx.DB, dest *[]SigninGpaUserRole, user int, code string) error {
+// QueryAllByUserAndOrg user -> user id / code -> org code
+func (a *SigninGpaUserRole) QueryAllByUserAndOrg(sqlx *sqlx.DB, usr int, org string) (*[]SigninGpaUserRole, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}user_role ur 
 		inner join {{TP}}role ro on ro.id = ur.role_id 
 		left  join {{TP}}app_service sv on sv.id = ro.svc_id 
 		where ro.status = 1 and ur.user_id=?`
-	params := []interface{}{user}
-	if code != "" {
+	params := []interface{}{usr}
+	if org != "" {
 		SQL += " and ur.org_cod=?"
-		params = append(params, code)
+		params = append(params, org)
 	} else {
 		SQL += " and ur.org_cod is null"
 	}
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL, params...)
+	res := []SigninGpaUserRole{}
+	if err := sqlx.Select(&res, SQL, params...); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// QueryByUserAndRoleAndOrg user -> user id / code -> org code
+func (a *SigninGpaUserRole) QueryByUserAndRoleAndOrg(sqlx *sqlx.DB, user, role int, org string) error {
+	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}user_role ur 
+		inner join {{TP}}role ro on ro.id = ur.role_id 
+		left  join {{TP}}app_service sv on sv.id = ro.svc_id 
+		where ro.status = 1 and ur.user_id=? and ur.role_id=?`
+	params := []interface{}{user, role}
+	if org != "" {
+		SQL += " and ur.org_cod=?"
+		params = append(params, org)
+	} else {
+		SQL += " and ur.org_cod is null"
+	}
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Select(a, SQL, params...)
 }

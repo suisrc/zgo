@@ -74,37 +74,31 @@ type CasbinGpaModel struct {
 }
 
 // QueryAllByOrg 查询
-func (a *CasbinGpaModel) QueryAllByOrg(sqlx *sqlx.DB, dest *[]CasbinGpaModel, org string) error {
+func (a *CasbinGpaModel) QueryAllByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaModel, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_model pm where pm.org_cod is null or pm.org_cod = ?`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL, org)
+	res := []CasbinGpaModel{}
+	if err := sqlx.Select(&res, SQL, org); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
 // QueryByOrg 查询
-func (a *CasbinGpaModel) QueryByOrg(sqlx *sqlx.DB, org string) error {
-	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_model pm where pm.org_cod is null or pm.org_cod = ? desc pm.org_cod, pm.id limit 1`
+func (a *CasbinGpaModel) QueryByOrg(sqlx *sqlx.DB, org string) (*CasbinGpaModel, error) {
+	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_model pm 
+			where pm.org_cod is null or pm.org_cod = ? 
+			desc pm.org_cod, pm.id limit 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Get(a, SQL, org)
+	if err := sqlx.Get(a, SQL, org); err != nil {
+		return nil, err
+	}
+	return a, nil
 }
 
-// CasbinGpaRole Role, 授权角色需要排除管理员， 因为管理员会跳过所有的权限认证
-type CasbinGpaRole struct {
-	ID      int            `tbl:"ro" db:"id"`
-	KID     string         `tbl:"ro" db:"kid"`
-	Name    string         `tbl:"ro.name" db:"r_name"`
-	Svc     sql.NullString `tbl:"sv.name" db:"s_name"`
-	OrgCode sql.NullString `tbl:"ro" db:"org_cod"`
-	//Status  StatusType     `tbl:"ro" db:"status"`
-}
-
-// QueryByOrgWithStatus 查询 有效状态为1
-func (a *CasbinGpaRole) QueryByOrgWithStatus(sqlx *sqlx.DB, dest *[]CasbinGpaRole, org string) error {
-	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}role ro 
-		left join {{TP}}app_service sv on sv.id = ro.svc_id 
-		where (ro.org_cod is null or ro.org_cod = ?) and status = 1`
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL, org)
-}
+//==========================================================================================
+//==========================================================================================
+//==========================================================================================
 
 // CasbinGpaRoleRole RoleRole
 type CasbinGpaRoleRole struct {
@@ -115,8 +109,8 @@ type CasbinGpaRoleRole struct {
 	OrgCode    sql.NullString `tbl:"rr" db:"org_cod"`
 }
 
-// QueryByOrgWithStatus 查询 有效状态为1
-func (a *CasbinGpaRoleRole) QueryByOrgWithStatus(sqlx *sqlx.DB, dest *[]CasbinGpaRoleRole, org string) error {
+// QueryByOrg 查询 有效状态为1
+func (a *CasbinGpaRoleRole) QueryByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaRoleRole, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}role_role rr 
 		inner join {{TP}}role rp on rp.id = rr.pid
 		inner join {{TP}}role rc on rc.id = rr.cid
@@ -124,26 +118,32 @@ func (a *CasbinGpaRoleRole) QueryByOrgWithStatus(sqlx *sqlx.DB, dest *[]CasbinGp
 		left join {{TP}}app_service sc on sc.id = rc.svc_id
 		where (rr.org_cod is null or rr.org_cod = ?) and rp.status = 1 and rc.status = 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL, org)
+	res := []CasbinGpaRoleRole{}
+	err := sqlx.Select(&res, SQL, org)
+	return &res, err
 }
 
 // CasbinGpaRolePolicy RolePolicy
 type CasbinGpaRolePolicy struct {
-	role    string         `tbl:"ro.name" db:"r_name"`
+	Role    string         `tbl:"ro.name" db:"r_name"`
 	Svc     sql.NullString `tbl:"rv.name" db:"v_name"`
-	policy  string         `tbl:"po.name" db:"p_name"`
+	Policy  string         `tbl:"po.name" db:"p_name"`
 	OrgCode sql.NullString `tbl:"rp" db:"org_cod"`
 }
 
-// QueryByOrgWithStatus 查询 有效状态为1
-func (a *CasbinGpaRolePolicy) QueryByOrgWithStatus(sqlx *sqlx.DB, dest *[]CasbinGpaRolePolicy, org string) error {
+// QueryByOrg 查询 有效状态为1
+func (a *CasbinGpaRolePolicy) QueryByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaRolePolicy, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}role_policy rp 
 		inner join {{TP}}role ro on ro.id = rp.role_id
 		inner join {{TP}}policy po on po.id = rp.plcy_id
 		left join {{TP}}app_service sv on sv.id = ro.svc_id
 		where (rp.org_cod is null or rp.org_cod = ?) and ro.status = 1 and po.status = 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL, org)
+	res := []CasbinGpaRolePolicy{}
+	if err := sqlx.Select(&res, SQL, org); res != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
 // CasbinGpaPolicyStatement PolicyStatement 执行策略
@@ -152,19 +152,23 @@ type CasbinGpaPolicyStatement struct {
 	OrgCode   sql.NullString `tbl:"po" db:"org_cod"`
 	Status    StatusType     `tbl:"po" db:"status"`
 	Version   int            `tbl:"po" db:"version"` // 版本必须匹配
-	effect    bool           `tbl:"ps" db:"effect"`
-	action    sql.NullString `tbl:"ps" db:"action"`
-	resource  sql.NullString `tbl:"ps" db:"resource"`
-	condition sql.NullString `tbl:"ps" db:"condition"`
+	Effect    bool           `tbl:"ps" db:"effect"`
+	Action    sql.NullString `tbl:"ps" db:"action"`
+	Resource  sql.NullString `tbl:"ps" db:"resource"`
+	Condition sql.NullString `tbl:"ps" db:"condition"`
 }
 
-// QueryByOrgWithStatus 查询 有效状态为1
-func (a *CasbinGpaPolicyStatement) QueryByOrgWithStatus(sqlx *sqlx.DB, dest *[]CasbinGpaRolePolicy, org string) error {
+// QueryByOrg 查询 有效状态为1
+func (a *CasbinGpaPolicyStatement) QueryByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaPolicyStatement, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_statement ps 
 		inner join {{TP}}policy py on py.id = ps.plcy_id and py.version = ps.version
 		where (py.org_cod is null or py.org_cod = ?) and py.status = 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL, org)
+	res := []CasbinGpaPolicyStatement{}
+	if err := sqlx.Select(&res, SQL, org); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }
 
 // CasbinGpaPolicyServiceAction PolicyServiceAction
@@ -176,11 +180,15 @@ type CasbinGpaPolicyServiceAction struct {
 }
 
 // QueryActionByNameAndSvc 查询相应时间 * -> % / ? -> _
-func (a *CasbinGpaPolicyServiceAction) QueryActionByNameAndSvc(sqlx *sqlx.DB, dest *[]CasbinGpaPolicyServiceAction, name, svc string) error {
+func (a *CasbinGpaPolicyServiceAction) QueryActionByNameAndSvc(sqlx *sqlx.DB, name, svc string) (*[]CasbinGpaPolicyServiceAction, error) {
 	params := []interface{}{svc, strings.ReplaceAll(strings.ReplaceAll(name, "?", "_"), "*", "%")}
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_service_action psa 
 		inner join app_service psv on psv.id = psa.svc_id and psv.code = ? 
 		where pas.name like ?`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL, params...)
+	res := []CasbinGpaPolicyServiceAction{}
+	if err := sqlx.Select(&res, SQL, params...); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }

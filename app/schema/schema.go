@@ -10,7 +10,7 @@ const (
 	// SuperUser 超级用户
 	SuperUser string = "su"
 	// PlatformCode 平台
-	PlatformCode string = "P6M"
+	PlatformCode string = "p6m"
 )
 
 // AccountType 账户类型

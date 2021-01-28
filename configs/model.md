@@ -46,7 +46,7 @@ BCR2 -> 对salt进行了简单的倒序处理, BCR3 -> 对salt进行了以hashpa
 | platform_kid  | 账户归属平台   | 字符串   | 被授权平台, NULL标识不归属任何平台                  | varchar(64), udx_account,fk_account_platform_kid->platform.kid |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | user_id       | 用户标识       | 数值     |                                                     | int(11) NOT NULL, fk_account_user_id->user.id        |
-| role_id       | 角色标识       | 数值     | 如果不为空,表示账户和角色绑定                       | int(11), fk_account_role_id->user_role.id            |
+| role_id       | 角色标识       | 数值     | 如果不为空,表示账户和角色绑定, 角色可能被删除       | int(11), idx_account_role_id                         |
 | org_cod       | 租户标识       | 字符串   | 如果不为空,表示账户和租户绑定                       | varchar(64), fk_account_org_cod->tenant.code         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | password      | 登录密码       | 字符串   | 1.密码, 2:签名密钥 3:密钥 4:密钥                    | varchar(255)                                         |
@@ -336,6 +336,8 @@ NoSign: 为登录的人可以访问
 NoUser: 没有用户的人可以访问（一般用于第三方登录， 用于用户归一操作前可以访问）
 NoRole: 没有角色的人可以访问
 
+角色一旦建立， 无法删除
+
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
@@ -346,7 +348,7 @@ NoRole: 没有角色的人可以访问
 | org_cod       | 租户标识       | 字符串   | 角色归属的租户， 1表示平台                          | varchar(64), udx_role_name,fk_role_org_cod->tenant.code |
 | org_adm       | 管理员         | 数值     | 1:是管理员 0:普通用户 ->管理员跳过机构内部权限      | tinyint(4) DEFAULT 1                                 |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| status        | 状态           | 数值     | 1:启用 0:禁用 2:未激活(备用)                        | tinyint(4) DEFAULT 1                                 |
+| status        | 状态           | 数值     | 1:启用 0:禁用 2:未激活(备用）3:删除                 | tinyint(4) DEFAULT 1                                 |
 | description   | 角色描述       | 字符串   |                                                     | varchar(255)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -365,9 +367,9 @@ NoRole: 没有角色的人可以访问
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| pid           | 父节点标识     | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_role_pid->role.id           |
-| cid           | 子节点标识     | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_role_cid->role.id           |
-| org_cod       | 租户标识       | 数值     |                                                     | varchar(64), fk_role_role_org_cod->tenant.code       |
+| pid           | 父节点标识     | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_role_pid->role.id  |
+| cid           | 子节点标识     | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_role_cid->role.id  |
+| org_cod       | 租户标识       | 数值     | 冗余字段， 和角色org_cod相同                        | varchar(64), fk_role_role_org_cod->tenant.code       |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
 | created_at    | 创建时间       | 时间格式 |                                                     | timestamp                                            |
@@ -379,9 +381,9 @@ NoRole: 没有角色的人可以访问
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| user_id       | 账户标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_user_role_user_id->user.id       |
-| role_id       | 角色标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_user_role_role_id->role.id       |
-| org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_user_role_org_cod->tenant.code       |
+| user_id       | 账户标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_user_role_user_id->user.id |
+| role_id       | 角色标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_user_role_role_id->role.id |
+| org_cod       | 租户标识       | 字符串   | 冗余字段， 和角色org_cod相同                        | varchar(64), fk_user_role_org_cod->tenant.code       |
 | expired       | 授权有效期     | 时间格式 |                                                     | timestamp                                            |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -395,8 +397,8 @@ NoRole: 没有角色的人可以访问
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| role_id       | 角色标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_policy_role_id->role.id     |
-| plcy_id       | 策略标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_policy_plcy_id->role.id     |
+| role_id       | 角色标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_policy_role_id->role.id |
+| plcy_id       | 策略标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_policy_plcy_id->policy.id |
 | org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_role_policy_org_cod->tenant.code     |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | creator       | 创建人         | 字符串   |                                                     | varchar(64)                                          |
@@ -408,12 +410,12 @@ NoRole: 没有角色的人可以访问
 ---
 ## 用户角色实体(`user_policy`)
 
-用户直接指定策略， 保留， 暂时不使用
+用户直接指定策略， 保留， 暂时不使用,暂时不使用,暂时不使用
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| user_id       | 账户标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_role_user_id->user.id       |
-| plcy_id       | 策略标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_role_plcy_id->role.id       |
+| user_id       | 账户标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_role_user_id->user.id |
+| plcy_id       | 策略标识       | 数值     |                                                     | int(11) NOT NULL, primary,fk_role_role_plcy_id->role.id |
 | org_cod       | 租户标识       | 字符串   |                                                     | varchar(64), fk_user_policy_org_cod->tenant.code     |
 | expired       | 授权有效期     | 时间格式 |                                                     | timestamp                                            |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |

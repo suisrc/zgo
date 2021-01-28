@@ -27,18 +27,21 @@ type Signin struct {
 	gpa.GPA
 	Auther        auth.Auther
 	SigninService service.Signin
+	CasbinAuther  *service.CasbinAuther
 }
 
 // Register 注册路由,认证接口特殊,需要独立注册
 // sign 开头的路由会被全局casbin放行
 func (a *Signin) Register(r gin.IRouter) {
 
-	r.POST("signin", a.signin)                // 登录系统， 获取令牌 POST请求
-	r.GET("signout", a.signout)               // 登出系统， 注销令牌（访问令牌和刷新令牌）
-	r.GET("signin/refresh", a.refresh)        // 刷新令牌
-	r.GET("signin/captcha", a.captcha)        // 发送验证码
-	r.GET("pub/3rd/token/new", a.token3rdNew) // 构建新的访问令牌
-	r.GET("pub/3rd/token/get", a.token3rdGet) // 获取新的访问令牌
+	uac := a.CasbinAuther.UserAuthBasicMiddleware()
+
+	r.POST("signin", a.signin)                     // 登录系统， 获取令牌 POST请求
+	r.GET("signout", uac, a.signout)               // 登出系统， 注销令牌（访问令牌和刷新令牌）
+	r.GET("signin/refresh", a.refresh)             // 刷新令牌
+	r.GET("signin/captcha", a.captcha)             // 发送验证码
+	r.GET("pub/3rd/token/new", uac, a.token3rdNew) // 构建新的访问令牌
+	r.GET("pub/3rd/token/get", a.token3rdGet)      // 获取新的访问令牌
 	//r.GET("signin/mfa", a.signinMFA)
 	//r.POST("signup", a.signup) // 注册
 	//r.GET("signin/oauth2/:kid", a.oauth2) // OAUTH2登陆使用GET请求
@@ -114,15 +117,7 @@ func (a *Signin) signout(c *gin.Context) {
 	// user, b := helper.GetUserInfo(c)
 
 	// 确定登陆用户的身份
-	user, err := a.Auther.GetUserInfo(c)
-	if err != nil {
-		if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
-			helper.ResError(c, helper.Err401Unauthorized)
-			return
-		}
-		helper.ResError(c, helper.Err400BadRequest)
-		return
-	}
+	user, _ := a.Auther.GetUserInfo(c)
 
 	// 执行登出
 	if err := a.Auther.DestroyToken(c, user); err != nil {
@@ -375,15 +370,9 @@ func (a *Signin) captcha(c *gin.Context) {
 func (a *Signin) token3rdNew(c *gin.Context) {
 
 	// 确定登陆用户的身份
-	usr, err := a.Auther.GetUserInfo(c)
-	if err != nil {
-		if err == auth.ErrInvalidToken || err == auth.ErrNoneToken {
-			helper.ResError(c, helper.Err401Unauthorized)
-			return
-		}
-		helper.ResError(c, helper.Err400BadRequest)
-		return
-	}
+	// 确定登陆用户的身份
+	usr, _ := a.Auther.GetUserInfo(c)
+
 	aid, uid, _ := service.DecryptAccountWithUser(c, usr.GetAccount(), usr.GetTokenID())
 	tid := jwt.NewTokenID(strconv.Itoa(aid))
 	tkn := tid + "_" + crypto.UUID(21)
@@ -405,7 +394,7 @@ func (a *Signin) token3rdNew(c *gin.Context) {
 		return
 	}
 	// 返回正常结果即可
-	helper.ResSuccess(c, helper.H{"status": "ok", "token": tkn})
+	helper.ResSuccess(c, helper.H{"status": "ok", "code": tkn})
 
 }
 
@@ -455,7 +444,7 @@ func (a *Signin) token3rdGet(c *gin.Context) {
 // 获取旧的访问令牌
 func (a *Signin) getSigninGpaAccountTokenByDelay(c *gin.Context) *schema.SigninGpaAccountToken {
 	// 需要注意, 刷新令牌只有一次有效
-	tid := c.Request.FormValue("token")
+	tid := c.Request.FormValue("code")
 	if tid == "" {
 		helper.ResError(c, helper.Err401Unauthorized)
 		return nil

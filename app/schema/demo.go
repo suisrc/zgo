@@ -21,8 +21,12 @@ func (a *DemoSet) QueryByID(sqlx *sqlx.DB, id int) error {
 }
 
 // QueryByNamelike select by name like
-func (a *DemoSet) QueryByNamelike(sqlx *sqlx.DB, dest *[]DemoSet, name string) error {
+func (a *DemoSet) QueryByNamelike(sqlx *sqlx.DB, name string) (*[]DemoSet, error) {
 	SQL := "select code, name, memo from {{TP}}demo where name like ?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(dest, SQL, "%"+name+"%")
+	res := []DemoSet{}
+	if err := sqlx.Select(&res, SQL, "%"+name+"%"); err != nil {
+		return nil, err
+	}
+	return &res, nil
 }

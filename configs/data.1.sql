@@ -195,3 +195,22 @@ INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom
 
 INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES
 (118, null, 100118, "许亚楠",  1, "123456", null, null, null, "ORGCM3558", 1, "测试001");
+
+HSH20160483  王雪鹏
+HSH20160351  李怡谆
+HSH20160294  黄磊
+
+INSERT INTO `zgo_user`(`id`, `type`, `kid`, `name`, `status`) VALUES
+(100121, "usr", "u00020210128xx1000021111x000000000x000000000x121", "王雪鹏",  1)，
+(100122, "usr", "u00020210128xx1000021111x000000000x000000000x122", "李怡谆",  1),
+(100123, "usr", "u00020210128xx1000021111x000000000x000000000x123", "黄磊",  1);
+
+INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom_id`) VALUES
+(100121, "ORGCM3558", "u000xx10000120210128xx100002111100000121", "王雪鹏",   "HSH20160483"),
+(100122, "ORGCM3558", "u000xx10000120210128xx100002111100000122", "李怡谆",   "HSH20160351"),
+(100123, "ORGCM3558", "u000xx10000120210128xx100002111100000123", "黄磊",   "HSH20160294");
+
+INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES
+(121, null, 100121, "王雪鹏",  1, "123456", null, null, null, "ORGCM3558", 1, "生产001"),
+(122, null, 100122, "李怡谆",  1, "123456", null, null, null, "ORGCM3558", 1, "生产001"),
+(123, null, 100123, "黄磊",  1, "123456", null, null, null, "ORGCM3558", 1, "生产001");

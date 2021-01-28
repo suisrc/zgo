@@ -211,33 +211,51 @@ func (a *Signin) GetSignUserInfo(c *gin.Context, sa *schema.SigninGpaAccount, l 
 func (a *Signin) SetSignUserWithRole(c *gin.Context, sa *schema.SigninGpaAccount, suser *schema.SigninUser) error {
 
 	// 查询用户的所有的角色
-	role0 := schema.SigninGpaUserRole{}
-	roles := []schema.SigninGpaUserRole{}
-	if err := role0.QueryAllByUserID(a.Sqlx, &roles, sa.UserID, suser.OrgCode); err != nil {
-		return err
-	}
-	if len(roles) == 0 {
-		// 当前用户没有可用角色
+	role := schema.SigninGpaUserRole{}
+	if sa.RoleID.Valid {
+		// 登录账户上绑定了角色
+		if err := role.QueryByUserAndRoleAndOrg(a.Sqlx, sa.UserID, int(sa.RoleID.Int64), suser.OrgCode); err != nil {
+			if sqlxc.IsNotFound(err) { // 角色没有找到
+				return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-NOROLE", Other: "账户角色失效，账户无法使用"})
+			}
+			return err // 未知异常
+		}
+		if role.OrgAdm {
+			suser.OrgAdmin = schema.SuperUser
+			return nil // 超级管理员， 不需要角色
+		} else if role.SvcCode.Valid {
+			// 应用角色
+			suser.SetUserRoles([]string{role.SvcCode.String + ":" + role.Name})
+		} else {
+			// 租户角色
+			suser.SetUserRoles([]string{role.Name})
+		}
 		return nil
 	}
-	// 处理得到的用户角色
-	rs := []string{}
-	for _, r := range roles {
-		if r.OrgAdm {
-			// 发现用户具有管理员权限， 直接跳过所有权限检索
-			suser.OrgAdmin = schema.SuperUser
-			return nil
+	// 账户上没有角色， 取用户在对应租户下的所有角色
+	if roles, err := role.QueryAllByUserAndOrg(a.Sqlx, sa.UserID, suser.OrgCode); err != nil {
+		if !sqlxc.IsNotFound(err) {
+			return err
 		}
-		if r.SvcCode.Valid {
-			// 应用专有角色
-			rs = append(rs, r.SvcCode.String+":"+r.Name)
-		} else {
-			// 通用租户角色
-			rs = append(rs, r.Name)
+	} else if len(*roles) > 0 {
+		// 处理得到的用户角色列表
+		rs := []string{}
+		for _, r := range *roles {
+			if r.OrgAdm {
+				// 一旦用户具有管理员角色， 系统会无视其他所有角色的使用
+				suser.OrgAdmin = schema.SuperUser
+				return nil
+			} else if r.SvcCode.Valid {
+				// 应用角色
+				rs = append(rs, r.SvcCode.String+":"+r.Name)
+			} else {
+				// 租户角色
+				rs = append(rs, r.Name)
+			}
 		}
+		// 设定用户角色
+		suser.SetUserRoles(rs)
 	}
-	// 设定用户角色
-	suser.SetUserRoles(rs)
 	return nil
 }
 
