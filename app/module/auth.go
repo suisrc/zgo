@@ -1,4 +1,4 @@
-package service
+package module
 
 import (
 	"context"
@@ -23,8 +23,15 @@ import (
 // 认证需要频繁操作,所以这里需要使用内存缓存
 type AuthOpts struct {
 	gpa.GPA
-	Storer store.Storer
-	Jwts   map[interface{}]*schema.JwtGpaOpts
+	Storer         store.Storer
+	CachedJwtOtps1 map[interface{}]*AuthJwt // 加密配置
+	CachedExpireAt time.Time                // 刷新时间
+}
+
+// AuthJwt 验证器
+type AuthJwt struct {
+	JwtOpts  *schema.JwtGpaOpts // 加密配置
+	ExpireAt time.Time          // 刷新时间
 }
 
 // NewAuther of auth.Auther
@@ -36,13 +43,14 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 		logger.Infof(nil, "jwt secret: %s", secret)
 	}
 
-	opts.Jwts = map[interface{}]*schema.JwtGpaOpts{}
+	opts.CachedJwtOtps1 = map[interface{}]*AuthJwt{}
+	opts.CachedExpireAt = time.Now().Add(2 * time.Minute)
 	auther := jwt.New(opts.Storer,
-		jwt.SetKeyFunc(opts.keyFunc),
-		jwt.SetNewClaims(opts.signingFunc),
-		jwt.SetFixClaimsFunc(opts.claimsFunc),
-		jwt.SetUpdateFunc(opts.updateFunc),
-		jwt.SetTokenFunc(opts.tokenFunc),
+		jwt.SetKeyFunc(opts.key),
+		jwt.SetNewClaims(opts.signing),
+		jwt.SetFixClaimsFunc(opts.claims),
+		jwt.SetUpdateFunc(opts.update),
+		jwt.SetTokenFunc(opts.token),
 		jwt.SetSigningSecret(secret),                  // 注册令牌签名密钥
 		jwt.SetExpired(config.C.JWTAuth.LimitExpired), // 访问令牌生命周期
 		jwt.SetRefresh(config.C.JWTAuth.LimitRefresh), // 刷新令牌声明周期
@@ -52,8 +60,23 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 	return auther
 }
 
+// jwt 获取加密认证的jwt配置信息
+func (a *AuthOpts) jwtopt(ctx context.Context, kid interface{}) (*AuthJwt, bool) {
+	jwt, ok := a.CachedJwtOtps1[kid]
+	return jwt, ok
+	// return nil, false
+}
+
+// 更新认证
+func (a *AuthOpts) update(c context.Context) error {
+	// 使用按需加载的方式， 所以这里的更新， 只要清除缓存即可， 我们可以通过jwtopt方法重新加载缓存
+	a.CachedJwtOtps1 = map[interface{}]*AuthJwt{}
+	a.CachedExpireAt = time.Now().Add(2 * time.Minute)
+	return nil
+}
+
 // 获取令牌的方式
-func (a *AuthOpts) tokenFunc(ctx context.Context) (string, error) {
+func (a *AuthOpts) token(ctx context.Context) (string, error) {
 	if c, ok := ctx.(*gin.Context); ok {
 		if state := c.Query("state"); state != "" {
 			// 使用state隐藏令牌,一般用于重定向回调上
@@ -69,54 +92,39 @@ func (a *AuthOpts) tokenFunc(ctx context.Context) (string, error) {
 	return "", auth.ErrNoneToken
 }
 
-// 更新认证
-func (a *AuthOpts) updateFunc(c context.Context) error {
-	//opts := map[interface{}]*schema.JwtGpaOpts{}
-	//jwtOpt := new(schema.JwtGpaOpts)
-	//jwtOpts := []schema.JwtGpaOpts{}
-	// if err := jwtOpt.QueryAll(a.Sqlx, &jwtOpts); err != nil {
-	// 	logger.Errorf(c, logger.ErrorWW(err)) // 更新发生异常
-	// } else {
-	// 	for _, v := range jwtOpts {
-	// 		v.SecretByte = []byte(v.Secret)
-	// 		opts[v.KID] = &v
-	// 	}
-	// }
-	//a.Jwts = opts
-
-	return nil
-}
-
 // 修正令牌
-func (a *AuthOpts) claimsFunc(c context.Context, claims *jwt.UserClaims) error {
+func (a *AuthOpts) claims(c context.Context, claims *jwt.UserClaims) (int, error) {
 	if kid, ok := helper.GetCtxValueToString(c, helper.ResJwtKey); ok {
-		opt, ok := a.Jwts[kid]
+		opt, ok := a.jwtopt(c, kid)
 		if !ok {
-			return errors.New("signing jwt, kid error")
+			return -1, errors.New("signing jwt, kid error")
 		}
-		if opt.Expired > 0 {
+		if opt.JwtOpts.Expired.Valid && opt.JwtOpts.Expired.Int64 > 0 {
 			now := time.Unix(claims.IssuedAt, 0)
-			claims.ExpiresAt = now.Add(time.Duration(opt.Expired) * time.Second).Unix() // 修改时间
+			claims.ExpiresAt = now.Add(time.Duration(opt.JwtOpts.Expired.Int64) * time.Second).Unix() // 修改时间
 		}
-		if opt.Audience.Valid {
-			claims.Audience = opt.Audience.String
+		if opt.JwtOpts.Audience.Valid {
+			claims.Audience = opt.JwtOpts.Audience.String
 		}
-		if opt.Issuer.Valid {
-			claims.Issuer = opt.Issuer.String
+		if opt.JwtOpts.Issuer.Valid {
+			claims.Issuer = opt.JwtOpts.Issuer.String
+		}
+		if opt.JwtOpts.Refresh.Valid && opt.JwtOpts.Refresh.Int64 > 0 {
+			return int(opt.JwtOpts.Refresh.Int64), nil
 		}
 	}
-	return nil
+	return -1, nil
 }
 
 // 获取jwt密钥
-func (a *AuthOpts) keyFunc(c context.Context, token *jwtgo.Token, method jwtgo.SigningMethod, secret interface{}) (interface{}, error) {
+func (a *AuthOpts) key(c context.Context, token *jwtgo.Token, method jwtgo.SigningMethod, secret interface{}) (interface{}, error) {
 	token.Method = method // 强制使用配置, 防止alg使用none而跳过验证
 
 	// 获取处理的密钥
 	if kid, ok := token.Header["kid"]; ok {
 		helper.SetCtxValue(c, helper.ResJwtKey, kid)
-		if opt, ok := a.Jwts[kid]; ok {
-			return opt.SecretByte, nil
+		if opt, ok := a.jwtopt(c, kid); ok {
+			return opt.JwtOpts.SecretByte, nil
 		}
 		return nil, errors.New("parse jwt, kid error")
 	}
@@ -125,10 +133,10 @@ func (a *AuthOpts) keyFunc(c context.Context, token *jwtgo.Token, method jwtgo.S
 }
 
 // 签名jwt令牌
-func (a *AuthOpts) signingFunc(c context.Context, claims *jwt.UserClaims, method jwtgo.SigningMethod, secret interface{}) (string, error) {
+func (a *AuthOpts) signing(c context.Context, claims *jwt.UserClaims, method jwtgo.SigningMethod, secret interface{}) (string, error) {
 	if kid, ok := helper.GetCtxValueToString(c, helper.ResJwtKey); ok {
 		// 使用jwt私有密钥
-		if opt, ok := a.Jwts[kid]; ok {
+		if opt, ok := a.jwtopt(c, kid); ok {
 			token := &jwtgo.Token{
 				Header: map[string]interface{}{
 					"typ": "JWT",
@@ -138,7 +146,7 @@ func (a *AuthOpts) signingFunc(c context.Context, claims *jwt.UserClaims, method
 				Claims: claims,
 				Method: method,
 			}
-			return token.SignedString(opt.SecretByte)
+			return token.SignedString(opt.JwtOpts.SecretByte)
 		}
 		return "", errors.New("signing jwt kid error")
 	}

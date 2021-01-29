@@ -22,7 +22,7 @@ type options struct {
 	signingMethod    jwt.SigningMethod                                                                      // 签名方法
 	signingSecret    interface{}                                                                            // 公用签名密钥
 	signingFunc      func(context.Context, *UserClaims, jwt.SigningMethod, interface{}) (string, error)     // JWT构建令牌
-	claimsFunc       func(context.Context, *UserClaims) error                                               // 处理令牌载体, 对载体的内容进行处理
+	claimsFunc       func(context.Context, *UserClaims) (refresh int, err error)                            // 处理令牌载体, 对载体的内容进行处理
 	keyFunc          func(context.Context, *jwt.Token, jwt.SigningMethod, interface{}) (interface{}, error) // JWT中获取密钥, 该内容可以忽略默认的signingMethod和signingSecret
 	parseClaimsFunc  func(context.Context, string) (*UserClaims, error)                                     // 解析令牌
 	parseRefreshFunc func(context.Context, string) (*UserClaims, error)                                     // 解析刷新令牌
@@ -104,7 +104,7 @@ func SetUpdateFunc(f func(context.Context) error) Option {
 }
 
 // SetFixClaimsFunc 设定修复载体的方法
-func SetFixClaimsFunc(f func(context.Context, *UserClaims) error) Option {
+func SetFixClaimsFunc(f func(context.Context, *UserClaims) (int, error)) Option {
 	return func(o *options) {
 		o.claimsFunc = f
 	}
@@ -204,9 +204,12 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 	claims.NotBefore = now.Unix()
 	claims.ExpiresAt = now.Add(time.Duration(a.opts.expired) * time.Second).Unix()
 
+	refresh := a.opts.refresh
 	if a.opts.claimsFunc != nil {
-		if err := a.opts.claimsFunc(c, claims); err != nil {
+		if rfr, err := a.opts.claimsFunc(c, claims); err != nil {
 			return nil, nil, err
+		} else if rfr > 0 {
+			refresh = rfr
 		}
 	}
 
@@ -221,7 +224,7 @@ func (a *Auther) GenerateToken(c context.Context, user auth.UserInfo) (auth.Toke
 		AccessToken:  tokenString,
 		ExpiresAt:    claims.ExpiresAt,
 		RefreshToken: NewRefreshToken(claims.Id),
-		RefreshExpAt: now.Add(time.Duration(a.opts.refresh) * time.Second).Unix(),
+		RefreshExpAt: now.Add(time.Duration(refresh) * time.Second).Unix(),
 	}
 	return tokenInfo, claims, nil
 }

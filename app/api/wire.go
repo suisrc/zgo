@@ -3,6 +3,7 @@ package api
 import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/app/api/manager"
+	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/middlewire"
@@ -48,7 +49,7 @@ type Options struct {
 	System *System
 
 	// 权限管理
-	CasbinAuther *service.CasbinAuther
+	CasbinAuther *module.CasbinAuther
 
 	// 管理界面
 	ManagerWire *manager.Wire

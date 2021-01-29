@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
+	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/modules/auth"
@@ -27,7 +28,7 @@ type Signin struct {
 	gpa.GPA
 	Auther        auth.Auther
 	SigninService service.Signin
-	CasbinAuther  *service.CasbinAuther
+	CasbinAuther  *module.CasbinAuther
 }
 
 // Register 注册路由,认证接口特殊,需要独立注册

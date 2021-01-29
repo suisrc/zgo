@@ -11,8 +11,8 @@ type JwtGpaOpts struct {
 	ID          int            `db:"id"`
 	KID         string         `db:"kid"`
 	Secret      string         `db:"secret"`
-	Expired     int            `db:"expired"`
-	Refresh     int            `db:"refresh"`
+	Expired     sql.NullInt64  `db:"expired"`
+	Refresh     sql.NullInt64  `db:"refresh"`
 	Issuer      sql.NullString `db:"issuer"`
 	Audience    sql.NullString `db:"audience"`
 	SigninURL   sql.NullString `db:"signin_url"`

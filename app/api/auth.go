@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/modules/helper"
@@ -14,7 +15,7 @@ import (
 
 // Auth auth
 type Auth struct {
-	CasbinAuther *service.CasbinAuther
+	CasbinAuther *module.CasbinAuther
 }
 
 // Register 注册路由,认证接口特殊,需要独立注册

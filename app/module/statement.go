@@ -1,4 +1,4 @@
-package service
+package module
 
 // CasbinObject subject
 type CasbinObject struct {

@@ -110,7 +110,7 @@ type JWTAuth struct {
 	FilePath      string
 	RedisDB       int
 	RedisPrefix   string
-	LimitTime     int64 `default:"30"`    // 同时间内, 获取的访问令牌相同, 可以配置<=0, 不使用缓存
+	LimitTime     int64 `default:"0"`     // 同时间内, 获取的访问令牌相同, 可以配置<=0, 不使用缓存
 	LimitExpired  int   `default:"3600"`  // 访问令牌过期时间, 默认60分钟
 	LimitRefresh  int   `default:"86400"` // 刷新令牌过期时间, 默认24小时
 }

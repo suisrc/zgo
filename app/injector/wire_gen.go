@@ -11,6 +11,7 @@ import (
 	"github.com/suisrc/zgo/app/model/entc"
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
+	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/oauth2"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/middlewire"
@@ -40,18 +41,18 @@ func BuildInjector() (*Injector, func(), error) {
 	demo := &api.Demo{
 		GPA: gpaGPA,
 	}
-	storer, cleanup3, err := service.NewStorer()
+	storer, cleanup3, err := module.NewStorer()
 	if err != nil {
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	authOpts := &service.AuthOpts{
+	authOpts := &module.AuthOpts{
 		GPA:    gpaGPA,
 		Storer: storer,
 	}
-	auther := service.NewAuther(authOpts)
-	casbinAuther := &service.CasbinAuther{
+	auther := module.NewAuther(authOpts)
+	casbinAuther := &module.CasbinAuther{
 		GPA:    gpaGPA,
 		Storer: storer,
 		Auther: auther,

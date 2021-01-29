@@ -261,18 +261,18 @@ func (a *Signin) SetSignUserWithRole(c *gin.Context, sa *schema.SigninGpaAccount
 
 // SetSignUserWithClient with client info
 func (a *Signin) SetSignUserWithClient(c *gin.Context, sa *schema.SigninGpaAccount, suser *schema.SigninUser) error {
-	domain := c.Request.Host // 用户请求域名
-	client := schema.JwtGpaOpts{}
-	if err := client.QueryByAudience(a.Sqlx, domain, suser.OrgCode); err == nil && client.ID > 0 {
-		// return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
-		helper.SetCtxValue(c, helper.ResJwtKey, client.KID) // 配置客户端, 该内容会影响JWT签名方式
-		if client.Issuer.Valid {
-			suser.Issuer = client.Issuer.String
-		}
-		if client.Audience.Valid {
-			suser.Audience = client.Audience.String
-		}
-	}
+	// domain := c.Request.Host // 用户请求域名
+	// client := schema.JwtGpaOpts{}
+	// if err := client.QueryByAudience(a.Sqlx, domain, suser.OrgCode); err == nil && client.ID > 0 {
+	// 	// return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
+	// 	helper.SetCtxValue(c, helper.ResJwtKey, client.KID) // 配置客户端, 该内容会影响JWT签名方式
+	// 	if client.Issuer.Valid {
+	// 		suser.Issuer = client.Issuer.String
+	// 	}
+	// 	if client.Audience.Valid {
+	// 		suser.Audience = client.Audience.String
+	// 	}
+	// }
 	if suser.Issuer == "" {
 		suser.Issuer = c.Request.Host
 	}
