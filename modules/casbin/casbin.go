@@ -45,7 +45,7 @@ func NewCasbinEnforcer(adapter persist.Adapter) (*casbin.SyncedEnforcer, func(),
 
 	// 注册方法
 	enforcer.AddFunction("domainMatch", DomainMatchFunc)
-	enforcer.AddFunction("actionMatch", ActionMatchFunc)
+	enforcer.AddFunction("methodMatch", MethodMatchFunc)
 	enforcer.AddFunction("audienceMatch", AudienceMatchFunc)
 
 	return enforcer, cleanFunc, nil
@@ -99,12 +99,12 @@ func AudienceMatchFunc(args ...interface{}) (interface{}, error) {
 	return DomainMatch(domain1, domain2), nil
 }
 
-// ActionMatchFunc action
-func ActionMatchFunc(args ...interface{}) (interface{}, error) {
-	action := args[0].(string)
-	actions := args[1].(string)
-	if actions == "" || actions == "*" {
+// MethodMatchFunc action
+func MethodMatchFunc(args ...interface{}) (interface{}, error) {
+	method := args[0].(string)
+	methods := args[1].(string)
+	if methods == "" || methods == "*" {
 		return true, nil
 	}
-	return strings.Contains(actions, "("+action+")"), nil
+	return strings.Contains(methods, method), nil
 }

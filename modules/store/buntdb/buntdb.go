@@ -51,7 +51,10 @@ func (a *Store) Get(ctx context.Context, key string) (string, bool, error) {
 	var value string
 	err := a.db.View(func(tx *buntdb.Tx) error {
 		val, err := tx.Get(key)
-		if err != nil && err != buntdb.ErrNotFound {
+		if err != nil {
+			if err == buntdb.ErrNotFound {
+				return nil
+			}
 			return err
 		}
 		value = val

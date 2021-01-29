@@ -29,50 +29,6 @@ import (
 // 2.如果在同一个位置(租户或应用)上有多个角色， 服务直接拒绝
 // 3.子应用角色优先于租户角色(名称排他除外)
 // 3.子应用可以使用使用X-Request-Svc-[SVC-NAME]-Role指定服务角色， 且角色有限被使用
-var (
-	// CasbinPolicyModel casbin使用的对比模型
-	CasbinPolicyModel = `
-[request_definition]
-r = sub, obj, role
-
-[policy_definition]
-p = sub, svc, org, path, eft
-
-[role_definition]
-g = _, _
-g2 = _, _
-
-[policy_effect]
-e = some(where (p.eft == allow)) && !some(where (p.eft == deny))
-
-[matchers]
-m = 
-`
-	// CasbinPolicyMatcher casbin使用的对比模型
-	CasbinDefaultMatcher = `g(r.role, p.sub) && (p.path=="" || keyMatch(r.obj.Path, p.path))`
-	// `(g(r.role, p.sub) || keyMatch(p.sub, "u:*") && g2(r.sub.Usr, p.sub)) && (p.path=="" || keyMatch(r.obj.Path, p.path))`
-)
-
-var (
-	// CasbinSvcRoleKey 角色配置
-	CasbinSvcRoleKey = "X-Request-Svc-[SVC-NAME]-Role"
-	// CasbinSysRoleKey 系统平台角色
-	CasbinSysRoleKey = "X-Request-Sys-Role"
-	// CasbinSvcPublic 公共服务
-	CasbinSvcPublic = "pub-"
-	// CasbinNoSign 未登陆
-	CasbinNoSign = "nosign"
-	// CasbinNoRole 无角色
-	CasbinNoRole = "norole"
-	// CasbinNoUser 无用户
-	CasbinNoUser = "nouser"
-	// CasbinRolePrefix 角色
-	CasbinRolePrefix = "r:"
-	// CasbinUserPrefix 用户
-	CasbinUserPrefix = "u:"
-	// CasbinPolicyPrefix 策略
-	CasbinPolicyPrefix = "p:"
-)
 
 // CasbinAuther 权限管理
 type CasbinAuther struct {
@@ -124,13 +80,13 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 		}
 		// 获取访问的域名和路径
 		var host, path string // casbin -> 参数
-		if host, err := handle(c, helper.XReqOriginHostKey); err != nil {
+		if host, err = handle(c, helper.XReqOriginHostKey); err != nil {
 			helper.ResError(c, helper.Err403Forbidden)
 			return
 		} else if host == "default" {
 			host = c.Request.Host
 		}
-		if path, err := handle(c, helper.XReqOriginPathKey); err != nil {
+		if path, err = handle(c, helper.XReqOriginPathKey); err != nil {
 			helper.ResError(c, helper.Err403Forbidden)
 			return
 		} else if path == "default" {
@@ -178,7 +134,9 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 		// 获取用户访问角色
 		role, err := a.GetUserRole(c, user, svc, org)
 		if err != nil {
-			helper.FixResponse403Error(c, err, nil)
+			helper.FixResponse403Error(c, err, func() {
+				logger.Errorf(c, logger.ErrorWW(err))
+			})
 			return
 		}
 		if role == "" {
@@ -214,6 +172,14 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 			Method: method,                // casbin -> 参数 请求方法
 			Client: helper.GetClientIP(c), // casbin -> 参数 请求IP
 		}
+		// fix prefix for casbin
+		if sub.Usr != "" {
+			sub.Usr = CasbinUserPrefix + sub.Usr
+		}
+		if sub.OrgUsr != "" {
+			sub.OrgUsr = CasbinUserPrefix + sub.OrgUsr
+		}
+		ros := CasbinRolePrefix + role
 
 		if enforcer, err := a.GetEnforcer(conf, c, user, svc, org); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -230,7 +196,7 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 			// 授权发生异常, 没有可用权限验证器
 			helper.ResError(c, helper.Err403Forbidden)
 			return
-		} else if b, err := enforcer.Enforce(sub, obj, role); err != nil {
+		} else if b, err := enforcer.Enforce(sub, obj, ros); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err))
 			helper.ResError(c, &helper.ErrorModel{
 				Status:   403,
@@ -243,10 +209,14 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 			return
 		} else if !b {
 			// 授权失败， 拒绝访问
+			// log.Println(ros)
+			// log.Println(enforcer.GetImplicitPermissionsForUser(ros))
 			helper.ResError(c, helper.Err403Forbidden)
 			return
 		}
 
+		c.Writer.Header().Set("X-Request-Z-Svc", svc)
+		c.Writer.Header().Set("X-Request-Z-Svc-Role", role)
 		helper.SetUserInfo(c, user)
 		c.Next()
 	}
@@ -255,27 +225,6 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 //======================================================================================
 //======================================================================================
 //======================================================================================
-
-// CasbinObject subject
-type CasbinObject struct {
-	Svc    string
-	Host   string
-	Path   string
-	Method string
-	Client string
-}
-
-// CasbinSubject subject
-type CasbinSubject struct {
-	// UsrID    int
-	// AccID    int
-	Org    string
-	Usr    string
-	OrgUsr string
-	OrgApp string
-	Iss    string
-	Aud    string
-}
 
 // IsPassPermission 跳过权限判断
 // 确定管理员身份， 这里是否担心管理员身份被篡改？如果签名密钥泄漏， 会发生签名篡改问题， 所以需要保密服务器签名密钥
@@ -314,7 +263,6 @@ func (a *CasbinAuther) GetUserRole(c *gin.Context, user auth.UserInfo, svc, org 
 	// 处理多角色问题
 	roles := []string{}
 	if svc != "" && svc != schema.PlatformCode {
-		c.Writer.Header().Set("X-Request-Z-Svc", svc)
 		role = c.GetHeader(strings.ReplaceAll(CasbinSvcRoleKey, "[SVC-NAME]", svc)) // 子应用， 需要子应用授权
 		if role != "" {
 			// 验证角色信息， 快速结束
@@ -390,10 +338,10 @@ func (a *CasbinAuther) ClearEnforcer(force bool, org string) {
 func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user auth.UserInfo, svc, org string) (*casbin.SyncedEnforcer, error) {
 	if a.CachedEnforcer == nil {
 		a.CachedEnforcer = map[string]*CasbinEnforcer{}
-		a.CachedExpireAt = time.Now().Add(time.Minute)
+		a.CachedExpireAt = time.Now().Add(2 * time.Minute)
 	} else if a.CachedExpireAt.Before(time.Now()) {
-		a.CachedExpireAt = time.Now().Add(time.Minute) // 设定1分钟后再次刷新
-		go a.ClearEnforcer(false, "")                  // 执行异步刷新流程
+		a.CachedExpireAt = time.Now().Add(2 * time.Minute) // 设定1分钟后再次刷新
+		go a.ClearEnforcer(false, "")                      // 执行异步刷新流程
 	}
 	key := "fmes:casbin:" + org
 	if enforcer, b := a.CachedEnforcer[key]; b {
@@ -403,6 +351,7 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user au
 	if err != nil {
 		return nil, err
 	}
+	// log.Println(c)
 	m, err := model.NewModelFromString(c.ModelText)
 	if err != nil {
 		return nil, err
@@ -421,7 +370,7 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user au
 
 	// 注册方法
 	e.AddFunction("domainMatch", zgocasbin.DomainMatchFunc)
-	e.AddFunction("actionMatch", zgocasbin.ActionMatchFunc)
+	e.AddFunction("methodMatch", zgocasbin.MethodMatchFunc)
 	e.AddFunction("audienceMatch", zgocasbin.AudienceMatchFunc)
 
 	// 配置缓存
@@ -458,6 +407,7 @@ func (a *CasbinAuther) QueryCasbinPolicy(org string) (*CasbinPolicy, error) {
 		// 使用用户自定义策略
 		c.ModelText += cgm.Statement
 	}
+	// log.Println(c.ModelText)
 	// 获取角色间的关系
 	if rrs, err := new(schema.CasbinGpaRoleRole).QueryByOrg(a.Sqlx, org); err != nil {
 		if !sqlxc.IsNotFound(err) {
@@ -527,13 +477,20 @@ func (a *CasbinAuther) QueryCasbinPolicy(org string) (*CasbinPolicy, error) {
 							if a.Resource.Valid {
 								paths := strings.Split(a.Resource.String, ";")
 								for _, path := range paths {
-									pp := []string{sub, svc, org, path, eft}
+									meth := "*"
+									if offset := strings.IndexRune(path, ' '); offset > 0 {
+										meth = path[:offset]
+										path = path[offset+1:]
+									}
+									pp := []string{sub, svc, org, path, meth, eft}
 									c.Policies = append(c.Policies, pp)
 								}
 							}
 						}
 					}
 				}
+			} else if v.Resource.Valid {
+				// 配置资源访问权限， 暂时没有进行开发
 			}
 		}
 	}
@@ -544,6 +501,9 @@ func (a *CasbinAuther) QueryCasbinPolicy(org string) (*CasbinPolicy, error) {
 // QueryServiceCode 查询服务
 // "fmes:svc-code:" + host + ":" + resource
 func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, host, path, org string) (string, int, error) {
+	if host == "" && path == "" {
+		return "", 0, errors.New("无法确认访问的系统服务")
+	}
 	resource := ""
 	if strings.HasPrefix(path, "/api/") {
 		rescount := 3
@@ -561,8 +521,8 @@ func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, ho
 	if svc, b, err := a.Storer.Get(ctx, key); err != nil {
 		return "", 0, err // 查询缓存出现异常
 	} else if b {
-		if svc == "err" {
-			return "", 0, nil // 上一次查询，拒绝请求
+		if strings.HasPrefix(svc, "err:") {
+			return "", 0, errors.New(svc[4:]) // 上一次查询，拒绝请求
 		}
 		offset := strings.IndexRune(svc, '/')
 		if offset <= 0 {
@@ -577,8 +537,11 @@ func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, ho
 	sa := schema.CasbinGpaSvcAud{}
 	if err := sa.QueryByAudAndResAndOrg(a.Sqlx, host, resource, ""); err != nil || !sa.SvcCode.Valid {
 		// 系统没有配置或者系统为指定有效服务名称
-		a.Storer.Set(ctx, key, "err", time.Minute) // 1分钟延迟刷新， 拒绝请求也需要缓存
-		return "", 0, nil
+		a.Storer.Set(ctx, key, "err:"+err.Error(), time.Minute) // 1分钟延迟刷新， 拒绝请求也需要缓存
+		return "", 0, err
+	} else if !sa.SvcCode.Valid {
+		a.Storer.Set(ctx, key, "err: no service name", time.Minute)
+		return "", 0, errors.New("no service name")
 	}
 	a.Storer.Set(ctx, key, sa.SvcCode.String+"/"+strconv.Itoa(int(sa.SvcID.Int64)), time.Minute) // 查询结果缓存1分钟
 	return sa.SvcCode.String, int(sa.SvcID.Int64), nil
@@ -633,6 +596,8 @@ func (a *CasbinAuther) CheckTenantService(ctx *gin.Context, user auth.UserInfo, 
 		emsg = &i18n.Message{ID: "WARN-SERVICE-NOACTIVATE", Other: "服务未激活"}
 	} else if so.Status == schema.StatusExpired {
 		emsg = &i18n.Message{ID: "WARN-SERVICE-EXPIRED", Other: "授权已经过期"}
+	} else {
+		emsg = &i18n.Message{ID: "WARN-SERVICE-OTHER", Other: "授权状态异常"}
 	}
 	a.Storer.Set(ctx, key, emsg.ID+"/"+emsg.Other, time.Minute) // 1分钟延迟刷新， 拒绝请求也需要缓存
 	return false, helper.New0Error(ctx, helper.ShowWarn, emsg)

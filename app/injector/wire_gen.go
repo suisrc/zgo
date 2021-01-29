@@ -89,6 +89,7 @@ func BuildInjector() (*Injector, func(), error) {
 		GPA:           gpaGPA,
 		Auther:        auther,
 		SigninService: signin,
+		CasbinAuther:  casbinAuther,
 	}
 	user := service.User{
 		GPA:            gpaGPA,
@@ -101,9 +102,6 @@ func BuildInjector() (*Injector, func(), error) {
 		Auther:      auther,
 	}
 	system := &api.System{
-		GPA: gpaGPA,
-	}
-	use3rd := &api.Use3rd{
 		GPA: gpaGPA,
 	}
 	managerUser := &manager.User{
@@ -136,7 +134,6 @@ func BuildInjector() (*Injector, func(), error) {
 		Signin:       apiSignin,
 		User:         apiUser,
 		System:       system,
-		Use3rd:       use3rd,
 		CasbinAuther: casbinAuther,
 		ManagerWire:  wire,
 	}

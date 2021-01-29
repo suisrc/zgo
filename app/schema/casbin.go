@@ -28,11 +28,11 @@ func (p CasbinGpaSvcAudSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // QueryByAudAndResAndOrg 查询, 1st: aud + res, 2rd: res, 3th: aud, 如果三种方式都无法找到， 确定发生异常
 func (a *CasbinGpaSvcAud) QueryByAudAndResAndOrg(sqlx *sqlx.DB, aud, res, org string) error {
-	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}app_service_audience sa inner join app_service sv on sv.id = sa.svc_id where "
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}app_service_audience sa inner join {{TP}}app_service sv on sv.id = sa.svc_id where "
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	SQLX := []string{
 		"sa.audience = ? and sa.resource = ? limit 1",
-		"sa.audience = ? and sa.resource is null or sa.audience is null and sa.resource = ? desc sa.resource limit 1",
+		"sa.audience = ? and sa.resource is null or sa.audience is null and sa.resource = ? order by sa.resource desc limit 1",
 	}
 	for _, sx := range SQLX {
 		if err := sqlx.Get(a, SQL+sx, aud, res); err != nil {
@@ -40,7 +40,7 @@ func (a *CasbinGpaSvcAud) QueryByAudAndResAndOrg(sqlx *sqlx.DB, aud, res, org st
 				return err
 			}
 		} else {
-			break
+			return nil
 		}
 	}
 	return errors.New("sql: no rows in result set")
@@ -88,7 +88,7 @@ func (a *CasbinGpaModel) QueryAllByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaM
 func (a *CasbinGpaModel) QueryByOrg(sqlx *sqlx.DB, org string) (*CasbinGpaModel, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_model pm 
 			where pm.org_cod is null or pm.org_cod = ? 
-			desc pm.org_cod, pm.id limit 1`
+			order by pm.org_cod, pm.id desc limit 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	if err := sqlx.Get(a, SQL, org); err != nil {
 		return nil, err
@@ -103,9 +103,9 @@ func (a *CasbinGpaModel) QueryByOrg(sqlx *sqlx.DB, org string) (*CasbinGpaModel,
 // CasbinGpaRoleRole RoleRole
 type CasbinGpaRoleRole struct {
 	ParentName string         `tbl:"rp.name" db:"pn_name"`
-	ParentSvc  sql.NullString `tbl:"sp.name" db:"ps_name"`
+	ParentSvc  sql.NullString `tbl:"sp.code" db:"ps_code"`
 	ChildName  string         `tbl:"rc.name" db:"cn_name"`
-	ChildSvc   sql.NullString `tbl:"sc.name" db:"cs_name"`
+	ChildSvc   sql.NullString `tbl:"sc.code" db:"cs_code"`
 	OrgCode    sql.NullString `tbl:"rr" db:"org_cod"`
 }
 
@@ -126,7 +126,7 @@ func (a *CasbinGpaRoleRole) QueryByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaR
 // CasbinGpaRolePolicy RolePolicy
 type CasbinGpaRolePolicy struct {
 	Role    string         `tbl:"ro.name" db:"r_name"`
-	Svc     sql.NullString `tbl:"rv.name" db:"v_name"`
+	Svc     sql.NullString `tbl:"sv.code" db:"v_code"`
 	Policy  string         `tbl:"po.name" db:"p_name"`
 	OrgCode sql.NullString `tbl:"rp" db:"org_cod"`
 }
@@ -140,7 +140,7 @@ func (a *CasbinGpaRolePolicy) QueryByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGp
 		where (rp.org_cod is null or rp.org_cod = ?) and ro.status = 1 and po.status = 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	res := []CasbinGpaRolePolicy{}
-	if err := sqlx.Select(&res, SQL, org); res != nil {
+	if err := sqlx.Select(&res, SQL, org); err != nil {
 		return nil, err
 	}
 	return &res, nil
@@ -155,17 +155,18 @@ type CasbinGpaPolicyStatement struct {
 	Effect    bool           `tbl:"ps" db:"effect"`
 	Action    sql.NullString `tbl:"ps" db:"action"`
 	Resource  sql.NullString `tbl:"ps" db:"resource"`
-	Condition sql.NullString `tbl:"ps" db:"condition"`
+	Condition sql.NullString `tbl:"ps.condition" db:"r_condition"`
 }
 
 // QueryByOrg 查询 有效状态为1
 func (a *CasbinGpaPolicyStatement) QueryByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaPolicyStatement, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_statement ps 
-		inner join {{TP}}policy py on py.id = ps.plcy_id and py.version = ps.version
-		where (py.org_cod is null or py.org_cod = ?) and py.status = 1`
+		inner join {{TP}}policy po on po.id = ps.plcy_id and po.version = ps.plcy_ver
+		where (po.org_cod is null or po.org_cod = ?) and po.status = 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	res := []CasbinGpaPolicyStatement{}
 	if err := sqlx.Select(&res, SQL, org); err != nil {
+		// log.Println(SQL)
 		return nil, err
 	}
 	return &res, nil
@@ -183,8 +184,8 @@ type CasbinGpaPolicyServiceAction struct {
 func (a *CasbinGpaPolicyServiceAction) QueryActionByNameAndSvc(sqlx *sqlx.DB, name, svc string) (*[]CasbinGpaPolicyServiceAction, error) {
 	params := []interface{}{svc, strings.ReplaceAll(strings.ReplaceAll(name, "?", "_"), "*", "%")}
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_service_action psa 
-		inner join app_service psv on psv.id = psa.svc_id and psv.code = ? 
-		where pas.name like ?`
+		inner join {{TP}}app_service psv on psv.id = psa.svc_id and psv.code = ? 
+		where psa.name like ?`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	res := []CasbinGpaPolicyServiceAction{}
 	if err := sqlx.Select(&res, SQL, params...); err != nil {

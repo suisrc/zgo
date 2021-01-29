@@ -103,7 +103,7 @@ INSERT INTO `zgo_policy`(`id`, `org_cod`, `name`, `status`, `description`) VALUE
 INSERT INTO `zgo_policy_statement`(`plcy_id`, `plcy_ver`, `effect`, `action`, `resource`, `condition`) VALUES 
 (1, 0, 1, "lhdg:*",     null, null),
 (2, 0, 1, "lhdg:Basis", null, null),
-(3, 0, 1, "ka:KABasis;lhdg:Lhdg*",                                     null, null),
+(3, 0, 1, "ka:KABasis;lhdg:Lhdg*", null, null),
 (3, 0, 0, null, "fmes::lhdg:Organizer::/api/lhdg/v1/*", '{access_time":{"times": ["2020-12-12 00:00:00", "2021-02-02 00:00:00"]}}"');
 
 

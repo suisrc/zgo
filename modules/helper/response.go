@@ -59,6 +59,10 @@ func FixResponseError(c *gin.Context, err error) bool {
 	case *ErrorNone:
 		// do nothing
 		return true
+	case *ErrorModel:
+		em := err.(*ErrorModel)
+		ResJSON(c, em.Status, NewWrapError(c, em))
+		return true
 	default:
 		// e := err.Error()
 		return false

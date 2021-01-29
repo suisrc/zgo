@@ -26,7 +26,6 @@ var EndpointSet = wire.NewSet(
 	wire.Struct(new(Signin), "*"),
 	wire.Struct(new(User), "*"),
 	wire.Struct(new(System), "*"),
-	wire.Struct(new(Use3rd), "*"),
 
 	// 界面管理
 	wire.Struct(new(manager.Wire), "*"),
@@ -47,7 +46,6 @@ type Options struct {
 	Signin *Signin
 	User   *User
 	System *System
-	Use3rd *Use3rd
 
 	// 权限管理
 	CasbinAuther *service.CasbinAuther
@@ -65,7 +63,7 @@ func InitEndpoints(o *Options) *Endpoints {
 	// 在根路由注册通用授权接口, (没有ContextPath限定,一般是给nginx使用)
 	// 在nginx注册认证接口时候,请放行zgo服务器其他接口,防止重复认证
 	// 注意，改接口为内容接口，为提供国际化语言支持
-	o.Auth.RegisterWithUAC(o.Engine)
+	o.Auth.Register(o.Engine)
 
 	// ContextPath路由
 	r := o.Router
@@ -97,17 +95,13 @@ func InitEndpoints(o *Options) *Endpoints {
 	r.Use(uac)
 
 	// 注册登陆接口
-	o.Auth.Register(r)
 	o.Signin.Register(r)
 	o.User.Register(r)
 
 	o.System.Register(r)
-	o.Use3rd.Register(r)
-
 	o.Demo.Register(o.Engine)
 
 	o.ManagerWire.Register(r)
-
 	return &Endpoints{}
 }
 

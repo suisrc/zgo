@@ -1,8 +1,8 @@
 @base_url=http://127.0.0.1
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTE3NDYyNDQsImp0aSI6IjFnMTJmZGoxMmxpbjl4cXczNHB2OWRhZG85dWw4ZjYiLCJpYXQiOjE2MTE3NDI2NDQsImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTc0MjY0NCwic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6Imd4dkRVc29kZGhHYjJucldfTV9QcDdzekRjYjZaOEJkWWRUNVphUWw4dUU9IiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsInJvcyI6WyJPcGVyYXRvciIsIk9wZXJhdG9yT3JnIl0sIm9nYyI6Ik9SR0NNMzU1OCJ9.xIFgA0WqFbr0GKekfZbz8xx_QWy6fnfkcx6ROe7atzrEGq7teL4KNFYhSFKvQaEGhEtthOWH9OzFDZuuHI2K2A
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTE4OTM2OTksImp0aSI6IjFnMTZ2ZGoxMmx2YzUxMmZlemg0N3E1eGt6NG95NW8iLCJpYXQiOjE2MTE4OTAwOTksImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTg5MDA5OSwic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6IndVamZiSzlycXY2QXRMVjVTdUxiam1hbDFUbWF0TV8zcnpKQUVIWS16UUE9IiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsInJvcyI6WyJsaGRnOk9wZXJhdG9yIiwiT3BlcmF0b3JPcmciXSwib2djIjoiT1JHQ00zNTU4In0.aDio72DwCufszRh5f8qF7PuU1kn-i93QEAZRuMdmP6eLU1R7RqJNV-G-CNOzjUIG1ujmXva3hyc4C9aKAurXxQ
 
-@refresh_token=1g12fe569tootc0tp9hlp1f1c764d_xg8q83ti0mr1vtyaw0wb1g12fhlsjekkmpa3fuk
+@refresh_token=1g16unr12lsdmkd6h3x1dznby4k9bme_gf79fkq0u8w2u3dz8ohu1g16unrob5mplr22g0t
 
 @code=1g12fe569tootc0tp9hlp1f1c764d_icf32o640emkc0oeet60j
 
@@ -23,10 +23,22 @@ Content-Type: application/json
 GET {{base_url}}/authz
 Content-Type: application/json
 Authorization: Bearer {{bearer}}
-X-Request-Origin-Path: /api/lhdg/v2/user
 X-Request-Origin-Host:
+X-Request-Origin-Path: /api/lhdg/v2/user
+X-Request-Origin-Method: GET
+#X-Request-Sys-Role: Operator
+
+### 权限验证接口
+GET {{base_url}}/authx
+Content-Type: application/json
+Authorization: Bearer {{bearer}}
+X-Request-Origin-Host:
+X-Request-Origin-Path: /api/lhdg/v2/user
 X-Request-Origin-Method: GET
 
+### 清理认证缓存
+GET {{base_url}}/authz/clear
+Authorization: Bearer {{bearer}}
 
 ### 新建第三方令牌
 GET {{base_url}}/api/ka/v1/pub/3rd/token/new

@@ -34,17 +34,17 @@ type Signin struct {
 // sign 开头的路由会被全局casbin放行
 func (a *Signin) Register(r gin.IRouter) {
 
-	uac := a.CasbinAuther.UserAuthBasicMiddleware()
+	uax := a.CasbinAuther.UserAuthBasicMiddleware()
 
-	r.POST("signin", a.signin)                     // 登录系统， 获取令牌 POST请求
-	r.GET("signout", uac, a.signout)               // 登出系统， 注销令牌（访问令牌和刷新令牌）
-	r.GET("signin/refresh", a.refresh)             // 刷新令牌
-	r.GET("signin/captcha", a.captcha)             // 发送验证码
-	r.GET("pub/3rd/token/new", uac, a.token3rdNew) // 构建新的访问令牌
+	r.POST("signin", a.signin)         // 登录系统， 获取令牌 POST请求
+	r.GET("signout", uax, a.signout)   // 登出系统， 注销令牌（访问令牌和刷新令牌）
+	r.GET("signin/refresh", a.refresh) // 刷新令牌
+	r.GET("signin/captcha", a.captcha) // 发送验证码
+
+	r.POST("pub/3rd/token", a.signin)              // 获取新的访问令牌
+	r.GET("pub/3rd/token/new", uax, a.token3rdNew) // 构建新的访问令牌
 	r.GET("pub/3rd/token/get", a.token3rdGet)      // 获取新的访问令牌
-	//r.GET("signin/mfa", a.signinMFA)
-	//r.POST("signup", a.signup) // 注册
-	//r.GET("signin/oauth2/:kid", a.oauth2) // OAUTH2登陆使用GET请求
+	r.GET("pub/3rd/token/refresh", a.refresh)      // 获取新的访问令牌
 
 }
 
@@ -496,102 +496,3 @@ func (a *Signin) getSigninGpaAccountTokenByDelay(c *gin.Context) *schema.SigninG
 	o2a.AccessToken = o2b.AccessToken
 	return &o2a
 }
-
-//==================================================================================================================
-//==================================================================================================================
-//==================================================================================================================
-
-// oauth2 godoc
-// @Tags sign
-// @Summary OAuth2
-// @Description 第三方授权登陆
-// @Accept  json
-// @Produce  json
-// @Param kid path string true "平台KID"
-// @Param result query string false "返回值类型, 比如: json"
-// @Param redirect query string false "redirect"
-// @Success 200 {object} helper.Success
-// @Router /signin/oauth2/{kid} [get]
-//func (a *Signin) oauth2(c *gin.Context) {
-// 解析参数
-//body := schema.SigninOfOAuth2{}
-//if err := helper.ParseQuery(c, &body); err != nil {
-//	helper.FixResponse406Error(c, err, func() {
-//		logger.Errorf(c, logger.ErrorWW(err))
-//	})
-//	return
-//}
-//
-//// 执行登录
-//user, err := a.SigninService.OAuth2(c, &body, a.last)
-//if err != nil {
-//	helper.FixResponse500Error(c, err, func() {
-//		logger.Errorf(c, logger.ErrorWW(err))
-//	})
-//	return
-//}
-//token, usr, err := a.Auther.GenerateToken(c, user)
-//if err != nil {
-//	helper.FixResponse500Error(c, err, func() {
-//		logger.Errorf(c, logger.ErrorWW(err))
-//	})
-//	return
-//}
-//
-//// 登陆日志
-//a.log(c, usr, token, "oauth2", token.GetRefreshToken())
-//if body.Redirect != "" {
-//	// 需要重定向跳转
-//	redirect, err := url.QueryUnescape(body.Redirect)
-//	if err != nil {
-//		helper.FixResponse500Error(c, err, func() {
-//			logger.Errorf(c, logger.ErrorWW(err))
-//		})
-//		return
-//	}
-//	if strings.IndexRune(redirect, '?') <= 0 {
-//		redirect += "?"
-//	}
-//	if endc := redirect[len(redirect)-1:]; endc != "?" && endc != "&" {
-//		redirect += "&"
-//	}
-//	redirect += "access_token=" + token.GetAccessToken()
-//	redirect += "&expires_at=" + strconv.Itoa(int(token.GetExpiresAt()))
-//	redirect += "&expires_in=" + strconv.Itoa(int(token.GetExpiresAt()-time.Now().Unix()))
-//	redirect += "&refresh_token=" + token.GetRefreshToken()
-//	redirect += "&refresh_expires=" + strconv.Itoa(int(token.GetRefreshExpAt()))
-//	redirect += "&token_type=Bearer"
-//	redirect += "&trace_id=" + helper.GetTraceID(c)
-//	// 重定向到登陆页面
-//	c.Redirect(303, redirect)
-//	return
-//}
-//
-//// 登陆结果
-//result := schema.SigninResult{
-//	TokenStatus:  "ok",
-//	TokenType:    "Bearer",
-//	TokenID:      token.GetTokenID(),
-//	AccessToken:  token.GetAccessToken(),
-//	ExpiresAt:    token.GetExpiresAt(),
-//	ExpiresIn:    token.GetExpiresAt() - time.Now().Unix(),
-//	RefreshToken: token.GetRefreshToken(),
-//	RefreshExpAt:   token.GetRefreshExpAt(),
-//}
-//
-//// 记录登陆
-//// 返回正常结果即可
-//helper.ResSuccess(c, &result)
-//}
-
-// Signup godoc
-// @Tags sign
-// @Summary Signup
-// @Description 登陆
-// @Accept  json
-// @Produce  json
-// @Success 200 {object} helper.Success
-// @Router /signup [post]
-//func (a *Signin) signup(c *gin.Context) {
-//	helper.ResSuccess(c, "功能未开放")
-//}
