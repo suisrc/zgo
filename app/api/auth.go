@@ -83,7 +83,7 @@ func (a *Auth) authorize(c *gin.Context) {
 	if user.GetAccount() != "" {
 		if acc, usr, err := service.DecryptAccountWithUser(c, user.GetAccount(), user.GetTokenID()); err == nil {
 			h.Set("X-Request-Z-Account", strconv.Itoa(acc))
-			h.Set("X-Request-Z-User-Idx", strconv.Itoa(usr))
+			h.Set("X-Request-Z-User-Idx", helper.IfString(usr > 0, strconv.Itoa(usr), ""))
 		}
 	}
 

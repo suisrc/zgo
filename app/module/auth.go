@@ -62,9 +62,10 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 
 // jwt 获取加密认证的jwt配置信息
 func (a *AuthOpts) jwtopt(ctx context.Context, kid interface{}) (*AuthJwt, bool) {
-	jwt, ok := a.CachedJwtOtps1[kid]
-	return jwt, ok
-	// return nil, false
+	// TODO JWT多加密配置方案
+	// jwt, ok := a.CachedJwtOtps1[kid]
+	// return jwt, ok
+	return nil, false
 }
 
 // 更新认证

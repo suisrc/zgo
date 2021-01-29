@@ -18,6 +18,7 @@ type SigninOfCaptcha struct {
 	Email  string `form:"email"`  // 邮箱
 	Openid string `form:"openid"` // openid
 	KID    string `form:"kid"`    // 平台标识
+	Org    string `json:"org"`    // 租户
 }
 
 // SigninOfOAuth2 登陆参数

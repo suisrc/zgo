@@ -66,7 +66,7 @@ type SigninGpaAccount struct {
 	Account      string         `db:"account"`       // 账户
 	AccountType  int            `db:"account_type"`  // 账户类型 1:name 2:mobile 3:email 4:openid 5:unionid 6:token
 	PlatformKID  sql.NullString `db:"platform_kid"`  // 账户归属平台
-	UserID       int            `db:"user_id"`       // 用户标识
+	UserID       sql.NullInt64  `db:"user_id"`       // 用户标识
 	RoleID       sql.NullInt64  `db:"role_id"`       // 角色标识
 	OrgCod       sql.NullString `db:"org_cod"`       // 角色标识
 	Password     sql.NullString `db:"password"`      // 登录密码
@@ -87,7 +87,7 @@ func (a *SigninGpaAccount) QueryByID(sqlx *sqlx.DB, id int) error {
 }
 
 // QueryByAccount sql select
-func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, kid string) error {
+func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, kid, org string) error {
 	sqr := strings.Builder{}
 	sqr.WriteString("select " + sqlxc.SelectColumns(a))
 	sqr.WriteString(" from {{TP}}account")
@@ -100,6 +100,12 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 	} else {
 		sqr.WriteString(" and platform_kid is null")
 	}
+	if org != "" {
+		sqr.WriteString(" and org_cod=?")
+		params = append(params, org)
+	} else {
+		sqr.WriteString(" and org_cod is null")
+	}
 	sqr.WriteString(" and status=1")
 	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
 	// log.Println(SQL)
@@ -107,8 +113,8 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 }
 
 // QueryByParentAccount sql select
-func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ int, kid string) error {
-	err := a.QueryByAccount(sqlx, acc, typ, kid)
+func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ int, kid, org string) error {
+	err := a.QueryByAccount(sqlx, acc, typ, kid, org)
 	if err != nil {
 		return err
 	}
@@ -303,6 +309,32 @@ func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, update bo
 // 	SvcID   sql.NullInt64  `tbl:"ro" db:"svc_id"`
 // 	SvcCode sql.NullString `tbl:"sv" db:"code"`
 // }
+
+// SigninGpaRole role
+type SigninGpaRole struct {
+	OrgAdm  bool           `tbl:"ro" db:"org_adm"`
+	KID     string         `tbl:"ro" db:"kid"`
+	Name    string         `tbl:"ro" db:"name"`
+	SvcCode sql.NullString `tbl:"sv" db:"code"`
+}
+
+// QueryByRoleAndOrg role
+func (a *SigninGpaRole) QueryByRoleAndOrg(sqlx *sqlx.DB, role int, org string) error {
+	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}role ro
+		left  join {{TP}}app_service sv on sv.id = ro.svc_id 
+		where ro.status = 1 and ro.id=?`
+	params := []interface{}{role}
+	SQL += " and (ro.org_cod is null"
+	if org != "" {
+		SQL += " or ro.org_cod=?)"
+		params = append(params, org)
+	} else {
+		SQL += ")"
+	}
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	// log.Println(SQL)
+	return sqlx.Get(a, SQL, params...)
+}
 
 // SigninGpaUserRole role
 type SigninGpaUserRole struct {

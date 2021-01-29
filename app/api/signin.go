@@ -67,6 +67,10 @@ func (a *Signin) signin(c *gin.Context) {
 		})
 		return
 	}
+	if offset := strings.IndexRune(body.Username, '@'); offset > 0 {
+		body.Org = body.Username[offset+1:]
+		body.Username = body.Username[:offset]
+	}
 
 	// 执行登录
 	user, err := a.SigninService.Signin(c, &body, a.lastSignIn)

@@ -1,6 +1,6 @@
 @base_url=http://127.0.0.1
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTE4OTM2OTksImp0aSI6IjFnMTZ2ZGoxMmx2YzUxMmZlemg0N3E1eGt6NG95NW8iLCJpYXQiOjE2MTE4OTAwOTksImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTg5MDA5OSwic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6IndVamZiSzlycXY2QXRMVjVTdUxiam1hbDFUbWF0TV8zcnpKQUVIWS16UUE9IiwibmFtIjoi6LWi6L-q5rWL6K-VMiIsInJvcyI6WyJsaGRnOk9wZXJhdG9yIiwiT3BlcmF0b3JPcmciXSwib2djIjoiT1JHQ00zNTU4In0.aDio72DwCufszRh5f8qF7PuU1kn-i93QEAZRuMdmP6eLU1R7RqJNV-G-CNOzjUIG1ujmXva3hyc4C9aKAurXxQ
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTE5MjAyNTcsImp0aSI6IjFnMTdscjExMm40Y3I1d2szazhva2FubDB0NXUyMXQiLCJpYXQiOjE2MTE5MTMwNTcsImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMTkxMzA1NywiYXRpIjoid21lcUxiZDl1NnE0cGtFRTM4UU5obzY3LV9KeURha0lwczU0dllMSlI5UT0iLCJyb3MiOlsibGhkZzpPcGVyYXRvciJdLCJvZ2MiOiJPUkdDTTM1NTgifQ.r_9Yi9tzla23N692ZctH1fJawnmG4M1O2WH6nAIkMPGX7L3vjrTdnRAi8Pe7cG2gmVf6c6-yltbBncTI88DKrA
 
 @refresh_token=1g16unr12lsdmkd6h3x1dznby4k9bme_gf79fkq0u8w2u3dz8ohu1g16unrob5mplr22g0t
 
@@ -11,8 +11,9 @@ POST {{base_url}}/api/ka/v1/signin
 Content-Type: application/json
 
 {
+  "org": "ORGCM3558",
   "password": "123456",
-  "username": "it-100002"
+  "username": "it-100004"
 }
 
 ### 令牌刷新接口

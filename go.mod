@@ -5,8 +5,8 @@ go 1.15
 require (
 	github.com/BurntSushi/toml v0.3.1
 	github.com/NebulousLabs/fastrand v0.0.0-20181203155948-6fb6489aac4e
+	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef
 	github.com/billcobbler/casbin-redis-watcher/v2 v2.0.0-20200828043318-3301e9a5ebc2
-	github.com/casbin/casbin v1.9.1
 	github.com/casbin/casbin/v2 v2.20.2
 	github.com/casbin/json-adapter/v2 v2.0.0
 	github.com/casbin/redis-adapter/v2 v2.1.0

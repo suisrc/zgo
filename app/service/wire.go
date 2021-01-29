@@ -19,8 +19,9 @@ var ServiceSet = wire.NewSet(
 	wire.Struct(new(passwd.Validator), "*"), // 密码验证
 	oauth2.NewSelector,                      // OAuth2注册
 
-	module.NewAuther, // Auther注册
-	module.NewStorer, // Storer注册
+	module.NewAuther,   // Auther注册
+	module.NewStorer,   // Storer注册
+	module.NewEventBus, // 事件总线
 	wire.Struct(new(module.AuthOpts), "GPA", "Storer"),               // Auther依赖
 	wire.Struct(new(module.CasbinAuther), "GPA", "Storer", "Auther"), // Casbin依赖
 
