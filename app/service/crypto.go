@@ -12,11 +12,11 @@ import (
 //============================================================================================
 
 // EncryptCaptchaByAccount 加密验证码
-func EncryptCaptchaByAccount(c *gin.Context, account int, secret, captcha string, expire time.Duration) (string, error) {
+func EncryptCaptchaByAccount(c *gin.Context, account int64, secret, captcha string, expire time.Duration) (string, error) {
 	expireAt := time.Now().Add(expire).Unix()                      // 过期时间
 	var buffer bytes.Buffer                                        // byte buffer
 	buffer.Write(crypto.Number2BytesInNetworkOrder(int(expireAt))) // 占用4个字节
-	buffer.Write(crypto.Number2BytesInNetworkOrder(account))       // 占用4个字节
+	buffer.Write(crypto.Number2BytesInNetworkOrder(int(account)))  // 占用4个字节
 	buffer.Write([]byte(captcha))                                  // 验证码
 	// 加密KEY的内容
 	keys, err := crypto.Base64DecodeString(secret)
@@ -29,12 +29,12 @@ func EncryptCaptchaByAccount(c *gin.Context, account int, secret, captcha string
 		return "", err // 加密出现问题
 	}
 	// 给出登陆账户信息,以用来进行解密
-	resultCodeBytes := append(checkCodeBytes, crypto.Number2BytesInNetworkOrder(account)...)
+	resultCodeBytes := append(checkCodeBytes, crypto.Number2BytesInNetworkOrder(int(account))...)
 	return crypto.Base64EncodeToString(resultCodeBytes), nil
 }
 
 // DecryptCaptchaByAccount 解密验证码
-func DecryptCaptchaByAccount(c *gin.Context, code string) ( /*account*/ int, func( /*secret*/ string) (string, time.Duration, error), error) {
+func DecryptCaptchaByAccount(c *gin.Context, code string) ( /*account*/ int64, func( /*secret*/ string) (string, time.Duration, error), error) {
 	resultCodeBytes, err := crypto.Base64DecodeString(code)
 	if err != nil {
 		return 0, nil, err
@@ -45,7 +45,7 @@ func DecryptCaptchaByAccount(c *gin.Context, code string) ( /*account*/ int, fun
 		return 0, nil, errors.New("code is error")
 	}
 	account := crypto.BytesNetworkOrder2Number(resultCodeBytes[resultCodeLen-4:])
-	return account, func(secret string) (string, time.Duration, error) {
+	return int64(account), func(secret string) (string, time.Duration, error) {
 		keys, err := crypto.Base64DecodeString(secret)
 		if err != nil {
 			return "", 0, err
@@ -69,11 +69,14 @@ func DecryptCaptchaByAccount(c *gin.Context, code string) ( /*account*/ int, fun
 //============================================================================================
 
 // EncryptAccountWithUser 加密验证码
-func EncryptAccountWithUser(c *gin.Context, account, user int, secret string) (string, error) {
-	var buffer bytes.Buffer                                  // byte buffer
-	buffer.Write(crypto.Number2BytesInNetworkOrder(account)) // 占用4个字节
-	buffer.Write(crypto.Number2BytesInNetworkOrder(user))    // 占用4个字节
-	buffer.Write(crypto.RandomBytes(4))                      // 掩码4个字节
+func EncryptAccountWithUser(c *gin.Context, account, user int64, custom, secret string) (string, error) {
+	var buffer bytes.Buffer                                       // byte buffer
+	buffer.Write(crypto.Number2BytesInNetworkOrder(int(account))) // 占用4个字节
+	buffer.Write(crypto.Number2BytesInNetworkOrder(int(user)))    // 占用4个字节
+	buffer.Write(crypto.RandomBytes(4))                           // 掩码4个字节
+	if custom != "" {
+		buffer.Write([]byte(custom))
+	}
 	// 加密KEY的内容
 	keys := []byte(crypto.FixRandomAes32(secret))
 	// 加密
@@ -85,21 +88,24 @@ func EncryptAccountWithUser(c *gin.Context, account, user int, secret string) (s
 }
 
 // DecryptAccountWithUser 解密验证码
-func DecryptAccountWithUser(c *gin.Context, data string, secret string) (account, user int, err error) {
+func DecryptAccountWithUser(c *gin.Context, data string, secret string) (account, user int64, custom string, err error) {
 	dataBytes, err := crypto.Base64DecodeStringURL(data)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, "", err
 	}
 	resultCodeLen := len(dataBytes)
 	if resultCodeLen < 12 {
-		return 0, 0, errors.New("data is error") // 不可预知异常, 往往来自恶意攻击
+		return 0, 0, "", errors.New("data is error") // 不可预知异常, 往往来自恶意攻击
 	}
 	keys := []byte(crypto.FixRandomAes32(secret))
 	resultCodeBytes, err := crypto.AesDecryptBytes(dataBytes, keys)
 	if err != nil {
-		return 0, 0, err
+		return 0, 0, "", err
 	}
-	account = crypto.BytesNetworkOrder2Number(resultCodeBytes[:4])
-	user = crypto.BytesNetworkOrder2Number(resultCodeBytes[4:8])
+	account = int64(crypto.BytesNetworkOrder2Number(resultCodeBytes[:4]))
+	user = int64(crypto.BytesNetworkOrder2Number(resultCodeBytes[4:8]))
+	if len(resultCodeBytes) > 12 {
+		custom = string(resultCodeBytes[12:])
+	}
 	return
 }

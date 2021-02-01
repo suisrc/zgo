@@ -11,28 +11,36 @@ import (
 	"github.com/pkg/errors"
 )
 
-// IdxColumn id
-type IdxColumn struct {
+// TableIdxColumn id
+// 1.Column="" 或者 Column = "id", 如果ID > 0 update, 否则 create
+// 2.Update直接决定 update 或者 create
+// 3.DB = nil 或者 Table = nil, 为 create
+// 4.
+type TableIdxColumn struct {
 	Table  string
-	Column string
-	ID     int64
-	KID    string
-	Update bool
-	Create bool
+	IDCol  string      // index column
+	IDVal  interface{} // index data
+	Update sql.NullBool
 	DB     *sqlx.DB
 }
 
-func (u *IdxColumn) isUpdate() bool {
-	if u.Update || u.ID > 0 {
-		return true
-	}
-	if u.Create || u.ID == 0 && u.KID == "" || u.DB == nil || u.Table == "" {
+func (u *TableIdxColumn) isUpdate() bool {
+	if u.IDCol == "" || u.IDCol == "id" {
+		u.IDCol = "id"
+		return u.IDVal.(int64) > 0
+	} else if u.Update.Valid {
+		return u.Update.Bool
+	} else if u.DB == nil || u.Table == "" {
 		return false
 	}
 	// 确定数据是否存在
-	SQL := "select 1 from " + u.Table + " where " + u.Column + "=?"
-	_, err := u.DB.Exec(SQL, u.KID)
-	return err == nil
+	SQL := "select 1 from " + u.Table + " where " + u.IDCol + "=?"
+	create := false
+	if _, err := u.DB.Exec(SQL, u.IDVal); err != nil {
+		create = IsNotFound(err)
+	}
+	u.Update = sql.NullBool{Valid: true, Bool: !create}
+	return u.Update.Bool
 }
 
 // Index id
@@ -168,10 +176,10 @@ func SelectColumns(obj interface{}) string {
 
 // CreateUpdateSQLByNamedAndSkipNil create update sql by named
 // 忽略空字段, 空字段不进行更新, 如果需要前置更新空字段, 直接使用 CreateUpdateSQLByNamed
-func CreateUpdateSQLByNamedAndSkipNil(table string, ic IdxColumn, obj interface{}) (string, map[string]interface{}, error) {
-	return CreateUpdateSQLByNamed(table, ic, obj, func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool) {
+func CreateUpdateSQLByNamedAndSkipNil(tic TableIdxColumn, obj interface{}) (string, map[string]interface{}, error) {
+	return CreateUpdateSQLByNamed(tic, obj, func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool) {
 		value := PickProxy(v)
-		if n == "CreatedAt" && value == nil && !ic.isUpdate() || n == "UpdateAt" && value == nil {
+		if n == "CreatedAt" && value == nil && !tic.isUpdate() || n == "UpdateAt" && value == nil {
 			// 增加构建时间和更新时间字段
 			value = NewNowTime(t)
 		}
@@ -184,16 +192,16 @@ func CreateUpdateSQLByNamedAndSkipNil(table string, ic IdxColumn, obj interface{
 
 // CreateUpdateSQLByNamedAndSkipNilAndSet create update sql by named
 // 会处理 "set" 标签的内容 , 比如 `set:"=cloumn + 1"`
-func CreateUpdateSQLByNamedAndSkipNilAndSet(table string, ic IdxColumn, obj interface{}) (string, map[string]interface{}, error) {
-	return CreateUpdateSQLByNamed(table, ic, obj,
+func CreateUpdateSQLByNamedAndSkipNilAndSet(tic TableIdxColumn, obj interface{}) (string, map[string]interface{}, error) {
+	return CreateUpdateSQLByNamed(tic, obj,
 		func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool) {
 			value := PickProxy(v)
-			if n == "CreatedAt" && value == nil && !ic.isUpdate() || n == "UpdatedAt" && value == nil {
+			if n == "CreatedAt" && value == nil && !tic.isUpdate() || n == "UpdatedAt" && value == nil {
 				// 增加构建时间和更新时间字段
 				value = NewNowTime(t)
 			}
 			if value == nil {
-				if ic.isUpdate() && f.Tag.Get("set") != "" {
+				if tic.isUpdate() && f.Tag.Get("set") != "" {
 					return nil, true
 				}
 				return nil, false
@@ -212,7 +220,7 @@ func CreateUpdateSQLByNamedAndSkipNilAndSet(table string, ic IdxColumn, obj inte
 }
 
 // CreateUpdateSQLByNamed create update sql by named
-func CreateUpdateSQLByNamed(table string, ic IdxColumn, obj interface{},
+func CreateUpdateSQLByNamed(tic TableIdxColumn, obj interface{},
 	fix func(t reflect.Type, n string, v interface{}, f *reflect.StructField) (interface{}, bool),
 	set func(c string, p map[string]interface{}, v interface{}, f *reflect.StructField) (string, bool),
 ) (string, map[string]interface{}, error) {
@@ -248,7 +256,7 @@ func CreateUpdateSQLByNamed(table string, ic IdxColumn, obj interface{},
 		if column == "" {
 			column = strings.ToLower(key)
 		}
-		if ic.isUpdate() && column == ic.Column {
+		if tic.isUpdate() && column == tic.IDCol {
 			continue
 		}
 		obj := v.Field(i).Interface()
@@ -264,7 +272,7 @@ func CreateUpdateSQLByNamed(table string, ic IdxColumn, obj interface{},
 		} else {
 			obj = PickProxy(obj)
 		}
-		if ic.isUpdate() {
+		if tic.isUpdate() {
 			sql := ""
 			ok := false
 			if set != nil {
@@ -285,19 +293,15 @@ func CreateUpdateSQLByNamed(table string, ic IdxColumn, obj interface{},
 		}
 	}
 
-	if ic.isUpdate() {
+	if tic.isUpdate() {
 		if SQL1.Len() == 0 {
 			return "", nil, errors.New("no update values")
 		}
-		SQL := "update " + table + " set" + SQL1.String()[1:] + " where " + ic.Column + "=:" + ic.Column
-		if ic.ID > 0 {
-			params[ic.Column] = ic.ID
-		} else {
-			params[ic.Column] = ic.KID
-		}
+		SQL := "update " + tic.Table + " set" + SQL1.String()[1:] + " where " + tic.IDCol + "=:" + tic.IDCol
+		params[tic.IDCol] = tic.IDVal
 		return SQL, params, nil
 	}
-	SQL := "insert into " + table + "(" + SQL1.String()[1:] + ") values (" + SQL2.String()[1:] + ")"
+	SQL := "insert into " + tic.Table + "(" + SQL1.String()[1:] + ") values (" + SQL2.String()[1:] + ")"
 	return SQL, params, nil
 }
 
@@ -363,8 +367,10 @@ func UpdateAndSaveByIDWithNamed(sqlx *sqlx.DB, id *Index, fn func() (string, map
 	}
 	if id != nil && id.ID == 0 {
 		// 需要执行插入操作, 获取插入的ID
-		if id.ID, err = res.LastInsertId(); err != nil {
+		if iid, err := res.LastInsertId(); err != nil {
 			return err
+		} else if iid > 0 {
+			id.ID = iid
 		}
 	}
 	return nil

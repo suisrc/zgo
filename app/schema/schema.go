@@ -42,7 +42,7 @@ const (
 	StatusDisable StatusType = iota // value -> 0
 	// StatusEnable 启用
 	StatusEnable
-	// StatusNoActivate 为激活
+	// StatusNoActivate 未激活
 	StatusNoActivate
 	// StatusRevoked 注销
 	StatusRevoked

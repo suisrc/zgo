@@ -8,7 +8,7 @@ import (
 
 // JwtGpaOpts jwt配置信息
 type JwtGpaOpts struct {
-	ID          int            `db:"id"`
+	ID          int64          `db:"id"`
 	KID         string         `db:"kid"`
 	Secret      string         `db:"secret"`
 	Expired     sql.NullInt64  `db:"expired"`

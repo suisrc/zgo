@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/suisrc/zgo/app/model/sqlxc"
@@ -11,7 +12,7 @@ import (
 
 // CasbinGpaSvcAud 企业授权服务
 type CasbinGpaSvcAud struct {
-	ID       int            `tbl:"sa" db:"id"`
+	ID       int64          `tbl:"sa" db:"id"`
 	SvcID    sql.NullInt64  `tbl:"sa" db:"svc_id"`
 	SvcCode  sql.NullString `tbl:"sv" db:"code"`
 	OrgCode  sql.NullString `tbl:"sa" db:"org_cod"`
@@ -65,35 +66,52 @@ func (a *CasbinGpaSvcOrg) QueryByOrgAndSvc(sqlx *sqlx.DB, org string, sid int) e
 //=============================================================================================
 //=============================================================================================
 
+// TableCasbinRule ...
+var TableCasbinRule = TablePrefix + "policy_casbin_rule"
+
 // CasbinGpaModel model
 type CasbinGpaModel struct {
-	ID        int            `db:"id"`
-	OrgCode   sql.NullString `db:"org_cod"`
-	Name      string         `db:"name"`
-	Statement string         `db:"statement"`
-}
-
-// QueryAllByOrg 查询
-func (a *CasbinGpaModel) QueryAllByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaModel, error) {
-	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_model pm where pm.org_cod is null or pm.org_cod = ?`
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	res := []CasbinGpaModel{}
-	if err := sqlx.Select(&res, SQL, org); err != nil {
-		return nil, err
-	}
-	return &res, nil
+	ID          int64          `db:"id"`
+	UseVer      sql.NullString `db:"use_ver"`
+	OrgCode     sql.NullString `db:"org_cod"`
+	Name        string         `db:"name"`
+	Statement   sql.NullString `db:"statement"`
+	Description sql.NullString `db:"description"`
+	UpdatedAt   time.Time      `db:"updated_at"`
+	Status      StatusType     `db:"status"`
 }
 
 // QueryByOrg 查询
-func (a *CasbinGpaModel) QueryByOrg(sqlx *sqlx.DB, org string) (*CasbinGpaModel, error) {
-	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_model pm 
-			where pm.org_cod is null or pm.org_cod = ? 
-			order by pm.org_cod, pm.id desc limit 1`
+func (a *CasbinGpaModel) QueryByOrg(sqlx *sqlx.DB, org string) error {
+	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_casbin_model pcm 
+			where pcm.org_cod is null or pcm.org_cod = ? 
+			order by pcm.org_cod, pcm.use_ver, pcm.id desc limit 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	if err := sqlx.Get(a, SQL, org); err != nil {
-		return nil, err
+	return sqlx.Get(a, SQL, org)
+}
+
+// QueryByID 查询
+func (a *CasbinGpaModel) QueryByID(sqlx *sqlx.DB, id int64) error {
+	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_casbin_model where id=?`
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, id)
+}
+
+// SaveOrUpdate ...
+func (a *CasbinGpaModel) SaveOrUpdate(sqlx *sqlx.DB) error {
+	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "policy_casbin_model", IDVal: a.ID}
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(tic, a)
+	if err != nil {
+		return err
 	}
-	return a, nil
+	res, err := sqlx.NamedExec(SQL, params)
+	if err != nil {
+		return err
+	}
+	if a.ID == 0 {
+		a.ID, _ = res.LastInsertId()
+	}
+	return err
 }
 
 //==========================================================================================

@@ -16,8 +16,8 @@ func TestCreateUpdateSQLByNamedSkipNilAndSet(t *testing.T) {
 		AccessToken: sql.NullString{Valid: true, String: "123"},
 	}
 
-	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: token.TokenID, Update: true}
-	sql, pas, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet("table", IDX, &token)
+	tic := sqlxc.TableIdxColumn{Table: "123", IDCol: "token_kid", IDVal: token.TokenID}
+	sql, pas, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(tic, &token)
 
 	log.Println(sql)
 	log.Println(pas)

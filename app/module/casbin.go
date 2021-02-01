@@ -1,9 +1,12 @@
 package module
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/casbin/casbin/v2"
@@ -37,12 +40,16 @@ type CasbinAuther struct {
 	Storer         store.Storer               // 缓存
 	CachedEnforcer map[string]*CasbinEnforcer // 验证器
 	CachedExpireAt time.Time                  // 刷新时间
+	Mutex          sync.RWMutex               // 同步锁
 }
 
 // CasbinEnforcer 验证器
 type CasbinEnforcer struct {
 	Enforcer *casbin.SyncedEnforcer // 验证器
-	ExpireAt time.Time              // 刷新时间
+	ExpireAt time.Time              // 过期时间
+	Refresh  time.Time              // 刷新时间
+	Version  string                 // 验证版本
+	Mutex    sync.RWMutex           // 同步锁
 }
 
 // UserAuthCasbinMiddleware 用户授权中间件
@@ -152,7 +159,7 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 		}
 
 		// 租户用户， 默认我们认为租户用户范围不会超过100,000 所以会间人员信息加载到认证器中执行
-		// aid, uid, _ := DecryptAccountWithUser(c, user.GetAccount(), user.GetTokenID())
+		// aid, uid, cus, _ := DecryptAccountWithUser(c, user.GetAccount(), user.GetTokenID())
 		sub := CasbinSubject{
 			// UsrID:    aid,
 			// AccID:    uid,
@@ -344,19 +351,63 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user au
 		go a.ClearEnforcer(false, "")                      // 执行异步刷新流程
 	}
 	key := "fmes:casbin:" + org
-	if enforcer, b := a.CachedEnforcer[key]; b {
-		return enforcer.Enforcer, nil
+	ver := ""
+	cached, exist := a.CachedEnforcer[key]
+	if exist && cached.Refresh.Before(time.Now()) {
+		return cached.Enforcer, nil
+	} else if exist {
+		ver = cached.Version
+		// 多进程更新
+		defer cached.Mutex.Unlock()
+		cached.Mutex.Lock()
+		if c2, e2 := a.CachedEnforcer[key]; e2 && c2.Refresh.Before(time.Now()) {
+			return c2.Enforcer, nil // 缓存已经由其他进程更新
+		}
+	} else {
+		// 多进程创建
+		defer a.Mutex.Unlock()
+		a.Mutex.Lock()
+		if c2, e2 := a.CachedEnforcer[key]; e2 {
+			return c2.Enforcer, nil // 缓存已经由其他进程更新
+		}
+
 	}
-	c, err := a.QueryCasbinPolicy(org)
+	c, err := a.QueryCasbinPolicy(org, ver)
 	if err != nil {
 		return nil, err
+	} else if c == nil {
+		// 版本不变, 重置有效期限
+		cached.ExpireAt = time.Now().Add(10 * time.Minute)
+		cached.Refresh = time.Now().Add(time.Minute)
+		return cached.Enforcer, nil
 	}
+	if c.ModelText == "" {
+		// 重新加载配置, *Adapter
+		// 数据库访问适配器（使用redis缓存请改写这里）
+		if adapter, b := cached.Enforcer.GetAdapter().(*Adapter); b {
+			if adapter.Mid != c.Mid || adapter.Ver != c.Ver {
+				adapter.Mid = c.Mid
+				adapter.Ver = c.Ver
+			}
+		} else {
+			return nil, errors.New("casbin adapter type is error")
+		}
+		cached.Enforcer.LoadPolicy()
+		cached.ExpireAt = time.Now().Add(10 * time.Minute)
+		cached.Refresh = time.Now().Add(time.Minute)
+		cached.Version = c.Version
+		return cached.Enforcer, nil
+	}
+
 	// log.Println(c)
 	m, err := model.NewModelFromString(c.ModelText)
 	if err != nil {
 		return nil, err
 	}
-	e, err := casbin.NewSyncedEnforcer(m)
+	// *Adapter
+	// 数据库访问适配器（使用redis缓存请改写这里）
+	adapter := NewCasbinAdapter(a.Sqlx, schema.TableCasbinRule, c.Mid, c.Ver)
+	e, err := casbin.NewSyncedEnforcer(m, adapter)
 	if err != nil {
 		return nil, err
 	}
@@ -373,45 +424,95 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user au
 	e.AddFunction("methodMatch", zgocasbin.MethodMatchFunc)
 	e.AddFunction("audienceMatch", zgocasbin.AudienceMatchFunc)
 
+	cgm := schema.CasbinGpaModel{
+		ID:     c.Mid,
+		Status: schema.StatusEnable,
+	}
+	// 更新状态
+	if err := cgm.SaveOrUpdate(a.Sqlx); err != nil {
+		return nil, err
+	}
+
 	// 配置缓存
 	a.CachedEnforcer[key] = &CasbinEnforcer{
 		Enforcer: e,
-		ExpireAt: time.Now().Add(5 * time.Minute), // 有效期5分钟
+		ExpireAt: time.Now().Add(10 * time.Minute), // 有效期10分钟
+		Refresh:  time.Now().Add(time.Minute),      // 刷新时间1分钟
+		Version:  ver,
 	}
 	return e, nil
 }
 
 // CasbinPolicy Casbin策略
 type CasbinPolicy struct {
+	Mid       int64
+	Ver       string
 	ModelText string     // 模型声明
 	Grouping  [][]string // 角色声明
 	Policies  [][]string // 策略声明
+	Version   string     // 策略版本
 }
 
 // QueryCasbinPolicy 获取Casbin策略
-func (a *CasbinAuther) QueryCasbinPolicy(org string) (*CasbinPolicy, error) {
+func (a *CasbinAuther) QueryCasbinPolicy(org, ver string) (*CasbinPolicy, error) {
 	c := CasbinPolicy{
-		ModelText: CasbinPolicyModel,
-		Grouping:  [][]string{},
-		Policies:  [][]string{},
+		Grouping: [][]string{},
+		Policies: [][]string{},
+	}
+	// 获取策略模型
+	cgm := schema.CasbinGpaModel{}
+	if err := cgm.QueryByOrg(a.Sqlx, org); !sqlxc.IsNotFound(err) {
+		// 数据库异常
+		return nil, err
+	} else if ver != "" && cgm.ID > 0 && ver == fmt.Sprintf("%s:%s", strconv.Itoa(int(cgm.ID)), cgm.UseVer.String) {
+		// 访问策略不变
+		return nil, nil
+	} else if cgm.ID > 0 {
+		// 访问策略更新
+		c.Mid = cgm.ID
+		c.Ver = cgm.UseVer.String
+		c.Version = fmt.Sprintf("%s:%s", strconv.Itoa(int(cgm.ID)), cgm.UseVer.String)
+		if cgm.Status == schema.StatusEnable {
+			return &c, nil
+		}
+	}
+	// 获取基础配置访问策略
+	if err := a.CreateCasbinPolicy(org, &c); err != nil {
+		return nil, err
+	}
+	// 待激活， 完成激活操作
+	if cgm.Statement.Valid {
+		c.ModelText = CasbinPolicyModel + cgm.Statement.String
+	} else {
+		c.ModelText = CasbinPolicyModel + CasbinDefaultMatcher
+	}
+	if cgm.ID > 0 {
+		return &c, nil
 	}
 
-	// 获取策略模型
-	if cgm, err := new(schema.CasbinGpaModel).QueryByOrg(a.Sqlx, org); err != nil {
-		if !sqlxc.IsNotFound(err) {
-			return nil, err
-		}
-		// 使用默认策略
-		c.ModelText += CasbinDefaultMatcher
-	} else {
-		// 使用用户自定义策略
-		c.ModelText += cgm.Statement
+	// 新建访问策略
+	cgm.Name = "Default"
+	cgm.UseVer = sql.NullString{Valid: true, String: "1.0.0"}
+	cgm.OrgCode = sql.NullString{Valid: true, String: org}
+	cgm.Statement = sql.NullString{Valid: true, String: CasbinDefaultMatcher}
+	cgm.Description = sql.NullString{Valid: true, String: "Auto Build"}
+	cgm.Status = schema.StatusNoActivate // 未激活状态
+	if err := cgm.SaveOrUpdate(a.Sqlx); err != nil {
+		return nil, err
 	}
+	c.Mid = cgm.ID
+	c.Ver = cgm.UseVer.String
+	c.Version = fmt.Sprintf("%s:%s", strconv.Itoa(int(cgm.ID)), cgm.UseVer.String)
+	return &c, nil
+}
+
+// CreateCasbinPolicy 获取Casbin策略
+func (a *CasbinAuther) CreateCasbinPolicy(org string, c *CasbinPolicy) error {
 	// log.Println(c.ModelText)
 	// 获取角色间的关系
 	if rrs, err := new(schema.CasbinGpaRoleRole).QueryByOrg(a.Sqlx, org); err != nil {
 		if !sqlxc.IsNotFound(err) {
-			return nil, err
+			return err
 		}
 		// 没有有效的角色关系
 	} else if len(*rrs) > 0 {
@@ -433,7 +534,7 @@ func (a *CasbinAuther) QueryCasbinPolicy(org string) (*CasbinPolicy, error) {
 	}
 	if rps, err := new(schema.CasbinGpaRolePolicy).QueryByOrg(a.Sqlx, org); err != nil {
 		if !sqlxc.IsNotFound(err) {
-			return nil, err
+			return err
 		}
 		// 没有有效角色策略关系
 	} else if len(*rps) > 0 {
@@ -453,7 +554,7 @@ func (a *CasbinAuther) QueryCasbinPolicy(org string) (*CasbinPolicy, error) {
 	}
 	if pss, err := new(schema.CasbinGpaPolicyStatement).QueryByOrg(a.Sqlx, org); err != nil {
 		if !sqlxc.IsNotFound(err) {
-			return nil, err
+			return err
 		}
 	} else if len(*pss) > 0 {
 		for _, v := range *pss {
@@ -470,7 +571,7 @@ func (a *CasbinAuther) QueryCasbinPolicy(org string) (*CasbinPolicy, error) {
 					svc := sa[0]
 					if pas, err := new(schema.CasbinGpaPolicyServiceAction).QueryActionByNameAndSvc(a.Sqlx, sa[1], sa[0]); err != nil {
 						if !sqlxc.IsNotFound(err) {
-							return nil, err
+							return err
 						}
 					} else if len(*pas) > 0 {
 						for _, a := range *pas {
@@ -495,7 +596,7 @@ func (a *CasbinAuther) QueryCasbinPolicy(org string) (*CasbinPolicy, error) {
 		}
 	}
 
-	return &c, nil
+	return nil
 }
 
 // QueryServiceCode 查询服务

@@ -19,7 +19,7 @@ type UserPasswd struct {
 
 // UserGpaCurrent 用户基本信息
 type UserGpaCurrent struct {
-	ID     int    `db:"id" json:"-"`                    // 用户id
+	ID     int64  `db:"id" json:"-"`                    // 用户id
 	UID    string `db:"uid" json:"userid"`              // 用户uid
 	Avatar string `db:"avatar" json:"avatar,omitempty"` // 头像
 	Name   string `db:"name" json:"name"`               // 姓名
@@ -27,14 +27,14 @@ type UserGpaCurrent struct {
 
 // UserGpaRole 用户角色信息
 type UserGpaRole struct {
-	ID   int    `db:"id" json:"-"`      // 角色id
+	ID   int64  `db:"id" json:"-"`      // 角色id
 	UID  string `db:"uid" json:"id"`    // 角色uid
 	Name string `db:"name" json:"name"` // 角色name
 }
 
 // UserGpaMenu 用户菜单
 type UserGpaMenu struct {
-	ID       int           `db:"id" json:"-"`                   // 菜单ID
+	ID       int64         `db:"id" json:"-"`                   // 菜单ID
 	Key      string        `db:"uid" json:"key"`                // 菜单KEY, 全局唯一标识符,在当前系统中, 层级结构,每层使用3个字符
 	Locale   string        `db:"locale" json:"local,omitempty"` // 可以直接抽取前端i18n对应的内容,如果不配置,可以通过name抽取
 	Name     string        `db:"name" json:"name"`              // 菜单内容, 必要字段

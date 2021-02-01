@@ -21,8 +21,8 @@ type AccountOAuth2Token struct {
 
 // UpdateToken update
 func (a *AccountOAuth2Token) UpdateToken(sqlx *sqlx.DB) error {
-	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: a.TokenID}
-	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"token_oauth2", IDX, a)
+	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "token_oauth2", IDCol: "token_kid", IDVal: a.TokenID}
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(tic, a)
 	if err != nil {
 		return err
 	}
@@ -70,9 +70,9 @@ func (a *ServerOAuth2Token) QueryByPlatformMust(sqlx *sqlx.DB, platform int) err
 
 // UpdateToken update
 func (a *ServerOAuth2Token) UpdateToken(sqlx *sqlx.DB) error {
-	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: a.TokenID}
+	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "token_oauth2", IDCol: "token_kid", IDVal: a.TokenID}
 	if err := sqlxc.UpdateAndSaveByIDWithNamed(sqlx, nil, func() (string, map[string]interface{}, error) {
-		return sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"token_oauth2", IDX, a)
+		return sqlxc.CreateUpdateSQLByNamedAndSkipNil(tic, a)
 	}); err != nil {
 		return err
 	}

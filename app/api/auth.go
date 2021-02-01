@@ -81,9 +81,10 @@ func (a *Auth) authorize(c *gin.Context) {
 	h.Set("X-Request-Z-Token-Kid", user.GetTokenID())
 
 	if user.GetAccount() != "" {
-		if acc, usr, err := service.DecryptAccountWithUser(c, user.GetAccount(), user.GetTokenID()); err == nil {
-			h.Set("X-Request-Z-Account", strconv.Itoa(acc))
-			h.Set("X-Request-Z-User-Idx", helper.IfString(usr > 0, strconv.Itoa(usr), ""))
+		if acc, usr, cus, err := service.DecryptAccountWithUser(c, user.GetAccount(), user.GetTokenID()); err == nil {
+			h.Set("X-Request-Z-Account", strconv.Itoa(int(acc)))
+			h.Set("X-Request-Z-User-Idx", helper.IfString(usr > 0, strconv.Itoa(int(usr)), ""))
+			h.Set("X-Request-Z-Account2", cus)
 		}
 	}
 

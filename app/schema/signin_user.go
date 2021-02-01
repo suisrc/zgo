@@ -22,6 +22,7 @@ type SigninUser struct {
 	Domain    string
 	Issuer    string
 	Audience  string
+	CustomID  string
 }
 
 // GetTokenID xxx

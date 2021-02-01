@@ -187,10 +187,11 @@ func (a *Signin) GetSignUserInfo(c *gin.Context, sa *schema.SigninGpaAccount, l 
 	//suser.UserIdxID = strconv.Itoa(sa.UserID)
 	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) //  配置系统给定的TokenID
 	if suser.TokenID == "" {                                             // account加密需要令牌， 所以令牌不能为空
-		suser.TokenID = jwt.NewTokenID(strconv.Itoa(sa.ID + 1103))
+		suser.TokenID = jwt.NewTokenID(strconv.Itoa(int(sa.ID + 1103)))
 	}
-	suser.Account, _ = EncryptAccountWithUser(c, sa.ID, int(sa.UserID.Int64), suser.TokenID) // 账户信息
-	if err := a.SetSignUserWithUser(c, sa, &suser); err != nil {                             // 用户信息
+	suser.CustomID = sa.CustomID.String
+	suser.Account, _ = EncryptAccountWithUser(c, sa.ID, sa.UserID.Int64, suser.CustomID, suser.TokenID) // 账户信息
+	if err := a.SetSignUserWithUser(c, sa, &suser); err != nil {                                        // 用户信息
 		return nil, err
 	}
 	if err := a.SetSignUserWithClient(c, sa, &suser); err != nil { // 访问令牌签名
@@ -312,7 +313,7 @@ func (a *Signin) SetSignUserWithUser(c *gin.Context, sa *schema.SigninGpaAccount
 	if sa.OrgCod.Valid {
 		// 账户上绑定了租户， 使用用户的租户账户
 		user := schema.SigninGpaOrgUser{}
-		if err := user.QueryByUserAndOrg(a.Sqlx, int(sa.UserID.Int64), sa.OrgCod.String); err != nil {
+		if err := user.QueryByUserAndOrg(a.Sqlx, sa.UserID.Int64, sa.OrgCod.String); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
 			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户信息发生异常"})
 		} else if user.Status != schema.StatusEnable {

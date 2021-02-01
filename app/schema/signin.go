@@ -13,7 +13,7 @@ import (
 
 // SigninGpaUser user
 type SigninGpaUser struct {
-	ID     int        `db:"id" json:"-"`
+	ID     int64      `db:"id" json:"-"`
 	KID    string     `db:"kid" json:"id"`
 	Name   string     `db:"name" json:"name"`
 	Type   UserType   `db:"type" json:"-"`
@@ -38,9 +38,9 @@ func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int, typ string) error {
 
 // SigninGpaOrgUser user
 type SigninGpaOrgUser struct {
-	ID       int            `tbl:"u" db:"id"`
+	ID       int64          `tbl:"u" db:"id"`
 	Type     UserType       `tbl:"u" db:"type"`
-	UserID   int            `tbl:"t" db:"user_id"`
+	UserID   int64          `tbl:"t" db:"user_id"`
 	OrgCode  string         `tbl:"t" db:"org_cod"`
 	UnionKID string         `tbl:"t" db:"union_kid"`
 	Name     string         `tbl:"t" db:"name"`
@@ -49,7 +49,7 @@ type SigninGpaOrgUser struct {
 }
 
 // QueryByUserAndOrg sql select
-func (a *SigninGpaOrgUser) QueryByUserAndOrg(sqlx *sqlx.DB, userid int, orgcode string) error {
+func (a *SigninGpaOrgUser) QueryByUserAndOrg(sqlx *sqlx.DB, userid int64, orgcode string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}tenant_user t inner join {{TP}}user u on u.id = t.user_id where t.user_id=? and t.org_cod=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, userid, orgcode)
@@ -61,7 +61,7 @@ func (a *SigninGpaOrgUser) QueryByUserAndOrg(sqlx *sqlx.DB, userid int, orgcode 
 
 // SigninGpaAccount account
 type SigninGpaAccount struct {
-	ID           int            `db:"id"`
+	ID           int64          `db:"id"`
 	PID          sql.NullInt64  `db:"pid"`           // 上级账户
 	Account      string         `db:"account"`       // 账户
 	AccountType  int            `db:"account_type"`  // 账户类型 1:name 2:mobile 3:email 4:openid 5:unionid 6:token
@@ -73,6 +73,7 @@ type SigninGpaAccount struct {
 	PasswordSalt sql.NullString `db:"password_salt"` // 密码盐值
 	PasswordType sql.NullString `db:"password_type"` // 密码方式
 	VerifySecret sql.NullString `db:"verify_secret"` // 校验密钥
+	CustomID     sql.NullString `db:"custom_id"`     // 账户自定义ID
 	Status       StatusType     `db:"status"`        // 状态
 	CreatedAt    sql.NullTime   `db:"created_at"`    // 创建时间
 	UpdatedAt    sql.NullTime   `db:"updated_at"`    // 更新时间
@@ -80,7 +81,7 @@ type SigninGpaAccount struct {
 }
 
 // QueryByID 查询
-func (a *SigninGpaAccount) QueryByID(sqlx *sqlx.DB, id int) error {
+func (a *SigninGpaAccount) QueryByID(sqlx *sqlx.DB, id int64) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}account where id=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, id)
@@ -122,7 +123,7 @@ func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ i
 		return errors.New("account pid is null")
 	}
 	paccount := SigninGpaAccount{}
-	if err = paccount.QueryByID(sqlx, int(a.PID.Int64)); err != nil {
+	if err = paccount.QueryByID(sqlx, a.PID.Int64); err != nil {
 		return err
 	} else if paccount.AccountType == int(AccountTypeName) || paccount.Status != StatusEnable {
 		// 主账户不是密码账户或者主账户被禁用
@@ -199,8 +200,8 @@ func (a *SigninGpaAccount) UpdateVerifySecret(sqlx *sqlx.DB) error {
 
 // UpdateAndSaveX update and save
 func (a *SigninGpaAccount) UpdateAndSaveX(sqlx *sqlx.DB) error {
-	Index := sqlxc.IdxColumn{Column: "id", ID: int64(a.ID)}
-	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(TablePrefix+"account", Index, a)
+	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "account", IDVal: a.ID}
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNil(tic, a)
 	if err != nil {
 		return err
 	}
@@ -209,9 +210,8 @@ func (a *SigninGpaAccount) UpdateAndSaveX(sqlx *sqlx.DB) error {
 	if err != nil {
 		return err
 	}
-	if Index.ID == 0 {
-		ID, _ := res.LastInsertId()
-		a.ID = int(ID)
+	if a.ID == 0 {
+		a.ID, _ = res.LastInsertId()
 	}
 	return nil
 }
@@ -223,7 +223,7 @@ func (a *SigninGpaAccount) UpdateAndSaveX(sqlx *sqlx.DB) error {
 // SigninGpaAccountToken account
 type SigninGpaAccountToken struct {
 	TokenID      string         `db:"token_kid"`
-	AccountID    int            `db:"account_id"`
+	AccountID    int64          `db:"account_id"`
 	DelayToken   sql.NullString `db:"delay_token"`
 	DelayExpAt   sql.NullInt64  `db:"delay_exp"`
 	OrgCode      sql.NullString `db:"org_cod"`
@@ -240,8 +240,9 @@ type SigninGpaAccountToken struct {
 	CreatedAt    sql.NullTime   `db:"created_at"`
 	UpdatedAt    sql.NullTime   `db:"updated_at"`
 	Version      sql.NullInt64  `db:"version" set:"=version+1"`
-	Number1      sql.NullInt64  `db:"number_1"` // 扩展字段
 	String1      sql.NullString `db:"string_1"` // 扩展字段
+	Number2      sql.NullInt64  `db:"number_2"` // 扩展字段
+	String2      sql.NullString `db:"string_2"` // 扩展字段
 }
 
 // QueryByRefreshToken rtk
@@ -282,8 +283,8 @@ func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, accountID
 
 // UpdateAndSaveByTokenKID 更新
 func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, update bool) error {
-	IDX := sqlxc.IdxColumn{Column: "token_kid", KID: a.TokenID, Create: !update, Update: update}
-	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(TablePrefix+"token", IDX, a)
+	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "token", IDCol: "token_kid", IDVal: a.TokenID, Update: sql.NullBool{Valid: true, Bool: update}}
+	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(tic, a)
 	if err != nil {
 		return err
 	}
