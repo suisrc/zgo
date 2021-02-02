@@ -41,6 +41,8 @@ type UserInfo interface {
 	GetTokenID() string
 	// GetUserAccount 登陆ID, 本身不具备任何意义,只是标记登陆方式, 使用token反向加密
 	GetAccount() string
+	// GetUserAccount2 用户自定义账户信息
+	GetAccount2() string
 
 	// GetUserID 用户ID， GetOrgCode不为空(P6M开头的租户除外)，不提供
 	GetUserID() string

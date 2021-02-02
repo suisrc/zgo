@@ -69,14 +69,11 @@ func DecryptCaptchaByAccount(c *gin.Context, code string) ( /*account*/ int64, f
 //============================================================================================
 
 // EncryptAccountWithUser 加密验证码
-func EncryptAccountWithUser(c *gin.Context, account, user int64, custom, secret string) (string, error) {
+func EncryptAccountWithUser(c *gin.Context, account, user int64, secret string) (string, error) {
 	var buffer bytes.Buffer                                       // byte buffer
 	buffer.Write(crypto.Number2BytesInNetworkOrder(int(account))) // 占用4个字节
 	buffer.Write(crypto.Number2BytesInNetworkOrder(int(user)))    // 占用4个字节
 	buffer.Write(crypto.RandomBytes(4))                           // 掩码4个字节
-	if custom != "" {
-		buffer.Write([]byte(custom))
-	}
 	// 加密KEY的内容
 	keys := []byte(crypto.FixRandomAes32(secret))
 	// 加密
@@ -88,24 +85,21 @@ func EncryptAccountWithUser(c *gin.Context, account, user int64, custom, secret 
 }
 
 // DecryptAccountWithUser 解密验证码
-func DecryptAccountWithUser(c *gin.Context, data string, secret string) (account, user int64, custom string, err error) {
+func DecryptAccountWithUser(c *gin.Context, data string, secret string) (account, user int64, err error) {
 	dataBytes, err := crypto.Base64DecodeStringURL(data)
 	if err != nil {
-		return 0, 0, "", err
+		return 0, 0, err
 	}
 	resultCodeLen := len(dataBytes)
 	if resultCodeLen < 12 {
-		return 0, 0, "", errors.New("data is error") // 不可预知异常, 往往来自恶意攻击
+		return 0, 0, errors.New("data is error") // 不可预知异常, 往往来自恶意攻击
 	}
 	keys := []byte(crypto.FixRandomAes32(secret))
 	resultCodeBytes, err := crypto.AesDecryptBytes(dataBytes, keys)
 	if err != nil {
-		return 0, 0, "", err
+		return 0, 0, err
 	}
 	account = int64(crypto.BytesNetworkOrder2Number(resultCodeBytes[:4]))
 	user = int64(crypto.BytesNetworkOrder2Number(resultCodeBytes[4:8]))
-	if len(resultCodeBytes) > 12 {
-		custom = string(resultCodeBytes[12:])
-	}
 	return
 }

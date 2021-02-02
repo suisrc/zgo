@@ -192,9 +192,10 @@ func (a *Signin) GetSignUserInfo(c *gin.Context, sa *schema.SigninGpaAccount) (*
 	if suser.TokenID == "" {                                             // account加密需要令牌， 所以令牌不能为空
 		suser.TokenID = jwt.NewTokenID(strconv.Itoa(int(sa.ID + 1103)))
 	}
-	suser.CustomID = sa.CustomID.String
-	suser.Account, _ = EncryptAccountWithUser(c, sa.ID, sa.UserID.Int64, suser.CustomID, suser.TokenID) // 账户信息
-	if err := a.SetSignUserWithUser(c, sa, &suser); err != nil {                                        // 用户信息
+	suser.Account2 = sa.CustomID.String
+	suser.Account, _ = EncryptAccountWithUser(c, sa.ID, sa.UserID.Int64, suser.TokenID) // 账户信息
+
+	if err := a.SetSignUserWithUser(c, sa, &suser); err != nil { // 用户信息
 		return nil, err
 	}
 	if err := a.SetSignUserWithClient(c, sa, &suser); err != nil { // 访问令牌签名

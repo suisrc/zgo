@@ -11,8 +11,9 @@ type CasbinObject struct {
 
 // CasbinSubject subject
 type CasbinSubject struct {
-	// UsrID    int
-	// AccID    int
+	//UsrID    int
+	//AccID    int
+	Acc    string
 	Org    string
 	Usr    string
 	OrgUsr string

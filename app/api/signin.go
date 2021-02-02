@@ -173,7 +173,7 @@ func (a *Signin) logSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, up
 	// c.SetCookie("signin", u.GetTokenID(), -1, "", u.GetAudience(), false, false) // 标记登陆信息
 
 	// aid, _ := strconv.Atoi(u.GetAccount())
-	aid, _, _, err := service.DecryptAccountWithUser(c, u.GetAccount(), u.GetTokenID())
+	aid, _, err := service.DecryptAccountWithUser(c, u.GetAccount(), u.GetTokenID())
 	if err != nil {
 		return
 	}
@@ -378,7 +378,7 @@ func (a *Signin) token3rdNew(c *gin.Context) {
 	// 确定登陆用户的身份
 	usr, _ := a.Auther.GetUserInfo(c)
 
-	aid, uid, cus, _ := service.DecryptAccountWithUser(c, usr.GetAccount(), usr.GetTokenID())
+	aid, uid, _ := service.DecryptAccountWithUser(c, usr.GetAccount(), usr.GetTokenID())
 	tid := jwt.NewTokenID(strconv.Itoa(int(aid)))
 	tkn := tid + "_" + crypto.UUID(21)
 
@@ -387,9 +387,8 @@ func (a *Signin) token3rdNew(c *gin.Context) {
 		TokenID:    tid,
 		AccountID:  aid,
 		OrgCode:    sql.NullString{Valid: usr.GetOrgCode() != "", String: usr.GetOrgCode()},
+		Number1:    sql.NullInt64{Valid: true, Int64: uid},
 		String1:    sql.NullString{Valid: true, String: usr.GetTokenID()},
-		Number2:    sql.NullInt64{Valid: true, Int64: uid},
-		String2:    sql.NullString{Valid: true, String: cus},
 		DelayToken: sql.NullString{Valid: true, String: tkn},
 		DelayExpAt: sql.NullInt64{Valid: true, Int64: time.Now().Unix() + 300},
 	}
@@ -415,7 +414,7 @@ func (a *Signin) token3rdGet(c *gin.Context) {
 		if usr, b := usrInfo.(*jwt.UserClaims); b {
 			// 修正数据
 			usr.Id = o2a.TokenID
-			usr.Account, _ = service.EncryptAccountWithUser(c, o2a.AccountID, o2a.Number2.Int64, o2a.String2.String, o2a.TokenID)
+			usr.Account, _ = service.EncryptAccountWithUser(c, o2a.AccountID, o2a.Number1.Int64, o2a.TokenID)
 			usr.Audience = c.Request.Host
 		}
 		return nil

@@ -12,6 +12,7 @@ var _ auth.UserInfo = &SigninUser{}
 type SigninUser struct {
 	TokenID   string
 	Account   string
+	Account2  string
 	UserID    string
 	UserName  string
 	UserRoles string
@@ -22,7 +23,6 @@ type SigninUser struct {
 	Domain    string
 	Issuer    string
 	Audience  string
-	CustomID  string
 }
 
 // GetTokenID xxx
@@ -33,6 +33,11 @@ func (u *SigninUser) GetTokenID() string {
 // GetAccount xxx
 func (u *SigninUser) GetAccount() string {
 	return u.Account
+}
+
+// GetAccount2 xxx
+func (u *SigninUser) GetAccount2() string {
+	return u.Account2
 }
 
 // GetUserID xxx

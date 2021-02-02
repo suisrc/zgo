@@ -174,10 +174,11 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 		}
 
 		// 租户用户， 默认我们认为租户用户范围不会超过100,000 所以会间人员信息加载到认证器中执行
-		// aid, uid, cus, _ := DecryptAccountWithUser(c, user.GetAccount(), user.GetTokenID())
+		// _, _, _ := service.DecryptAccountWithUser(c, user.GetAccount(), user.GetTokenID())
 		sub := CasbinSubject{
 			// UsrID:    aid,
 			// AccID:    uid,
+			Acc:    user.GetAccount2(), // casbin -> 参数 租户自定义ID
 			Org:    org,                // casbin -> 参数 租户
 			Iss:    user.GetIssuer(),   // casbin -> 参数 授控域
 			Aud:    user.GetAudience(), // casbin -> 参数 受控域
@@ -341,8 +342,8 @@ func (a *CasbinAuther) ClearEnforcer(force bool, org string) {
 	if a.CachedEnforcer == nil {
 		// do nothing
 	} else if force {
-		a.CachedEnforcer = map[string]*CasbinEnforcer{} // 删除之前所有的
-		a.CachedExpireAt = time.Now().Add(time.Minute)
+		a.CachedEnforcer = map[string]*CasbinEnforcer{}    // 删除之前所有的
+		a.CachedExpireAt = time.Now().Add(4 * time.Minute) // 设定04分钟后刷新
 	} else if org != "" {
 		key := "zgo:casbin:" + org
 		delete(a.CachedEnforcer, key) // 清除指定缓存
@@ -350,7 +351,7 @@ func (a *CasbinAuther) ClearEnforcer(force bool, org string) {
 		now := time.Now()
 		for k, v := range a.CachedEnforcer {
 			if v.ExpireAt.Before(now) {
-				delete(a.CachedEnforcer, k) // 清除过期
+				delete(a.CachedEnforcer, k) // 清除过期缓存
 			}
 		}
 	}
@@ -360,10 +361,10 @@ func (a *CasbinAuther) ClearEnforcer(force bool, org string) {
 func (a *CasbinAuther) GetEnforcer(conf config.Casbin, c *gin.Context, user auth.UserInfo, svc, org string) (*casbin.SyncedEnforcer, error) {
 	if a.CachedEnforcer == nil {
 		a.CachedEnforcer = map[string]*CasbinEnforcer{}
-		a.CachedExpireAt = time.Now().Add(2 * time.Minute)
+		a.CachedExpireAt = time.Now().Add(4 * time.Minute)
 	} else if a.CachedExpireAt.Before(time.Now()) {
-		a.CachedExpireAt = time.Now().Add(2 * time.Minute) // 设定2分钟后再次刷新
-		go a.ClearEnforcer(false, "")                      // 执行异步刷新流程
+		a.CachedExpireAt = time.Now().Add(4 * time.Minute) // 设定04分钟后刷新
+		defer func() { go a.ClearEnforcer(false, "") }()   // 执行异步刷新流程
 	}
 	key := "zgo:casbin:" + org
 	ver := ""
@@ -393,13 +394,13 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, c *gin.Context, user auth
 	// 执行更新
 	if cps, err := a.QueryCasbinPolicies(org, ver); err != nil {
 		return nil, err
-	} else if cached != nil && c == nil {
+	} else if cached != nil && cps == nil {
 		// 版本不变, 重置有效期限， 不需要任何修改
-		cached.Refresh = time.Now().Add(2 * time.Minute)
+		cached.Refresh = time.Now().Add(1 * time.Minute)
 		cached.ExpireAt = cached.Refresh.Add(8 * time.Minute)
 		c.Writer.Header().Set("X-Request-Z-Casbin-Ver", cached.Version)
 		return cached.Enforcer, nil
-	} else if c == nil {
+	} else if cps == nil {
 		// 系统发生异常， 无法更新配置
 		return nil, errors.New("casbin policy is nil")
 	} else if cached != nil && !cps.New {
@@ -414,7 +415,7 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, c *gin.Context, user auth
 			return nil, errors.New("casbin adapter type is error")
 		}
 		cached.Enforcer.LoadPolicy()
-		cached.Refresh = time.Now().Add(2 * time.Minute)
+		cached.Refresh = time.Now().Add(1 * time.Minute)
 		cached.ExpireAt = cached.Refresh.Add(8 * time.Minute)
 		cached.Version = cps.Version
 		c.Writer.Header().Set("X-Request-Z-Casbin-Ver", cps.Version)
@@ -470,8 +471,8 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, c *gin.Context, user auth
 		// 配置缓存
 		a.CachedEnforcer[key] = &CasbinEnforcer{
 			Enforcer: e,
-			Refresh:  time.Now().Add(2 * time.Minute),  // 刷新时间2分钟
-			ExpireAt: time.Now().Add(10 * time.Minute), // 有效期10分钟
+			Refresh:  time.Now().Add(1 * time.Minute), // 刷新期1分钟
+			ExpireAt: time.Now().Add(8 * time.Minute), // 有效期8分钟
 			Version:  cps.Version,
 		}
 		c.Writer.Header().Set("X-Request-Z-Casbin-Ver", cps.Version)

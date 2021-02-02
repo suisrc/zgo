@@ -44,6 +44,7 @@ func NewUserInfo(user auth.UserInfo) *UserClaims {
 	}
 	claims.Id = tokenID
 	claims.Account = user.GetAccount()
+	claims.Account2 = user.GetAccount2()
 
 	claims.Subject = user.GetUserID()
 	claims.UserName = user.GetUserName()
@@ -70,6 +71,7 @@ type UserClaims struct {
 	// TokenID -> Id
 	// UserID -> Subject -> sub, GetOrgCode为空，提供用户平台ID， 否则提供用户租户ID
 	Account   string   `json:"ati,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式, 使用token反向加密
+	Account2  string   `json:"atc,omitempty"` // 用户自定义ID
 	UserName  string   `json:"nam,omitempty"` // 用户名
 	UserRoles []string `json:"ros,omitempty"` // 角色ID, 该角色是平台角色， 也可以理解为平台给机构的角色
 	OrgCode   string   `json:"ogc,omitempty"` // 组织/租户code
@@ -91,6 +93,11 @@ func (u *UserClaims) GetTokenID() string {
 // GetAccount xxx
 func (u *UserClaims) GetAccount() string {
 	return u.Account
+}
+
+// GetAccount2 xxx
+func (u *UserClaims) GetAccount2() string {
+	return u.Account2
 }
 
 // GetUserID xxx

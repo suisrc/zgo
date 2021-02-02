@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/casbin/casbin/v2/model"
-	"github.com/casbin/casbin/v2/persist"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"
 )
@@ -40,7 +39,8 @@ type Adapter struct {
 	Ver string   // model ver
 }
 
-var _ persist.BatchAdapter = (*Adapter)(nil)
+// var _ persist.BatchAdapter = (*Adapter)(nil)
+// var _ persist.FilteredAdapter = (*Adapter)(nil)
 
 // NewCasbinAdapter is the constructor for Adapter with existed connection
 func NewCasbinAdapter(db *sqlx.DB, tbl string, mid int64, ver string) *Adapter {
@@ -156,6 +156,16 @@ func (a *Adapter) RemovePolicies(sec string, ptype string, rules [][]string) (er
 	return
 }
 
+// LoadFilteredPolicy loads only policy rules that match the filter.
+func (a *Adapter) LoadFilteredPolicy(model model.Model, filter interface{}) (err error) {
+	return
+}
+
+// IsFiltered returns true if the loaded policy has been filtered.
+func (a *Adapter) IsFiltered() bool {
+	return true
+}
+
 func (a *Adapter) ensureTable() {
 	_, err := a.DB.Exec(fmt.Sprintf("SELECT 1 FROM `%s` LIMIT 1", a.Tbl))
 	if err != nil {
@@ -167,6 +177,9 @@ func (a *Adapter) queryPolicies() (rules *[]CasbinRule, err error) {
 	rules = new([]CasbinRule)
 	query := fmt.Sprintf("SELECT * FROM `%s` WHERE mid = ? and ver = ?", a.Tbl)
 	err = a.DB.Select(rules, query, a.Mid, a.Ver)
+	// for _, r := range *rules {
+	// 	log.Println(r)
+	// }
 	return
 }
 

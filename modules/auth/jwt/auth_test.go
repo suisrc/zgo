@@ -98,6 +98,11 @@ func (u *UserInfo) GetAccount() string {
 	return ""
 }
 
+// GetAccount2 xxx
+func (u *UserInfo) GetAccount2() string {
+	return ""
+}
+
 // GetDomain xxx
 func (u *UserInfo) GetDomain() string {
 	return ""
