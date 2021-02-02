@@ -32,8 +32,10 @@ func (a *CasbinGpaSvcAud) QueryByAudAndResAndOrg(sqlx *sqlx.DB, aud, res, org st
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}app_service_audience sa inner join {{TP}}app_service sv on sv.id = sa.svc_id where "
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	SQLX := []string{
-		"sa.audience = ? and sa.resource = ? limit 1",
-		"sa.audience = ? and sa.resource is null or sa.audience is null and sa.resource = ? order by sa.resource desc limit 1",
+		"sa.audience = ? and sa.resource = ? limit 1", // 使用精准匹配查询
+		"sa.audience = ? and sa.resource is null or sa.audience is null and sa.resource = ? order by sa.resource, sa.audience desc limit 1",
+		"? like sa.audience and ? like sa.resource order by sa.resource, sa.audience limit 1", // 使用模糊匹配查询
+		"? like sa.audience and sa.resource is null or sa.audience is null and ? like sa.resource order by sa.resource, sa.audience desc limit 1",
 	}
 	for _, sx := range SQLX {
 		if err := sqlx.Get(a, SQL+sx, aud, res); err != nil {
@@ -41,7 +43,7 @@ func (a *CasbinGpaSvcAud) QueryByAudAndResAndOrg(sqlx *sqlx.DB, aud, res, org st
 				return err
 			}
 		} else {
-			return nil
+			return nil // 查询到结果， 直接返回
 		}
 	}
 	return errors.New("sql: no rows in result set")

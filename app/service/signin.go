@@ -39,7 +39,7 @@ type Signin struct {
 // params: b 请求参数
 // params: l 验证最后一次登录结果
 // result: 登录者信息
-func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, l func(*gin.Context, int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, l func(*gin.Context, int64) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	if b.Password != "" {
 		// 使用密码方式登录
 		return a.SigninByPasswd(c, b, l)
@@ -113,7 +113,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, l func(*gin.Contex
 //============================================================================================
 
 // SigninByPasswd 密码登陆
-func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, l func(*gin.Context, int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, last func(*gin.Context, int64) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 查询账户信息
 	account := schema.SigninGpaAccount{}
 	if err := account.QueryByAccount(a.Sqlx, b.Username, int(schema.AccountTypeName), b.KID, b.Org); err != nil || account.ID <= 0 {
@@ -139,12 +139,15 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, l func(*gi
 		// 密码不匹配
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
+	if _, err := last(c, account.ID); err != nil {
+		return nil, err // 快速验证上次登录结果
+	}
 	// 获取用户信息
-	return a.GetSignUserInfo(c, &account, l)
+	return a.GetSignUserInfo(c, &account)
 }
 
 // SigninByCaptcha 验证码登陆
-func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, l func(*gin.Context, int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func(*gin.Context, int64) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	// 查询账户信息
 	accountID, captchaGetter, err := DecryptCaptchaByAccount(c, b.Code)
 	if err != nil {
@@ -167,19 +170,19 @@ func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, l func(*g
 	} else if captcha != b.Captcha {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-CHECK", Other: "验证码不正确"})
 	}
+	if _, err := last(c, account.ID); err != nil {
+		return nil, err // 快速验证上次登录结果
+	}
 	// 获取用户信息
-	return a.GetSignUserInfo(c, &account, l)
+	return a.GetSignUserInfo(c, &account)
 }
 
 //============================================================================================
 
 // GetSignUserInfo with role
-func (a *Signin) GetSignUserInfo(c *gin.Context, sa *schema.SigninGpaAccount, l func(*gin.Context, int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+func (a *Signin) GetSignUserInfo(c *gin.Context, sa *schema.SigninGpaAccount) (*schema.SigninUser, error) {
 	if sa.Status != schema.StatusEnable { // 账户被禁用
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ACCOUNT-DISABLE", Other: "账户被禁用,请联系管理员"})
-	}
-	if l == nil {
-		l = a.lastSignInNil
 	}
 	// 登陆用户
 	suser := schema.SigninUser{}
@@ -208,54 +211,13 @@ func (a *Signin) GetSignUserInfo(c *gin.Context, sa *schema.SigninGpaAccount, l 
 }
 
 // SetSignUserWithRole with role info
+// 查询用户的所有的角色
 // 如果一个人具有管理员权限， 其所有的角色都会被舍弃， 只保留管理员角色
 func (a *Signin) SetSignUserWithRole(c *gin.Context, sa *schema.SigninGpaAccount, suser *schema.SigninUser) error {
-	// 查询用户的所有的角色
-	if !sa.UserID.Valid {
-		if sa.RoleID.Valid {
-			grr := schema.SigninGpaRole{}
-			// 登录账户上绑定了角色
-			if err := grr.QueryByRoleAndOrg(a.Sqlx, int(sa.RoleID.Int64), suser.OrgCode); err != nil {
-				if sqlxc.IsNotFound(err) { // 角色没有找到
-					return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-NOROLE", Other: "账户角色失效，账户无法使用"})
-				}
-				return err // 未知异常
-			}
-			if grr.OrgAdm {
-				suser.OrgAdmin = schema.SuperUser // 超级管理员， 不需要角色
-			} else if grr.SvcCode.Valid {
-				suser.SetUserRoles([]string{grr.SvcCode.String + ":" + grr.Name}) // 应用角色
-			} else {
-				suser.SetUserRoles([]string{grr.Name}) // 租户角色
-			}
-		}
-		return nil
-	} else if sa.RoleID.Valid {
-		gur := schema.SigninGpaUserRole{}
-		// 登录账户上绑定了角色
-		if err := gur.QueryByUserAndRoleAndOrg(a.Sqlx, int(sa.UserID.Int64), int(sa.RoleID.Int64), suser.OrgCode); err != nil {
-			if sqlxc.IsNotFound(err) { // 角色没有找到
-				return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-NOROLE", Other: "账户角色失效，账户无法使用"})
-			}
-			return err // 未知异常
-		}
-		if gur.OrgAdm {
-			suser.OrgAdmin = schema.SuperUser
-			return nil // 超级管理员， 不需要角色
-		} else if gur.SvcCode.Valid {
-			// 应用角色
-			suser.SetUserRoles([]string{gur.SvcCode.String + ":" + gur.Name})
-		} else {
-			// 租户角色
-			suser.SetUserRoles([]string{gur.Name})
-		}
-		return nil
-	}
-	// 账户上没有角色， 取用户在对应租户下的所有角色
-	gur := schema.SigninGpaUserRole{}
-	if roles, err := gur.QueryAllByUserAndOrg(a.Sqlx, int(sa.UserID.Int64), suser.OrgCode); err != nil {
+	// 如果账户上带有角色， 优先使用账户角色登录系统Account
+	if roles, err := new(schema.SigninGpaAccountRole).QueryAllByUserAndOrg(a.Sqlx, sa.ID, suser.OrgCode); err != nil {
 		if !sqlxc.IsNotFound(err) {
-			return err
+			return err // 数据库发生异常
 		}
 	} else if len(*roles) > 0 {
 		// 处理得到的用户角色列表
@@ -266,20 +228,47 @@ func (a *Signin) SetSignUserWithRole(c *gin.Context, sa *schema.SigninGpaAccount
 				suser.OrgAdmin = schema.SuperUser
 				return nil
 			} else if r.SvcCode.Valid {
-				// 应用角色
-				rs = append(rs, r.SvcCode.String+":"+r.Name)
+				rs = append(rs, r.SvcCode.String+":"+r.Name) // 应用角色
 			} else {
-				// 租户角色
-				rs = append(rs, r.Name)
+				rs = append(rs, r.Name) // 租户角色
+			}
+			rs = append(rs, helper.IfString(r.SvcCode.Valid, r.SvcCode.String+":"+r.Name, r.Name))
+		}
+		// 设定用户角色
+		suser.SetUserRoles(rs)
+		return nil // 使用了账户上的角色登录系统
+	}
+	if !sa.UserID.Valid {
+		return nil // 账户上没有用户信息， 结束处理， 该账户无角色信息
+	}
+	// 账户上没有角色， 取用户在对应租户下的所有角色
+	if roles, err := new(schema.SigninGpaUserRole).QueryAllByUserAndOrg(a.Sqlx, sa.UserID.Int64, suser.OrgCode); err != nil {
+		if !sqlxc.IsNotFound(err) {
+			return err // 数据库发生异常
+		}
+	} else if len(*roles) > 0 {
+		// 处理得到的用户角色列表
+		rs := []string{}
+		for _, r := range *roles {
+			if r.OrgAdm {
+				// 一旦用户具有管理员角色， 系统会无视其他所有角色的使用
+				suser.OrgAdmin = schema.SuperUser
+				return nil
+			} else if r.SvcCode.Valid {
+				rs = append(rs, r.SvcCode.String+":"+r.Name) // 应用角色
+			} else {
+				rs = append(rs, r.Name) // 租户角色
 			}
 		}
 		// 设定用户角色
 		suser.SetUserRoles(rs)
+		return nil // 使用了用户上的角色登录系统
 	}
-	return nil
+	return nil // 账户和用户上都没有角色
 }
 
 // SetSignUserWithClient with client info
+// 登录客户端加密方式
 func (a *Signin) SetSignUserWithClient(c *gin.Context, sa *schema.SigninGpaAccount, suser *schema.SigninUser) error {
 	// TODO JWT多加密配置方案
 	// domain := c.Request.Host // 用户请求域名
@@ -304,18 +293,24 @@ func (a *Signin) SetSignUserWithClient(c *gin.Context, sa *schema.SigninGpaAccou
 }
 
 // SetSignUserWithUser with user info
+// 查询用户信息
 func (a *Signin) SetSignUserWithUser(c *gin.Context, sa *schema.SigninGpaAccount, suser *schema.SigninUser) error {
 	if !sa.UserID.Valid {
 		// 账户上没有用户信息， 待验证账户， 允许登录
 		suser.OrgCode = sa.OrgCod.String
+		if len(sa.Account) > 8 {
+			suser.UserName = sa.Account[:8] + "..."
+		} else {
+			suser.UserName = sa.Account
+		}
 		return nil
 	}
 	if sa.OrgCod.Valid {
 		// 账户上绑定了租户， 使用用户的租户账户
 		user := schema.SigninGpaOrgUser{}
 		if err := user.QueryByUserAndOrg(a.Sqlx, sa.UserID.Int64, sa.OrgCod.String); err != nil {
-			logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
-			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户信息发生异常"})
+			logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是租户用户不存在
+			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户信息异常"})
 		} else if user.Status != schema.StatusEnable {
 			// 租户账户被禁用
 			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
@@ -328,11 +323,11 @@ func (a *Signin) SetSignUserWithUser(c *gin.Context, sa *schema.SigninGpaAccount
 			suser.OrgAdmin = schema.SuperUser // 租户根账户即是super user
 		}
 	} else {
-		// 使用用户的平台账户
+		// 账户上未绑定租户， 使用用户的平台账户
 		user := schema.SigninGpaUser{}
-		if err := user.QueryByID(a.Sqlx, int(sa.UserID.Int64), ""); err != nil {
+		if err := user.QueryByID(a.Sqlx, sa.UserID.Int64, ""); err != nil {
 			logger.Errorf(c, logger.ErrorWW(err)) // 这里发生不可预知异常,登陆账户存在,但是账户对用的用户不存在
-			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户信息发生异常"})
+			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-ERROR", Other: "用户信息异常"})
 		} else if user.Status != schema.StatusEnable {
 			// 平台账户被禁用
 			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-USER-DISABLE", Other: "用户被禁用,请联系管理员"})
@@ -467,6 +462,6 @@ func (a *Signin) parseCaptchaType(c *gin.Context, b *schema.SigninOfCaptcha) (*S
 //============================================================================================
 
 // 空的上次登陆验证器
-func (a *Signin) lastSignInNil(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, error) {
+func (a *Signin) lastSignInNil(c *gin.Context, aid int64) (*schema.SigninGpaAccountToken, error) {
 	return nil, nil
 }

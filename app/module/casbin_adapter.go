@@ -51,12 +51,11 @@ func NewCasbinAdapter(db *sqlx.DB, tbl string, mid int64, ver string) *Adapter {
 
 // LoadPolicy loads policy from database.
 func (a *Adapter) LoadPolicy(m model.Model) error {
-	var rules []CasbinRule
-	err := a.DB.Select(&rules, fmt.Sprintf("SELECT * FROM `%s` WHERE mid = ? and ver = ?", a.Tbl), a.Mid, a.Ver)
+	rules, err := a.QueryPolicies()
 	if err != nil {
 		return err
 	}
-	for _, rule := range rules {
+	for _, rule := range *rules {
 		key := rule.PType
 		sec := key[:1]
 		args := []string{}
@@ -197,6 +196,21 @@ func (a *Adapter) insertPolicyLine(line *CasbinRule) (err error) {
 	if err != nil {
 		return
 	}
+	return
+}
+
+// DeletePolicies ...
+func (a *Adapter) DeletePolicies() (err error) {
+	query := fmt.Sprintf("DELETE FROM %s WHERE mid = ? AND ver = ?", a.Tbl)
+	_, err = a.DB.Exec(query, a.Mid, a.Ver)
+	return
+}
+
+// QueryPolicies ...
+func (a *Adapter) QueryPolicies() (rules *[]CasbinRule, err error) {
+	rules = new([]CasbinRule)
+	query := fmt.Sprintf("SELECT * FROM `%s` WHERE mid = ? and ver = ?", a.Tbl)
+	err = a.DB.Select(rules, query, a.Mid, a.Ver)
 	return
 }
 

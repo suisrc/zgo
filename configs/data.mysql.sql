@@ -55,9 +55,9 @@ INSERT INTO `zgo_app_service`(`id`, `name`, `code`) VALUES
 
 -- 平台对应关系
 INSERT INTO `zgo_app_service_audience`(`svc_id`, `audience`, `resource`) VALUES 
-(1, null, '/api/ka/'),
-(2, null, '/api/lhdg/'),
-(3, null, '/api/tlsj/');
+(1, null, '/api/ka/%'),
+(2, null, '/api/lhdg/%'),
+(3, null, '/api/tlsj/%');
 
 -- 授权
 INSERT INTO `zgo_app_service_org`(`svc_id`, `org_cod`, `expired`, `status`, `description`) VALUES 

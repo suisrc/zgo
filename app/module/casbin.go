@@ -329,7 +329,7 @@ func (a *CasbinAuther) ClearEnforcer(force bool, org string) {
 		a.CachedEnforcer = map[string]*CasbinEnforcer{} // 删除之前所有的
 		a.CachedExpireAt = time.Now().Add(time.Minute)
 	} else if org != "" {
-		key := "fmes:casbin:" + org
+		key := "zgo:casbin:" + org
 		delete(a.CachedEnforcer, key) // 清除指定缓存
 	} else {
 		now := time.Now()
@@ -350,7 +350,7 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user au
 		a.CachedExpireAt = time.Now().Add(2 * time.Minute) // 设定1分钟后再次刷新
 		go a.ClearEnforcer(false, "")                      // 执行异步刷新流程
 	}
-	key := "fmes:casbin:" + org
+	key := "zgo:casbin:" + org
 	ver := ""
 	cached, exist := a.CachedEnforcer[key]
 	if exist && cached.Refresh.Before(time.Now()) {
@@ -380,8 +380,7 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user au
 		cached.ExpireAt = time.Now().Add(10 * time.Minute)
 		cached.Refresh = time.Now().Add(time.Minute)
 		return cached.Enforcer, nil
-	}
-	if c.ModelText == "" {
+	} else if c.ModelText == "" {
 		// 重新加载配置, *Adapter
 		// 数据库访问适配器（使用redis缓存请改写这里）
 		if adapter, b := cached.Enforcer.GetAdapter().(*Adapter); b {
@@ -398,7 +397,6 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user au
 		cached.Version = c.Version
 		return cached.Enforcer, nil
 	}
-
 	// log.Println(c)
 	m, err := model.NewModelFromString(c.ModelText)
 	if err != nil {
@@ -407,6 +405,9 @@ func (a *CasbinAuther) GetEnforcer(conf config.Casbin, ctx *gin.Context, user au
 	// *Adapter
 	// 数据库访问适配器（使用redis缓存请改写这里）
 	adapter := NewCasbinAdapter(a.Sqlx, schema.TableCasbinRule, c.Mid, c.Ver)
+	// 清空原有的内容
+	adapter.DeletePolicies()
+	// 构建新的认证引擎
 	e, err := casbin.NewSyncedEnforcer(m, adapter)
 	if err != nil {
 		return nil, err
@@ -600,24 +601,18 @@ func (a *CasbinAuther) CreateCasbinPolicy(org string, c *CasbinPolicy) error {
 }
 
 // QueryServiceCode 查询服务
-// "fmes:svc-code:" + host + ":" + resource
+// "zgo:svc-cox:" + host + ":" + resource
 func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, host, path, org string) (string, int, error) {
-	if host == "" && path == "" {
-		return "", 0, errors.New("无法确认访问的系统服务")
-	}
 	resource := ""
 	if strings.HasPrefix(path, "/api/") {
-		rescount := 3
-		for i, r := range path {
-			if r == '/' {
-				if rescount--; rescount == 0 {
-					resource = path[:i]
-					break
-				}
-			}
-		}
+		// 后端API服务使用3级模糊匹配
+		resource = helper.SplitStrCR(path[1:], '/', 3)
 	}
-	key := "fmes:svc-code:" + host + ":" + resource
+	if host == "" && resource == "" {
+		return "", 0, errors.New("无法确认访问的系统服务")
+	}
+	audience := helper.ReverseStr(host) // host倒序， 可以使用数据库索引查询
+	key := "zgo:svc-cox:" + audience + ":" + resource
 
 	if svc, b, err := a.Storer.Get(ctx, key); err != nil {
 		return "", 0, err // 查询缓存出现异常
@@ -636,7 +631,7 @@ func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, ho
 
 	// 由于查询是居于全局的， 所以1分钟的缓存是一个合理的范围
 	sa := schema.CasbinGpaSvcAud{}
-	if err := sa.QueryByAudAndResAndOrg(a.Sqlx, host, resource, ""); err != nil || !sa.SvcCode.Valid {
+	if err := sa.QueryByAudAndResAndOrg(a.Sqlx, audience, resource, ""); err != nil || !sa.SvcCode.Valid {
 		// 系统没有配置或者系统为指定有效服务名称
 		a.Storer.Set(ctx, key, "err:"+err.Error(), time.Minute) // 1分钟延迟刷新， 拒绝请求也需要缓存
 		return "", 0, err
@@ -649,13 +644,13 @@ func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, ho
 }
 
 // CheckTenantService 验证租户是否有访问该服务的权限服务
-// "fmes:svc-org:" + svc_cod + ":" + org_cod -> CasbinGpaSvcOrg
+// "zgo:svc-orx:" + svc_cod + ":" + org_cod -> CasbinGpaSvcOrg
 func (a *CasbinAuther) CheckTenantService(ctx *gin.Context, user auth.UserInfo, org, svc string, sid int) (bool, error) {
 	if org == "" || org == schema.PlatformCode {
 		return true, nil // 平台用户， 没有服务权限问题
 	}
 
-	key := "fmes:svc-org:" + svc + ":" + org
+	key := "zgo:svc-orx:" + svc + ":" + org
 	if res, b, err := a.Storer.Get(ctx, key); err != nil {
 		return false, err
 	} else if b {

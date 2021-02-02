@@ -21,7 +21,7 @@ type SigninGpaUser struct {
 }
 
 // QueryByID sql 查询用户信息
-func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int, typ string) error {
+func (a *SigninGpaUser) QueryByID(sqlx *sqlx.DB, id int64, typ string) error {
 	SQL := "select id, kid, name, status from {{TP}}user where id=?"
 	params := []interface{}{id}
 	if typ != "" {
@@ -67,7 +67,6 @@ type SigninGpaAccount struct {
 	AccountType  int            `db:"account_type"`  // 账户类型 1:name 2:mobile 3:email 4:openid 5:unionid 6:token
 	PlatformKID  sql.NullString `db:"platform_kid"`  // 账户归属平台
 	UserID       sql.NullInt64  `db:"user_id"`       // 用户标识
-	RoleID       sql.NullInt64  `db:"role_id"`       // 角色标识
 	OrgCod       sql.NullString `db:"org_cod"`       // 角色标识
 	Password     sql.NullString `db:"password"`      // 登录密码
 	PasswordSalt sql.NullString `db:"password_salt"` // 密码盐值
@@ -155,7 +154,7 @@ func (a *SigninGpaAccount) QueryByAccountSkipStatus(sqlx *sqlx.DB, acc string, t
 }
 
 // QueryByUserAndKind user and kid
-func (a *SigninGpaAccount) QueryByUserAndKind(sqlx *sqlx.DB, uid int, typ int, kid string) error {
+func (a *SigninGpaAccount) QueryByUserAndKind(sqlx *sqlx.DB, uid int64, typ int, kid string) error {
 	sqr := strings.Builder{}
 	sqr.WriteString("select " + sqlxc.SelectColumns(a))
 	sqr.WriteString(" from {{TP}}account")
@@ -173,7 +172,7 @@ func (a *SigninGpaAccount) QueryByUserAndKind(sqlx *sqlx.DB, uid int, typ int, k
 }
 
 // DeleteByUserAndKind user and kid
-func (a *SigninGpaAccount) DeleteByUserAndKind(sqlx *sqlx.DB, uid int, typ int, kid string) error {
+func (a *SigninGpaAccount) DeleteByUserAndKind(sqlx *sqlx.DB, uid int64, typ int, kid string) error {
 	sqr := strings.Builder{}
 	sqr.WriteString("delete from {{TP}}account")
 	sqr.WriteString(" where user_id=? and account_type=?")
@@ -267,12 +266,12 @@ func (a *SigninGpaAccountToken) QueryByTokenKID(sqlx *sqlx.DB, kid string) error
 }
 
 // QueryByAccountAndClient kid
-func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, accountID int, clientIP string) error {
+func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, acc int64, cip string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where account_id=?"
-	params := []interface{}{accountID}
-	if clientIP != "" {
+	params := []interface{}{acc}
+	if cip != "" {
 		SQL += " and last_ip=?"
-		params = append(params, clientIP)
+		params = append(params, cip)
 	}
 	SQL += " order by expires_at desc limit 1"
 
@@ -320,7 +319,7 @@ type SigninGpaRole struct {
 }
 
 // QueryByRoleAndOrg role
-func (a *SigninGpaRole) QueryByRoleAndOrg(sqlx *sqlx.DB, role int, org string) error {
+func (a *SigninGpaRole) QueryByRoleAndOrg(sqlx *sqlx.DB, role int64, org string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}role ro
 		left  join {{TP}}app_service sv on sv.id = ro.svc_id 
 		where ro.status = 1 and ro.id=?`
@@ -337,6 +336,35 @@ func (a *SigninGpaRole) QueryByRoleAndOrg(sqlx *sqlx.DB, role int, org string) e
 	return sqlx.Get(a, SQL, params...)
 }
 
+// SigninGpaAccountRole role
+type SigninGpaAccountRole struct {
+	OrgAdm  bool           `tbl:"ro" db:"org_adm"`
+	KID     string         `tbl:"ro" db:"kid"`
+	Name    string         `tbl:"ro" db:"name"`
+	SvcCode sql.NullString `tbl:"sv" db:"code"`
+}
+
+// QueryAllByUserAndOrg user -> user id / code -> org code
+func (a *SigninGpaAccountRole) QueryAllByUserAndOrg(sqlx *sqlx.DB, acc int64, org string) (*[]SigninGpaAccountRole, error) {
+	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}account_role ar 
+		inner join {{TP}}role ro on ro.id = ar.role_id 
+		left  join {{TP}}app_service sv on sv.id = ro.svc_id 
+		where ro.status = 1 and ar.account=?`
+	params := []interface{}{acc}
+	if org != "" {
+		SQL += " and ur.org_cod=?"
+		params = append(params, org)
+	} else {
+		SQL += " and ur.org_cod is null"
+	}
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	res := []SigninGpaAccountRole{}
+	if err := sqlx.Select(&res, SQL, params...); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
 // SigninGpaUserRole role
 type SigninGpaUserRole struct {
 	OrgAdm  bool           `tbl:"ro" db:"org_adm"`
@@ -346,7 +374,7 @@ type SigninGpaUserRole struct {
 }
 
 // QueryAllByUserAndOrg user -> user id / code -> org code
-func (a *SigninGpaUserRole) QueryAllByUserAndOrg(sqlx *sqlx.DB, usr int, org string) (*[]SigninGpaUserRole, error) {
+func (a *SigninGpaUserRole) QueryAllByUserAndOrg(sqlx *sqlx.DB, usr int64, org string) (*[]SigninGpaUserRole, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}user_role ur 
 		inner join {{TP}}role ro on ro.id = ur.role_id 
 		left  join {{TP}}app_service sv on sv.id = ro.svc_id 
@@ -367,18 +395,18 @@ func (a *SigninGpaUserRole) QueryAllByUserAndOrg(sqlx *sqlx.DB, usr int, org str
 }
 
 // QueryByUserAndRoleAndOrg user -> user id / code -> org code
-func (a *SigninGpaUserRole) QueryByUserAndRoleAndOrg(sqlx *sqlx.DB, user, role int, org string) error {
-	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}user_role ur 
-		inner join {{TP}}role ro on ro.id = ur.role_id 
-		left  join {{TP}}app_service sv on sv.id = ro.svc_id 
-		where ro.status = 1 and ur.user_id=? and ur.role_id=?`
-	params := []interface{}{user, role}
-	if org != "" {
-		SQL += " and ur.org_cod=?"
-		params = append(params, org)
-	} else {
-		SQL += " and ur.org_cod is null"
-	}
-	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	return sqlx.Select(a, SQL, params...)
-}
+// func (a *SigninGpaUserRole) QueryByUserAndRoleAndOrg(sqlx *sqlx.DB, user, role int, org string) error {
+// 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}user_role ur
+// 		inner join {{TP}}role ro on ro.id = ur.role_id
+// 		left  join {{TP}}app_service sv on sv.id = ro.svc_id
+// 		where ro.status = 1 and ur.user_id=? and ur.role_id=?`
+// 	params := []interface{}{user, role}
+// 	if org != "" {
+// 		SQL += " and ur.org_cod=?"
+// 		params = append(params, org)
+// 	} else {
+// 		SQL += " and ur.org_cod is null"
+// 	}
+// 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+// 	return sqlx.Get(a, SQL, params...)
+// }

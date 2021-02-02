@@ -137,7 +137,7 @@ func (a *Signin) signout(c *gin.Context) {
 //==================================================================================================================
 
 // 获取最后一次登陆信息
-func (a *Signin) lastSignIn(c *gin.Context, aid int) (*schema.SigninGpaAccountToken, error) {
+func (a *Signin) lastSignIn(c *gin.Context, aid int64) (*schema.SigninGpaAccountToken, error) {
 	if config.C.JWTAuth.LimitTime <= 0 {
 		// 不使用上去签名的结果作为缓存
 		return nil, nil
