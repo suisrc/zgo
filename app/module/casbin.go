@@ -339,6 +339,7 @@ func (a *CasbinAuther) GetUserRole(c *gin.Context, user auth.UserInfo, svc, org 
 }
 
 // ClearEnforcer 清理缓存
+// 缓存全部情况后， 引擎立即完成刷新操作
 func (a *CasbinAuther) ClearEnforcer(force bool, org string) {
 	if a.CachedEnforcer == nil {
 		// do nothing

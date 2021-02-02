@@ -8,7 +8,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/suisrc/zgo/app/module"
-	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/modules/helper"
 )
@@ -47,15 +46,18 @@ func fixRequestHeaderParam(c *gin.Context, k string) (string, error) {
 }
 
 func (a *Auth) clear(c *gin.Context) {
-	user, _ := helper.GetUserInfo(c)
+	a.CasbinAuther.ClearEnforcer(true, "")
+	helper.ResSuccess(c, "ok")
 
-	if user.GetOrgCode() == schema.PlatformCode && user.GetOrgAdmin() == schema.SuperUser {
-		org := c.Request.FormValue("org")
-		a.CasbinAuther.ClearEnforcer(org == "", org)
-		helper.ResSuccess(c, "ok")
-	} else {
-		helper.ResSuccess(c, "error")
-	}
+	//user, _ := helper.GetUserInfo(c)
+	//
+	//if user.GetOrgCode() == schema.PlatformCode && user.GetOrgAdmin() == schema.SuperUser {
+	//	org := c.Request.FormValue("org")
+	//	a.CasbinAuther.ClearEnforcer(org == "", org)
+	//	helper.ResSuccess(c, "ok")
+	//} else {
+	//	helper.ResSuccess(c, "error")
+	//}
 
 }
 
