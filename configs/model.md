@@ -542,8 +542,8 @@ condition: 条件， 策略预计成立的条件
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| plcy_id       | 策略标识       | 数值     |                                                     | int(11) NOT NULL, idx_policy_statement, fk_policy_statement_plcy_id->policy.id |
-| plcy_ver      | 数据版本       | 数值     |                                                     | int(11) NOT NULL, idx_policy_statement               |
+| pid           | 策略标识       | 数值     |                                                     | int(11) NOT NULL, idx_policy_statement, fk_policy_statement_pid->policy.id |
+| ver           | 数据版本       | 数值     |                                                     | int(11) NOT NULL DEFAULT 0, idx_policy_statement     |
 | effect        | 相应           | 数值     | 1: allow 0:deny                                     | tinyint(4) DEFAULT 0                                 |
 | action        | 操作           | 字符串   |                                                     | varchar(255)                                         |
 | resource      | 资源           | 字符串   |                                                     | varchar(255)                                         |
@@ -591,6 +591,8 @@ condition: 条件， 策略预计成立的条件
 | v7            |                | 字符串   |                                                     | varchar(255)                                         |
 | v8            |                | 字符串   |                                                     | varchar(255)                                         |
 | v9            |                | 字符串   |                                                     | varchar(255)                                         |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| created_at    | 更新时间       | 时间格式 |                                                     | timestamp                                            |
 
 ---
 ## 第三方登陆实体(`platform`)

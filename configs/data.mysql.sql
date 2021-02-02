@@ -33,19 +33,19 @@ INSERT INTO `zgo_tenant_user`(`user_id`, `org_cod`, `union_kid`, `name`, `custom
 (100003, "ORGCM3558", "u000xx10000120210112xx100003111100000001", "赢迪测试3", null);
 
 -- 账户
-INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES 
-(1, null, 1,      "p6m0adm",     1, "uBnKfXylWRdUFqVM424ERH.tISbfJbWq", "J3Apb1ZhNgtuBx4ifhg9F0MBVhI3bH9ELjJRQg==", "BCR3", null, "P6M", 1, "平台管理员"),
-(2, null, 10007,  "it-10007",    1, "c557193f596ccf70b8cbc5ca306557b3", "uoqacs2t699ybv8tc42hz8z1shny6ups",         "MD5",  null, null,  1, "平台测试"),
-(3, 1   , 1,      "13377777777", 2, null,     null, null, null, null,        1, "平台手机账户"),
-(4, 1   , 1,      "f3@fmes.com", 3, null,     null, null, null, null,        1, "平台邮箱账户"),
-(5, null, 100001, "it-100001",   1, "654321", null, null, null, null,        1, "赢迪管理员"),
-(6, null, 100002, "it-100002",   1, "123456", null, null, null, "ORGCM3558", 1, "赢迪-测试1"),
-(7, null, 100003, "it-100003",   1, "123456", null, null, null, "ORGCM3558", 1, "赢迪-测试1");
+INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `org_cod`, `status`, `description`) VALUES 
+(1, null, 1,      "p6m0adm",     1, "uBnKfXylWRdUFqVM424ERH.tISbfJbWq", "J3Apb1ZhNgtuBx4ifhg9F0MBVhI3bH9ELjJRQg==", "BCR3", "P6M", 1, "平台管理员"),
+(2, null, 10007,  "it-10007",    1, "c557193f596ccf70b8cbc5ca306557b3", "uoqacs2t699ybv8tc42hz8z1shny6ups",         "MD5",  null,  1, "平台测试"),
+(3, 1   , 1,      "13377777777", 2, null,     null, null, null,        1, "平台手机账户"),
+(4, 1   , 1,      "f3@fmes.com", 3, null,     null, null, null,        1, "平台邮箱账户"),
+(5, null, 100001, "it-100001",   1, "654321", null, null, null,        1, "赢迪管理员"),
+(6, null, 100002, "it-100002",   1, "123456", null, null, "ORGCM3558", 1, "赢迪-测试1"),
+(7, null, 100003, "it-100003",   1, "123456", null, null, "ORGCM3558", 1, "赢迪-测试1");
 
 -- 账户
-INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `role_id`, `org_cod`, `status`, `description`) VALUES
-(8, null, 100003, "zgo1",   1, "123456", null, null, null, "ORGCM3558", 1, "ZGO-测试1")
-(9, null, 100003, "plus1",   1, "123456", null, null, null, "ORGCM3558", 1, "PLUS-测试1")；
+INSERT INTO `zgo_account`(`id`, `pid`, `user_id`, `account`, `account_type`, `password`, `password_salt`, `password_type`, `org_cod`, `status`, `description`) VALUES
+(8, null, 100003, "zgo1",    1, "123456", null, null,"ORGCM3558", 1, "ZGO-测试1"),
+(9, null, 100003, "plus1",   1, "123456", null, null,"ORGCM3558", 1, "PLUS-测试1")；
 
 -- 平台服务
 INSERT INTO `zgo_app_service`(`id`, `name`, `code`) VALUES 
@@ -105,7 +105,7 @@ INSERT INTO `zgo_policy`(`id`, `org_cod`, `name`, `status`, `description`) VALUE
 (3, "ORGCM3558", "Operator", 1, "赢迪经营者权限");
 
 -- 策略声明
-INSERT INTO `zgo_policy_statement`(`plcy_id`, `effect`, `action`, `resource`, `condition`) VALUES 
+INSERT INTO `zgo_policy_statement`(`pid`, `effect`, `action`, `resource`, `condition`) VALUES 
 (1, 1, "lhdg:*",     null, null),
 (2, 1, "lhdg:Basis", null, null),
 (3, 1, "ka:KABasis;lhdg:Lhdg*",                                     null, null),
@@ -115,7 +115,3 @@ INSERT INTO `zgo_policy_statement`(`plcy_id`, `effect`, `action`, `resource`, `c
 -- 角色策略
 INSERT INTO `zgo_role_policy`(`role_id`, `plcy_id`, `org_cod`) VALUES 
 ( 4,  3, 'ORGCM3558');
-
--- 角色策略
-INSERT INTO `zgo_user_policy`(`user_id`, `plcy_id`, `org_cod`) VALUES 
-(100003, 3, 'ORGCM3558');

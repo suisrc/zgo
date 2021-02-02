@@ -1,31 +1,35 @@
 package module
 
 import (
-	"errors"
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/casbin/casbin/v2/model"
+	"github.com/casbin/casbin/v2/persist"
 	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
 )
 
 // CasbinRule ...
 type CasbinRule struct {
-	Mid   int64  `db:"mid"`
-	Ver   string `db:"ver"`
-	PType string `db:"p_type"`
-	V0    string `db:"v0"`
-	V1    string `db:"v1"`
-	V2    string `db:"v2"`
-	V3    string `db:"v3"`
-	V4    string `db:"v4"`
-	V5    string `db:"v5"`
-	V6    string `db:"v6"`
-	V7    string `db:"v7"`
-	V8    string `db:"v8"`
-	V9    string `db:"v9"`
+	Mid   int64        `db:"mid"`
+	Ver   string       `db:"ver"`
+	PType string       `db:"p_type"`
+	V0    string       `db:"v0"`
+	V1    string       `db:"v1"`
+	V2    string       `db:"v2"`
+	V3    string       `db:"v3"`
+	V4    string       `db:"v4"`
+	V5    string       `db:"v5"`
+	V6    string       `db:"v6"`
+	V7    string       `db:"v7"`
+	V8    string       `db:"v8"`
+	V9    string       `db:"v9"`
+	CT    sql.NullTime `db:"created_at"`
 }
 
 // Adapter 适配器
@@ -35,6 +39,8 @@ type Adapter struct {
 	Mid int64    // model id
 	Ver string   // model ver
 }
+
+var _ persist.BatchAdapter = (*Adapter)(nil)
 
 // NewCasbinAdapter is the constructor for Adapter with existed connection
 func NewCasbinAdapter(db *sqlx.DB, tbl string, mid int64, ver string) *Adapter {
@@ -51,7 +57,7 @@ func NewCasbinAdapter(db *sqlx.DB, tbl string, mid int64, ver string) *Adapter {
 
 // LoadPolicy loads policy from database.
 func (a *Adapter) LoadPolicy(m model.Model) error {
-	rules, err := a.QueryPolicies()
+	rules, err := a.queryPolicies()
 	if err != nil {
 		return err
 	}
@@ -61,9 +67,16 @@ func (a *Adapter) LoadPolicy(m model.Model) error {
 		args := []string{}
 
 		v := reflect.ValueOf(rule)
-		columnsIterator(func(c string, i int) (string, error) {
-			if c[:1] == "v" {
-				args = append(args, v.Field(i).String())
+		withColumnsIterator(func(c string, i int) (string, error) {
+			if c != "ver" && c[:1] == "v" {
+				if _, err := strconv.Atoi(c[1:]); err == nil {
+					value := v.Field(i).String()
+					if value != "" {
+						args = append(args, value)
+					} else {
+						return "", errors.New("end assignment") // 结束遍历
+					}
+				}
 			}
 			return "", nil
 		}, rule)
@@ -75,48 +88,26 @@ func (a *Adapter) LoadPolicy(m model.Model) error {
 	return nil
 }
 
-// SavePolicy saves policy to database.
-func (a *Adapter) SavePolicy(model model.Model) (err error) {
-	a.dropTable()
-	for ptype, ast := range model["p"] {
-		for _, rule := range ast.Policy {
-			line := a.createPolicyRule(ptype, rule)
-			err = a.insertPolicyLine(&line)
-			if err != nil {
-				return
-			}
-		}
-	}
-	for ptype, ast := range model["g"] {
-		for _, rule := range ast.Policy {
-			line := a.createPolicyRule(ptype, rule)
-			err = a.insertPolicyLine(&line)
-			if err != nil {
-				return
-			}
-		}
-	}
-	return
-}
-
 // AddPolicy adds a policy rule to the storage.
 func (a *Adapter) AddPolicy(sec string, ptype string, rule []string) (err error) {
-	line := a.createPolicyRule(ptype, rule)
-	err = a.insertPolicyLine(&line)
-	if err != nil {
-		return
-	}
-	return err
+	// line := a.createPolicyRule(ptype, rule)
+	// err = a.insertPolicyLine(&line)
+	// if err != nil {
+	// 	return
+	// }
+	// return err
+	return
 }
 
 // RemovePolicy removes a policy rule from the storage.
 func (a *Adapter) RemovePolicy(sec string, ptype string, rule []string) (err error) {
-	line := a.createPolicyRule(ptype, rule)
-	err = a.deletePolicyLine(&line)
-	if err != nil {
-		return
-	}
-	return err
+	// line := a.createPolicyRule(ptype, rule)
+	// err = a.deletePolicyLine(&line)
+	// if err != nil {
+	// 	return
+	// }
+	// return err
+	return
 }
 
 // RemoveFilteredPolicy removes policy rules that match the filter from the storage.
@@ -124,24 +115,89 @@ func (a *Adapter) RemoveFilteredPolicy(sec string, ptype string, fieldIndex int,
 	return
 }
 
-func (a *Adapter) rawDelete(line *CasbinRule) (err error) {
-	args := []interface{}{}
+// SavePolicy saves policy to database.
+func (a *Adapter) SavePolicy(model model.Model) (err error) {
+	err = withTx(a.DB, func(tx *sqlx.Tx) (err error) {
+		lines := []CasbinRule{}
+		for ptype, ast := range model["p"] {
+			for _, rule := range ast.Policy {
+				line := a.createPolicyRule(ptype, rule)
+				line.CT = sql.NullTime{Valid: true, Time: time.Now()}
+				lines = append(lines, line)
+			}
+		}
+		for ptype, ast := range model["g"] {
+			for _, rule := range ast.Policy {
+				line := a.createPolicyRule(ptype, rule)
+				line.CT = sql.NullTime{Valid: true, Time: time.Now()}
+				lines = append(lines, line)
+			}
+		}
+		if err = a.clearPolicyRules(tx); err != nil {
+			return
+		}
+		if err = a.insertPolicyRules(tx, &lines); err != nil {
+			return
+		}
+		return
+	})
+	return
+}
+
+// AddPolicies adds policy rules to the storage.
+// This is part of the Auto-Save feature.
+func (a *Adapter) AddPolicies(sec string, ptype string, rules [][]string) (err error) {
+	return
+}
+
+// RemovePolicies removes policy rules from the storage.
+// This is part of the Auto-Save feature.
+func (a *Adapter) RemovePolicies(sec string, ptype string, rules [][]string) (err error) {
+	return
+}
+
+func (a *Adapter) ensureTable() {
+	_, err := a.DB.Exec(fmt.Sprintf("SELECT 1 FROM `%s` LIMIT 1", a.Tbl))
+	if err != nil {
+		panic(err)
+	}
+}
+
+func (a *Adapter) queryPolicies() (rules *[]CasbinRule, err error) {
+	rules = new([]CasbinRule)
+	query := fmt.Sprintf("SELECT * FROM `%s` WHERE mid = ? and ver = ?", a.Tbl)
+	err = a.DB.Select(rules, query, a.Mid, a.Ver)
+	return
+}
+
+func (a *Adapter) insertPolicyRules(db *sqlx.Tx, lines *[]CasbinRule) (err error) {
+	if lines == nil || len(*lines) == 0 {
+		return nil
+	}
+
 	columns := strings.Builder{}
-
-	v := reflect.ValueOf(line)
-	columnsIterator(func(c string, i int) (string, error) {
-		columns.WriteString("AND ")
+	values := strings.Builder{}
+	withColumnsItr(func(c string) string {
+		columns.WriteString(",")
 		columns.WriteString(c)
-		columns.WriteString(" = ?")
-		args = append(args, v.Field(i).Interface())
-		return "", nil
-	}, line)
-
-	query := fmt.Sprintf("DELETE FROM `%s` WHERE %s", a.Tbl, columns.String()[4:])
-	_, err = a.DB.Exec(query, args...)
+		values.WriteString(",:")
+		values.WriteString(c)
+		return ""
+	}, (*lines)[0])
+	// for _, line := range *lines {
+	// 	line.CT = sql.NullTime{Valid: true, Time: time.Now()}
+	// }
+	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", a.Tbl, columns.String()[1:], values.String()[1:])
+	_, err = db.NamedExec(query, *lines)
 	if err != nil {
 		return
 	}
+	return
+}
+
+func (a *Adapter) clearPolicyRules(db *sqlx.Tx) (err error) {
+	query := fmt.Sprintf("DELETE FROM %s WHERE mid = ? AND ver = ?", a.Tbl)
+	_, err = db.Exec(query, a.Mid, a.Ver)
 	return
 }
 
@@ -151,8 +207,8 @@ func (a *Adapter) createPolicyRule(ptype string, rule []string) CasbinRule {
 	line.Ver = a.Ver
 	line.PType = ptype
 
-	v := reflect.ValueOf(line)
-	columnsIterator(func(c string, i int) (string, error) {
+	v := reflect.ValueOf(&line).Elem()
+	withColumnsIterator(func(c string, i int) (string, error) {
 		if c != "ver" && c[:1] == "v" {
 			if idx, err := strconv.Atoi(c[1:]); err == nil {
 				if idx < len(rule) {
@@ -167,77 +223,13 @@ func (a *Adapter) createPolicyRule(ptype string, rule []string) CasbinRule {
 	return line
 }
 
-func (a *Adapter) dropTable() {
-	_, err := a.DB.Exec(fmt.Sprintf("DELETE FROM `%s`", a.Tbl))
-	if err != nil {
-		panic(err)
-	}
+// WithColumnsItr column
+func withColumnsItr(iterater func(string) string, obj interface{}) ([]string, error) {
+	return withColumnsIterator(func(c string, i int) (string, error) { return iterater(c), nil }, obj)
 }
 
-func (a *Adapter) ensureTable() {
-	_, err := a.DB.Exec(fmt.Sprintf("SELECT 1 FROM `%s` LIMIT 1", a.Tbl))
-	if err != nil {
-		panic(err)
-	}
-}
-
-func (a *Adapter) insertPolicyLine(line *CasbinRule) (err error) {
-	columns := strings.Builder{}
-	values := strings.Builder{}
-	columnsItr(func(c string) string {
-		columns.WriteString(",")
-		columns.WriteString(c)
-		values.WriteString(",:")
-		values.WriteString(c)
-		return ""
-	}, line)
-	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", a.Tbl, columns.String()[1:], values.String()[1:])
-	_, err = a.DB.NamedExec(query, line)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// DeletePolicies ...
-func (a *Adapter) DeletePolicies() (err error) {
-	query := fmt.Sprintf("DELETE FROM %s WHERE mid = ? AND ver = ?", a.Tbl)
-	_, err = a.DB.Exec(query, a.Mid, a.Ver)
-	return
-}
-
-// QueryPolicies ...
-func (a *Adapter) QueryPolicies() (rules *[]CasbinRule, err error) {
-	rules = new([]CasbinRule)
-	query := fmt.Sprintf("SELECT * FROM `%s` WHERE mid = ? and ver = ?", a.Tbl)
-	err = a.DB.Select(rules, query, a.Mid, a.Ver)
-	return
-}
-
-func (a *Adapter) deletePolicyLine(line *CasbinRule) (err error) {
-	columns := strings.Builder{}
-	columnsItr(func(c string) string {
-		columns.WriteString("AND ")
-		columns.WriteString(c)
-		columns.WriteString(" = :")
-		columns.WriteString(c)
-		return ""
-	}, line)
-	query := fmt.Sprintf("DELETE FROM %s WHERE %s", a.Tbl, columns.String()[4:])
-	_, err = a.DB.NamedExec(query, line)
-	if err != nil {
-		return
-	}
-	return
-}
-
-// columnsItr column
-func columnsItr(iterater func(string) string, obj interface{}) ([]string, error) {
-	return columnsIterator(func(c string, i int) (string, error) { return iterater(c), nil }, obj)
-}
-
-// columnsIterator column
-func columnsIterator(iterater func(string, int) (string, error), obj interface{}) ([]string, error) {
+// WithColumnsIterator column
+func withColumnsIterator(iterater func(string, int) (string, error), obj interface{}) ([]string, error) {
 	result := []string{}
 	t := reflect.TypeOf(obj)
 	if t.Kind() == reflect.Ptr {
@@ -274,3 +266,97 @@ func columnsIterator(iterater func(string, int) (string, error), obj interface{}
 	}
 	return result, nil
 }
+
+// WithTx ...
+func withTx(db *sqlx.DB, fn func(tx *sqlx.Tx) error) error {
+	tx := db.MustBegin()
+	defer func() {
+		if v := recover(); v != nil {
+			tx.Rollback()
+			panic(v)
+		}
+	}()
+	if err := fn(tx); err != nil {
+		if rerr := tx.Rollback(); rerr != nil {
+			err = errors.Wrapf(err, "rolling back transaction: %v", rerr)
+		}
+		return err
+	}
+	if err := tx.Commit(); err != nil {
+		return errors.Wrapf(err, "committing transaction: %v", err)
+	}
+	return nil
+}
+
+// func (a *Adapter) rawDelete(line *CasbinRule) (err error) {
+// 	args := []interface{}{}
+// 	columns := strings.Builder{}
+//
+// 	v := reflect.ValueOf(line)
+// 	WithColumnsIterator(func(c string, i int) (string, error) {
+// 		columns.WriteString("AND ")
+// 		columns.WriteString(c)
+// 		columns.WriteString(" = ?")
+// 		args = append(args, v.Field(i).Interface())
+// 		return "", nil
+// 	}, line)
+//
+// 	query := fmt.Sprintf("DELETE FROM `%s` WHERE %s", a.Tbl, columns.String()[4:])
+// 	_, err = a.DB.Exec(query, args...)
+// 	if err != nil {
+// 		return
+// 	}
+// 	return
+// }
+//
+// func (a *Adapter) insertPolicyLine(line *CasbinRule) (err error) {
+// 	return a.insertPolicyLine2(a.DB, line)
+// }
+//
+// func (a *Adapter) insertPolicyLine2(db *sqlx.DB, line *CasbinRule) (err error) {
+// 	columns := strings.Builder{}
+// 	values := strings.Builder{}
+// 	WithColumnsItr(func(c string) string {
+// 		columns.WriteString(",")
+// 		columns.WriteString(c)
+// 		values.WriteString(",:")
+// 		values.WriteString(c)
+// 		return ""
+// 	}, line)
+// 	line.CT = sql.NullTime{Valid: true, Time: time.Now()}
+// 	query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", a.Tbl, columns.String()[1:], values.String()[1:])
+// 	_, err = db.NamedExec(query, line)
+// 	if err != nil {
+// 		return
+// 	}
+// 	return
+// }
+//
+// func (a *Adapter) deletePolicyLine(line *CasbinRule) (err error) {
+// 	return a.deletePolicyLine2(a.DB, line)
+// }
+//
+// func (a *Adapter) deletePolicyLine2(db *sqlx.DB, line *CasbinRule) (err error) {
+// 	columns := strings.Builder{}
+// 	WithColumnsItr(func(c string) string {
+// 		columns.WriteString("AND ")
+// 		columns.WriteString(c)
+// 		columns.WriteString(" = :")
+// 		columns.WriteString(c)
+// 		return ""
+// 	}, line)
+// 	query := fmt.Sprintf("DELETE FROM %s WHERE %s", a.Tbl, columns.String()[4:])
+// 	_, err = a.DB.NamedExec(query, line)
+// 	if err != nil {
+// 		return
+// 	}
+// 	return
+// }
+//
+// // ClearPolicies ...
+// func (a *Adapter) clearPolicies() (err error) {
+// 	query := fmt.Sprintf("DELETE FROM %s WHERE mid = ? AND ver = ?", a.Tbl)
+// 	_, err = a.DB.Exec(query, a.Mid, a.Ver)
+// 	return
+// }
+//

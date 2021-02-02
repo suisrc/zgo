@@ -299,7 +299,7 @@ func (a *Signin) SetSignUserWithUser(c *gin.Context, sa *schema.SigninGpaAccount
 		// 账户上没有用户信息， 待验证账户， 允许登录
 		suser.OrgCode = sa.OrgCod.String
 		if len(sa.Account) > 8 {
-			suser.UserName = sa.Account[:8] + "..."
+			suser.UserName = sa.Account[:16] + "..."
 		} else {
 			suser.UserName = sa.Account
 		}

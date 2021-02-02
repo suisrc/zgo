@@ -3,7 +3,6 @@ package schema
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"strings"
 
 	"github.com/suisrc/zgo/app/model/sqlxc"
@@ -276,7 +275,7 @@ func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, acc int64
 	SQL += " order by expires_at desc limit 1"
 
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
-	log.Println(SQL)
+	// log.Println(SQL)
 	return sqlx.Get(a, SQL, params...)
 }
 
@@ -352,10 +351,10 @@ func (a *SigninGpaAccountRole) QueryAllByUserAndOrg(sqlx *sqlx.DB, acc int64, or
 		where ro.status = 1 and ar.account=?`
 	params := []interface{}{acc}
 	if org != "" {
-		SQL += " and ur.org_cod=?"
+		SQL += " and ar.org_cod=?"
 		params = append(params, org)
 	} else {
-		SQL += " and ur.org_cod is null"
+		SQL += " and ar.org_cod is null"
 	}
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	res := []SigninGpaAccountRole{}

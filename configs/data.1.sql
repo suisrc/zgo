@@ -100,7 +100,7 @@ INSERT INTO `zgo_policy`(`id`, `org_cod`, `name`, `status`, `description`) VALUE
 (3, "ORGCM3558", "Operator", 1, "赢迪经营者权限");
 
 -- 策略声明
-INSERT INTO `zgo_policy_statement`(`plcy_id`, `plcy_ver`, `effect`, `action`, `resource`, `condition`) VALUES 
+INSERT INTO `zgo_policy_statement`(`pid`, `ver`, `effect`, `action`, `resource`, `condition`) VALUES 
 (1, 0, 1, "lhdg:*",     null, null),
 (2, 0, 1, "lhdg:Basis", null, null),
 (3, 0, 1, "ka:KABasis;lhdg:Lhdg*", null, null),

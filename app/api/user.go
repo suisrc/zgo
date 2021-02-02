@@ -77,8 +77,12 @@ func (a *User) current(c *gin.Context) {
 	// name?: string; // 名称
 	// system?: string; // 该字段主要是有前端给出,用以记录使用, 不同system带来的access也是不同的
 	// createAt?: number; // 获取当前信息的时间
+	userid := user.GetUserID()
+	if userid == "" {
+		userid = user.GetTokenID() // userid 决定前端登录状态， 不能为空
+	}
 	helper.ResSuccess(c, helper.H{
-		"userid":   user.GetUserID(),
+		"userid":   userid,
 		"name":     user.GetUserName(),
 		"orgCode":  user.GetOrgCode(),
 		"createAt": time.Now(),

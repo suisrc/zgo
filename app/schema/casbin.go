@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/suisrc/zgo/app/model/sqlxc"
@@ -34,8 +33,8 @@ func (a *CasbinGpaSvcAud) QueryByAudAndResAndOrg(sqlx *sqlx.DB, aud, res, org st
 	SQLX := []string{
 		"sa.audience = ? and sa.resource = ? limit 1", // 使用精准匹配查询
 		"sa.audience = ? and sa.resource is null or sa.audience is null and sa.resource = ? order by sa.resource, sa.audience desc limit 1",
-		"? like sa.audience and ? like sa.resource order by sa.resource, sa.audience limit 1", // 使用模糊匹配查询
-		"? like sa.audience and sa.resource is null or sa.audience is null and ? like sa.resource order by sa.resource, sa.audience desc limit 1",
+		"REVERSE(?) like REVERSE(REPLACE(sa.audience,'*', '%')) and ? like REPLACE(sa.resource,'*', '%') order by sa.resource, sa.audience limit 1", // 使用模糊匹配查询
+		"REVERSE(?) like REVERSE(REPLACE(sa.audience,'*', '%')) and sa.resource is null or sa.audience is null and ? like REPLACE(sa.resource,'*', '%') order by sa.resource, sa.audience desc limit 1",
 	}
 	for _, sx := range SQLX {
 		if err := sqlx.Get(a, SQL+sx, aud, res); err != nil {
@@ -74,20 +73,20 @@ var TableCasbinRule = TablePrefix + "policy_casbin_rule"
 // CasbinGpaModel model
 type CasbinGpaModel struct {
 	ID          int64          `db:"id"`
-	UseVer      sql.NullString `db:"use_ver"`
-	OrgCode     sql.NullString `db:"org_cod"`
+	Ver         sql.NullString `db:"ver"`
+	Org         sql.NullString `db:"org"`
 	Name        string         `db:"name"`
 	Statement   sql.NullString `db:"statement"`
 	Description sql.NullString `db:"description"`
-	UpdatedAt   time.Time      `db:"updated_at"`
+	UpdatedAt   sql.NullTime   `db:"updated_at"`
 	Status      StatusType     `db:"status"`
 }
 
 // QueryByOrg 查询
 func (a *CasbinGpaModel) QueryByOrg(sqlx *sqlx.DB, org string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_casbin_model pcm 
-			where pcm.org_cod is null or pcm.org_cod = ? 
-			order by pcm.org_cod, pcm.use_ver, pcm.id desc limit 1`
+			where pcm.org is null or pcm.org = ? 
+			order by pcm.org, pcm.ver, pcm.id desc limit 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, org)
 }
@@ -181,7 +180,7 @@ type CasbinGpaPolicyStatement struct {
 // QueryByOrg 查询 有效状态为1
 func (a *CasbinGpaPolicyStatement) QueryByOrg(sqlx *sqlx.DB, org string) (*[]CasbinGpaPolicyStatement, error) {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_statement ps 
-		inner join {{TP}}policy po on po.id = ps.plcy_id and po.version = ps.plcy_ver
+		inner join {{TP}}policy po on po.id = ps.pid and po.version = ps.ver
 		where (po.org_cod is null or po.org_cod = ?) and po.status = 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	res := []CasbinGpaPolicyStatement{}
@@ -202,7 +201,9 @@ type CasbinGpaPolicyServiceAction struct {
 
 // QueryActionByNameAndSvc 查询相应时间 * -> % / ? -> _
 func (a *CasbinGpaPolicyServiceAction) QueryActionByNameAndSvc(sqlx *sqlx.DB, name, svc string) (*[]CasbinGpaPolicyServiceAction, error) {
-	params := []interface{}{svc, strings.ReplaceAll(strings.ReplaceAll(name, "?", "_"), "*", "%")}
+	nam1 := strings.ReplaceAll(name, "?", "_")
+	nam2 := strings.ReplaceAll(nam1, "*", "%")
+	params := []interface{}{svc, nam2}
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_service_action psa 
 		inner join {{TP}}app_service psv on psv.id = psa.svc_id and psv.code = ? 
 		where psa.name like ?`
