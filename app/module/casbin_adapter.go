@@ -33,10 +33,11 @@ type CasbinRule struct {
 
 // Adapter 适配器
 type Adapter struct {
-	DB  *sqlx.DB // database
-	Tbl string   //table name
-	Mid int64    // model id
-	Ver string   // model ver
+	DB     *sqlx.DB // database
+	Tbl    string   //table name
+	Mid    int64    // model id
+	Ver    string   // model ver
+	Enable bool     // 是否启用适配器
 }
 
 // var _ persist.BatchAdapter = (*Adapter)(nil)
@@ -57,6 +58,9 @@ func NewCasbinAdapter(db *sqlx.DB, tbl string, mid int64, ver string) *Adapter {
 
 // LoadPolicy loads policy from database.
 func (a *Adapter) LoadPolicy(m model.Model) error {
+	if !a.Enable {
+		return nil // 未启用， 阻止第一次加载
+	}
 	rules, err := a.queryPolicies()
 	if err != nil {
 		return err
@@ -88,35 +92,11 @@ func (a *Adapter) LoadPolicy(m model.Model) error {
 	return nil
 }
 
-// AddPolicy adds a policy rule to the storage.
-func (a *Adapter) AddPolicy(sec string, ptype string, rule []string) (err error) {
-	// line := a.createPolicyRule(ptype, rule)
-	// err = a.insertPolicyLine(&line)
-	// if err != nil {
-	// 	return
-	// }
-	// return err
-	return
-}
-
-// RemovePolicy removes a policy rule from the storage.
-func (a *Adapter) RemovePolicy(sec string, ptype string, rule []string) (err error) {
-	// line := a.createPolicyRule(ptype, rule)
-	// err = a.deletePolicyLine(&line)
-	// if err != nil {
-	// 	return
-	// }
-	// return err
-	return
-}
-
-// RemoveFilteredPolicy removes policy rules that match the filter from the storage.
-func (a *Adapter) RemoveFilteredPolicy(sec string, ptype string, fieldIndex int, fieldValues ...string) (err error) {
-	return
-}
-
 // SavePolicy saves policy to database.
 func (a *Adapter) SavePolicy(model model.Model) (err error) {
+	if !a.Enable {
+		return nil // 未启用， 阻止持久化
+	}
 	err = withTx(a.DB, func(tx *sqlx.Tx) (err error) {
 		lines := []CasbinRule{}
 		for ptype, ast := range model["p"] {
@@ -144,6 +124,33 @@ func (a *Adapter) SavePolicy(model model.Model) (err error) {
 	return
 }
 
+// AddPolicy adds a policy rule to the storage.
+func (a *Adapter) AddPolicy(sec string, ptype string, rule []string) (err error) {
+	return
+	// line := a.createPolicyRule(ptype, rule)
+	// err = a.insertPolicyLine(&line)
+	// if err != nil {
+	// 	return
+	// }
+	// return err
+}
+
+// RemovePolicy removes a policy rule from the storage.
+func (a *Adapter) RemovePolicy(sec string, ptype string, rule []string) (err error) {
+	return
+	// line := a.createPolicyRule(ptype, rule)
+	// err = a.deletePolicyLine(&line)
+	// if err != nil {
+	// 	return
+	// }
+	// return err
+}
+
+// RemoveFilteredPolicy removes policy rules that match the filter from the storage.
+func (a *Adapter) RemoveFilteredPolicy(sec string, ptype string, fieldIndex int, fieldValues ...string) (err error) {
+	return
+}
+
 // AddPolicies adds policy rules to the storage.
 // This is part of the Auto-Save feature.
 func (a *Adapter) AddPolicies(sec string, ptype string, rules [][]string) (err error) {
@@ -154,16 +161,6 @@ func (a *Adapter) AddPolicies(sec string, ptype string, rules [][]string) (err e
 // This is part of the Auto-Save feature.
 func (a *Adapter) RemovePolicies(sec string, ptype string, rules [][]string) (err error) {
 	return
-}
-
-// LoadFilteredPolicy loads only policy rules that match the filter.
-func (a *Adapter) LoadFilteredPolicy(model model.Model, filter interface{}) (err error) {
-	return
-}
-
-// IsFiltered returns true if the loaded policy has been filtered.
-func (a *Adapter) IsFiltered() bool {
-	return true
 }
 
 func (a *Adapter) ensureTable() {

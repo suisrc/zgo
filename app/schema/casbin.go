@@ -75,7 +75,7 @@ type CasbinGpaModel struct {
 	ID          int64          `db:"id"`
 	Ver         sql.NullString `db:"ver"`
 	Org         sql.NullString `db:"org"`
-	Name        string         `db:"name"`
+	Name        sql.NullString `db:"name"`
 	Statement   sql.NullString `db:"statement"`
 	Description sql.NullString `db:"description"`
 	UpdatedAt   sql.NullTime   `db:"updated_at"`
