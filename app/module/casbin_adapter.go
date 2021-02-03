@@ -15,20 +15,20 @@ import (
 
 // CasbinRule ...
 type CasbinRule struct {
-	Mid   int64        `db:"mid"`
-	Ver   string       `db:"ver"`
-	PType string       `db:"p_type"`
-	V0    string       `db:"v0"`
-	V1    string       `db:"v1"`
-	V2    string       `db:"v2"`
-	V3    string       `db:"v3"`
-	V4    string       `db:"v4"`
-	V5    string       `db:"v5"`
-	V6    string       `db:"v6"`
-	V7    string       `db:"v7"`
-	V8    string       `db:"v8"`
-	V9    string       `db:"v9"`
-	CT    sql.NullTime `db:"created_at"`
+	Mid   int64          `db:"mid"`
+	Ver   string         `db:"ver"`
+	PType string         `db:"p_type"`
+	V0    sql.NullString `db:"v0"`
+	V1    sql.NullString `db:"v1"`
+	V2    sql.NullString `db:"v2"`
+	V3    sql.NullString `db:"v3"`
+	V4    sql.NullString `db:"v4"`
+	V5    sql.NullString `db:"v5"`
+	V6    sql.NullString `db:"v6"`
+	V7    sql.NullString `db:"v7"`
+	V8    sql.NullString `db:"v8"`
+	V9    sql.NullString `db:"v9"`
+	CT    sql.NullTime   `db:"created_at"`
 }
 
 // Adapter 适配器
@@ -70,15 +70,16 @@ func (a *Adapter) LoadPolicy(m model.Model) error {
 		sec := key[:1]
 		args := []string{}
 
-		v := reflect.ValueOf(rule)
+		obj := reflect.ValueOf(rule)
 		withColumnsIterator(func(c string, i int) (string, error) {
 			if c != "ver" && c[:1] == "v" {
 				if _, err := strconv.Atoi(c[1:]); err == nil {
-					value := v.Field(i).String()
-					if value != "" {
-						args = append(args, value)
-					} else {
-						return "", errors.New("end assignment") // 结束遍历
+					if arg, b := obj.Field(i).Interface().(sql.NullString); b {
+						if arg.Valid {
+							args = append(args, arg.String)
+						} else {
+							return "", errors.New("end assignment") // 结束遍历
+						}
 					}
 				}
 			}
@@ -217,12 +218,14 @@ func (a *Adapter) createPolicyRule(ptype string, rule []string) CasbinRule {
 	line.Ver = a.Ver
 	line.PType = ptype
 
-	v := reflect.ValueOf(&line).Elem()
+	obj := reflect.ValueOf(&line).Elem()
 	withColumnsIterator(func(c string, i int) (string, error) {
 		if c != "ver" && c[:1] == "v" {
 			if idx, err := strconv.Atoi(c[1:]); err == nil {
 				if idx < len(rule) {
-					v.Field(i).SetString(rule[idx])
+					// v.Field(i).SetString(rule[idx])
+					arg := sql.NullString{Valid: true, String: rule[idx]}
+					obj.Field(i).Set(reflect.ValueOf(arg))
 				} else {
 					return "", errors.New("end assignment") // 结束遍历
 				}

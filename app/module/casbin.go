@@ -186,6 +186,7 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 			Usr:    user.GetUserID(),   // casbin -> 参数 用户ID
 			OrgUsr: user.GetOrgUsrID(), // casbin -> 参数 租户自定义ID
 			OrgApp: user.GetOrgAppID(), // casbin -> 参数 应用ID
+			Role:   role,               // casbin -> 参数 角色
 		}
 		// 访问资源
 		method, _ := handle(c, helper.XReqOriginMethodKey)
@@ -203,9 +204,14 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 		if sub.OrgUsr != "" {
 			sub.OrgUsr = CasbinUserPrefix + sub.OrgUsr
 		}
-		ros := CasbinRolePrefix + role
+		if sub.Role != "" {
+			sub.Role = CasbinRolePrefix + sub.Role
+		}
 
 		if enforcer, err := a.GetEnforcer(conf, c, user, svc, org); err != nil {
+			if helper.FixResponseError(c, err) {
+				return
+			}
 			logger.Errorf(c, logger.ErrorWW(err))
 			helper.ResError(c, &helper.ErrorModel{
 				Status:   403,
@@ -220,7 +226,10 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 			// 授权发生异常, 没有可用权限验证器
 			helper.ResError(c, helper.Err403Forbidden)
 			return
-		} else if b, err := enforcer.Enforce(sub, obj, ros); err != nil {
+		} else if b, err := enforcer.Enforce(sub, obj); err != nil {
+			if helper.FixResponseError(c, err) {
+				return
+			}
 			logger.Errorf(c, logger.ErrorWW(err))
 			helper.ResError(c, &helper.ErrorModel{
 				Status:   403,
@@ -476,7 +485,7 @@ func (a *CasbinAuther) GetEnforcer2(conf config.Casbin, user auth.UserInfo,
 		// 注册方法
 		e.AddFunction("domainMatch", zgocasbin.DomainMatchFunc)
 		e.AddFunction("methodMatch", zgocasbin.MethodMatchFunc)
-		e.AddFunction("audienceMatch", zgocasbin.AudienceMatchFunc)
+		e.AddFunction("customMatch", CustomMatchFunc)
 
 		adapter.Enable = true // 启动适配器
 		if !cps.New {
@@ -544,9 +553,9 @@ func (a *CasbinAuther) QueryCasbinPolicies(org, ver string) (*CasbinPolicy, erro
 		cgm.Name = sql.NullString{Valid: true, String: "Default"}
 		cgm.Ver = sql.NullString{Valid: true, String: "1.0.0"}
 		cgm.Org = sql.NullString{Valid: true, String: org}
-		cgm.Statement = sql.NullString{Valid: true, String: CasbinDefaultMatcher}
 		cgm.Description = sql.NullString{Valid: true, String: "Auto Build"}
 		cgm.Status = schema.StatusNoActivate // 未激活状态
+		// cgm.Statement = sql.NullString{Valid: true, String: CasbinDefaultMatcher}
 		if err := cgm.SaveOrUpdate(a.Sqlx); err != nil {
 			return nil, err
 		}
@@ -567,6 +576,15 @@ func (a *CasbinAuther) QueryCasbinPolicies(org, ver string) (*CasbinPolicy, erro
 	if cgm.Status == schema.StatusEnable {
 		// 访问策略已经构建完成，不用重新构建
 		return &c, nil
+	} else if cgm.Status == schema.StatusDisable {
+		return nil, &helper.ErrorModel{
+			Status:   200,
+			ShowType: helper.ShowWarn,
+			ErrorMessage: &i18n.Message{
+				ID:    "ERR-CASBIN-DISABLE",
+				Other: "授权系统已经被禁止使用，请联系平台管理员",
+			},
+		}
 	}
 
 	// 获取基础配置访问策略
@@ -632,6 +650,7 @@ func (a *CasbinAuther) CreateCasbinPolicy(org string, c *CasbinPolicy) error {
 			// 策略前增加Casbin策略专有前缀
 			sub := CasbinPolicyPrefix + v.Name
 			eft := helper.IfString(v.Effect, "allow", "deny")
+			c8n := v.Condition.String
 			if v.Action.Valid {
 				actions := strings.Split(v.Action.String, ";")
 				for _, action := range actions {
@@ -654,7 +673,7 @@ func (a *CasbinAuther) CreateCasbinPolicy(org string, c *CasbinPolicy) error {
 										meth = path[:offset]
 										path = path[offset+1:]
 									}
-									pp := []string{sub, svc, org, path, meth, eft}
+									pp := []string{sub, svc, org, path, meth, eft, c8n}
 									c.Policies = append(c.Policies, pp)
 								}
 							}
@@ -768,4 +787,75 @@ func (a *CasbinAuther) CheckTenantService(ctx *gin.Context, user auth.UserInfo, 
 	}
 	a.Storer.Set(ctx, key, emsg.ID+"/"+emsg.Other, CasbinServiceTenantExpireAt/4) // 拒绝请求也需要缓存, 时间缩短1/4
 	return false, helper.New0Error(ctx, helper.ShowWarn, emsg)
+}
+
+// CustomMatchFunc domain
+func CustomMatchFunc(args ...interface{}) (interface{}, error) {
+	if len(args) != 3 {
+		return false, nil
+	}
+	c8n, b := args[0].(string)
+	if !b || c8n == "" {
+		return false, nil
+	}
+	conditions := make(map[string]interface{})
+	if err := helper.JSONUnmarshal([]byte(c8n), &conditions); err != nil {
+		// panic(err)
+		// log.Println(err)
+		return false, nil
+		// return false, err
+		// return false, &helper.ErrorModel{
+		// 	Status:   403,
+		// 	ShowType: helper.ShowWarn,
+		// 	ErrorMessage: &i18n.Message{
+		// 		ID:    "ERR-CASBIN-CONDITION",
+		// 		Other: "验证器条件错误，拒绝访问",
+		// 	},
+		// }
+	}
+	// sub, b := args[1].(CasbinSubject)
+	// if !b {
+	// 	return false, nil
+	// }
+	// obj, b := args[2].(CasbinObject)
+	// if !b {
+	// 	return false, nil
+	// }
+
+	result := false
+	if access, b := conditions["access_time"]; b {
+		if r, e := customAccessTimes(access); e != nil || !r {
+			return false, e // 条件失败
+		}
+		result = true
+	}
+	return result, nil
+}
+
+// 验证授权时间
+func customAccessTimes(access interface{}) (bool, error) {
+	if access2, b := access.(map[string]interface{}); b {
+		if times, b := access2["times"]; b {
+			if times2, b := times.([]interface{}); b && len(times2) == 2 {
+				now := time.Now()
+				if times2[0] != "" {
+					if t, e := time.ParseInLocation("2006-01-02 15:04:05", times2[0].(string), time.Local); e != nil {
+						return false, nil
+					} else if t.After(now) {
+						return false, nil
+					}
+				}
+				if times2[1] != "" {
+					if t, e := time.ParseInLocation("2006-01-02 15:04:05", times2[1].(string), time.Local); e != nil {
+						return false, nil
+					} else if t.Before(now) {
+						return false, nil
+					}
+				}
+				// log.Println(access)
+				return true, nil
+			}
+		}
+	}
+	return false, nil
 }

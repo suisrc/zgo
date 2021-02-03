@@ -41,15 +41,15 @@ const (
 	// StatusDisable 禁用
 	StatusDisable StatusType = iota // value -> 0
 	// StatusEnable 启用
-	StatusEnable
+	StatusEnable // value -> 1
 	// StatusNoActivate 未激活
-	StatusNoActivate
+	StatusNoActivate // value -> 2
 	// StatusRevoked 注销
-	StatusRevoked
+	StatusRevoked // value -> 3
 	// StatusDeleted 删除
-	StatusDeleted
+	StatusDeleted // value -> 4
 	// StatusExpired 过期
-	StatusExpired
+	StatusExpired // value -> 5
 )
 
 // UserType 用户类型

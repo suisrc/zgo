@@ -85,7 +85,7 @@ type CasbinGpaModel struct {
 // QueryByOrg 查询
 func (a *CasbinGpaModel) QueryByOrg(sqlx *sqlx.DB, org string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + ` from {{TP}}policy_casbin_model pcm 
-			where pcm.org is null or pcm.org = ? 
+			where (pcm.org is null or pcm.org) = ? and pcm.status < 3
 			order by pcm.org, pcm.ver, pcm.id desc limit 1`
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, org)

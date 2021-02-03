@@ -22,15 +22,16 @@ type CasbinSubject struct {
 	OrgApp string
 	Iss    string
 	Aud    string
+	Role   string
 }
 
 var (
 	// CasbinPolicyModel casbin使用的对比模型
 	CasbinPolicyModel = `[request_definition]
-r = sub, obj, role
+r = sub, obj
 
 [policy_definition]
-p = sub, svc, org, path, meth, eft
+p = sub, svc, org, path, meth, eft, c8n
 
 [role_definition]
 g = _, _
@@ -42,19 +43,18 @@ e = some(where (p.eft == allow)) && !some(where (p.eft == deny))
 [matchers]
 m = `
 	// CasbinDefaultMatcher casbin使用的对比模型
-	CasbinDefaultMatcher = `g(r.role, p.sub) && (p.meth=="" || methodMatch(r.obj.Method, p.meth)) && (p.path=="" || keyMatch(r.obj.Path, p.path))`
-	// `(g(r.role, p.sub) || keyMatch(p.sub, "u:*") && g2(r.sub.Usr, p.sub)) && (p.path=="" || keyMatch(r.obj.Path, p.path))`
+	CasbinDefaultMatcher = `g(r.sub.Role, p.sub) && r.obj.Svc==p.svc && (p.meth=="" || methodMatch(r.obj.Method, p.meth)) && (p.path=="" || keyMatch(r.obj.Path, p.path)) && (p.c8n=="" || customMatch(p.c8n, r.sub, r.obj))`
 )
 
 var (
 	// CasbinCachedExpireAt 缓存定时器刷新时间
 	CasbinCachedExpireAt = 4 * time.Minute
 	// CasbinEnforcerCheckAt 引擎检测版本时间
-	CasbinEnforcerCheckAt = 1 * time.Minute
+	CasbinEnforcerCheckAt = 2 * time.Minute
 	// CasbinEnforcerExpireAt 引擎标记过期时间
 	CasbinEnforcerExpireAt = 8 * time.Minute
 	// CasbinServiceCodeExpireAt 过期时间
-	CasbinServiceCodeExpireAt = 1 * time.Minute
+	CasbinServiceCodeExpireAt = 2 * time.Minute
 	// CasbinServiceTenantExpireAt 过期时间
 	CasbinServiceTenantExpireAt = 2 * time.Minute
 )

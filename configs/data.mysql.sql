@@ -109,7 +109,7 @@ INSERT INTO `zgo_policy_statement`(`pid`, `effect`, `action`, `resource`, `condi
 (1, 1, "lhdg:*",     null, null),
 (2, 1, "lhdg:Basis", null, null),
 (3, 1, "ka:KABasis;lhdg:Lhdg*",                                     null, null),
-(3, 0, null, "fmes::lhdg:Organizer::/api/lhdg/v1/*", '{access_time":{"times": ["2020-12-12 00:00:00", "2021-02-02 00:00:00"]}}"');
+(3, 0, null, "fmes::::", '{"access_time":{"times": ["2020-12-12 00:00:00", "2021-02-02 00:00:00"]}}');
 
 
 -- 角色策略
