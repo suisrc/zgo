@@ -9,6 +9,7 @@ type SigninBody struct {
 	KID      string `json:"kid"`                         // 授权平台
 	Org      string `json:"org"`                         // 租户
 	Role     string `json:"role"`                        // 角色
+	Scope    string `form:"scope"`                       // 作用域
 	Domain   string `json:"host"`                        // 域, 如果无,使用c.Reqest.Host代替
 }
 
@@ -18,7 +19,7 @@ type SigninOfCaptcha struct {
 	Email  string `form:"email"`  // 邮箱
 	Openid string `form:"openid"` // openid
 	KID    string `form:"kid"`    // 平台标识
-	Org    string `json:"org"`    // 租户
+	Org    string `form:"org"`    // 租户
 }
 
 // SigninOfOAuth2 登陆参数

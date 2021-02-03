@@ -23,6 +23,7 @@ type CasbinSubject struct {
 	Iss    string
 	Aud    string
 	Role   string
+	Scope  string
 }
 
 var (
@@ -53,9 +54,9 @@ var (
 	CasbinEnforcerCheckAt = 2 * time.Minute
 	// CasbinEnforcerExpireAt 引擎标记过期时间
 	CasbinEnforcerExpireAt = 8 * time.Minute
-	// CasbinServiceCodeExpireAt 过期时间
+	// CasbinServiceCodeExpireAt 服务缓存过期时间
 	CasbinServiceCodeExpireAt = 2 * time.Minute
-	// CasbinServiceTenantExpireAt 过期时间
+	// CasbinServiceTenantExpireAt 租户缓存过期时间
 	CasbinServiceTenantExpireAt = 2 * time.Minute
 )
 

@@ -103,6 +103,11 @@ func (u *UserInfo) GetAccount2() string {
 	return ""
 }
 
+// GetScope xxx
+func (u *UserInfo) GetScope() string {
+	return ""
+}
+
 // GetDomain xxx
 func (u *UserInfo) GetDomain() string {
 	return ""

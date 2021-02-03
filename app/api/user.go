@@ -6,9 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	i18n "github.com/suisrc/gin-i18n"
 	"github.com/suisrc/zgo/app/model/gpa"
+	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
-	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/helper"
 	"github.com/suisrc/zgo/modules/logger"
 )
@@ -16,17 +16,20 @@ import (
 // User 用户管理器
 type User struct {
 	gpa.GPA
-	UserService service.User
-	Auther      auth.Auther // 令牌控制
+	UserService  service.User
+	CasbinAuther *module.CasbinAuther
 }
 
 // Register 注册接口
 func (a *User) Register(r gin.IRouter) {
+
+	uax := a.CasbinAuther.UserAuthBasicMiddleware()
+
 	user := r.Group("user")
 
 	current := user.Group("current")
 	{
-		current.GET("", a.current)
+		current.GET("", uax, a.current)
 		current.GET("access", a.access)
 		current.GET("notices", a.notices)
 	}
@@ -56,21 +59,7 @@ func (a *User) Register(r gin.IRouter) {
 // @Router /user/current [get]
 func (a *User) current(c *gin.Context) {
 	// 验证登录信息
-	user, err := a.Auther.GetUserInfo(c)
-	// 如果通过验证， 当前用户是一定登录的
-	// user, exist := helper.GetUserInfo(c)
-	if err != nil || user == nil /*!exist*/ {
-		// 未登录
-		helper.ResError(c, &helper.ErrorModel{
-			Status:   200,
-			ShowType: helper.ShowWarn,
-			ErrorMessage: &i18n.Message{
-				ID:    "ERR-AUTHORIZE-USERNOEXIST",
-				Other: "登录用户不存在",
-			},
-		})
-		return
-	}
+	user, _ := helper.GetUserInfo(c)
 
 	// userid?: string; // 用户ID
 	// avatar?: string; // 头像

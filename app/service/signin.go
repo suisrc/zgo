@@ -143,7 +143,7 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, last func(
 		return nil, err // 快速验证上次登录结果
 	}
 	// 获取用户信息
-	return a.GetSignUserInfo(c, &account)
+	return a.GetSignUserInfo(c, b, &account)
 }
 
 // SigninByCaptcha 验证码登陆
@@ -174,18 +174,19 @@ func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func
 		return nil, err // 快速验证上次登录结果
 	}
 	// 获取用户信息
-	return a.GetSignUserInfo(c, &account)
+	return a.GetSignUserInfo(c, b, &account)
 }
 
 //============================================================================================
 
 // GetSignUserInfo with role
-func (a *Signin) GetSignUserInfo(c *gin.Context, sa *schema.SigninGpaAccount) (*schema.SigninUser, error) {
+func (a *Signin) GetSignUserInfo(c *gin.Context, b *schema.SigninBody, sa *schema.SigninGpaAccount) (*schema.SigninUser, error) {
 	if sa.Status != schema.StatusEnable { // 账户被禁用
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-ACCOUNT-DISABLE", Other: "账户被禁用,请联系管理员"})
 	}
 	// 登陆用户
 	suser := schema.SigninUser{}
+	suser.Scope = b.Scope
 	//suser.AccountID = strconv.Itoa(sa.ID) // SigninUser -> 1
 	//suser.UserIdxID = strconv.Itoa(sa.UserID)
 	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) //  配置系统给定的TokenID

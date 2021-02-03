@@ -76,6 +76,9 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 			if err == auth.ErrNoneToken || err == auth.ErrInvalidToken {
 				helper.ResError(c, helper.Err401Unauthorized)
 				return // 无有效登陆用户
+			} else if err == auth.ErrExpiredToken {
+				helper.ResError(c, helper.Err456TokenExpired)
+				return // 访问令牌已经过期
 			}
 			helper.ResError(c, helper.Err500InternalServer)
 			return // 解析jwt令牌出现未知错误
@@ -187,6 +190,7 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 			OrgUsr: user.GetOrgUsrID(), // casbin -> 参数 租户自定义ID
 			OrgApp: user.GetOrgAppID(), // casbin -> 参数 应用ID
 			Role:   role,               // casbin -> 参数 角色
+			Scope:  user.GetScope(),    // casbin -> 参数 作用域
 		}
 		// 访问资源
 		method, _ := handle(c, helper.XReqOriginMethodKey)

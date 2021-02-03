@@ -7,10 +7,21 @@ import (
 
 // 定义错误
 var (
-	// ErrInvalidToken 无效令牌
-	ErrInvalidToken = errors.New("invalid token")
 	// ErrNoneToken 没有令牌
 	ErrNoneToken = errors.New("none token")
+	// ErrInvalidToken 无效令牌
+	ErrInvalidToken = errors.New("invalid token")
+	// ErrExpiredToken 过期令牌
+	ErrExpiredToken = errors.New("expired token")
+
+	// ScopeLogin ...
+	ScopeLogin = "snsapi_login"
+	// ScopeBase ...
+	ScopeBase = "snsapi_base"
+	// ScopeUser ...
+	ScopeUser = "snsapi_userinfo"
+	// ScopePrivate ...
+	ScopePrivate = "snsapi_privateinfo"
 )
 
 // TokenInfo 令牌信息
@@ -60,6 +71,8 @@ type UserInfo interface {
 	// GetOrgAppID
 	GetOrgAppID() string
 
+	// GetScope 令牌作用域 snsapi_login snsapi_base snsapi_userinfo
+	GetScope() string
 	// GetDomain 领域标识
 	GetDomain() string
 	// GetIssuer 令牌签发者

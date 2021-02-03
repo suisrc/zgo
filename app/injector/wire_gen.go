@@ -98,9 +98,9 @@ func BuildInjector() (*Injector, func(), error) {
 		OAuth2Selector: selector,
 	}
 	apiUser := &api.User{
-		GPA:         gpaGPA,
-		UserService: user,
-		Auther:      auther,
+		GPA:          gpaGPA,
+		UserService:  user,
+		CasbinAuther: casbinAuther,
 	}
 	system := &api.System{
 		GPA: gpaGPA,

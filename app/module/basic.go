@@ -21,6 +21,9 @@ func (a *CasbinAuther) UserAuthBasicMiddleware(skippers ...middleware.SkipperFun
 			if err == auth.ErrNoneToken || err == auth.ErrInvalidToken {
 				helper.ResError(c, helper.Err401Unauthorized)
 				return // 无有效登陆用户
+			} else if err == auth.ErrExpiredToken {
+				helper.ResError(c, helper.Err456TokenExpired)
+				return // 访问令牌已经过期
 			}
 			helper.ResError(c, helper.Err500InternalServer)
 			return // 解析jwt令牌出现未知错误

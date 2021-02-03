@@ -35,6 +35,7 @@ var (
 	Err405MethodNotAllowed = &ErrorModel{Status: 405, ShowType: ShowWarn, ErrorMessage: &i18n.Message{ID: "ERR-METHOD-NOT-ALLOWED", Other: "请求的方法不允许"}}
 	Err406NotAcceptable    = &ErrorModel{Status: 406, ShowType: ShowWarn, ErrorMessage: &i18n.Message{ID: "ERR-NOT-ACCEPTABLE", Other: "请求的格式不可得"}}
 	Err429TooManyRequests  = &ErrorModel{Status: 429, ShowType: ShowWarn, ErrorMessage: &i18n.Message{ID: "ERR-TOO-MANY-REQUESTS", Other: "请求次数过多"}}
+	Err456TokenExpired     = &ErrorModel{Status: 456, ShowType: ShowWarn, ErrorMessage: &i18n.Message{ID: "ERR-TOKEN-EXPIRED", Other: "请求令牌已过期"}}
 	Err500InternalServer   = &ErrorModel{Status: 500, ShowType: ShowWarn, ErrorMessage: &i18n.Message{ID: "ERR-INTERNAL-SERVER", Other: "服务器发生错误"}}
 )
 

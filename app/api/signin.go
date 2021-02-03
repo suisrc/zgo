@@ -118,12 +118,7 @@ func (a *Signin) signin(c *gin.Context) {
 // @Success 200 {object} helper.Success
 // @Router /signout [get]
 func (a *Signin) signout(c *gin.Context) {
-	// 返回正常结果即可
-	// user, b := helper.GetUserInfo(c)
-
-	// 确定登陆用户的身份
-	user, _ := a.Auther.GetUserInfo(c)
-
+	user, _ := helper.GetUserInfo(c)
 	// 执行登出
 	if err := a.Auther.DestroyToken(c, user); err != nil {
 		helper.ResError(c, helper.Err400BadRequest)
@@ -373,10 +368,8 @@ func (a *Signin) captcha(c *gin.Context) {
 // 新建3方令牌
 // 该方法不好在于， 签发令牌后， 令牌有可能一次也不会使用， 所以这里应该对令牌进行二次签名
 func (a *Signin) token3rdNew(c *gin.Context) {
-
 	// 确定登陆用户的身份
-	// 确定登陆用户的身份
-	usr, _ := a.Auther.GetUserInfo(c)
+	usr, _ := helper.GetUserInfo(c)
 
 	aid, uid, _ := service.DecryptAccountWithUser(c, usr.GetAccount(), usr.GetTokenID())
 	tid := jwt.NewTokenID(strconv.Itoa(int(aid)))

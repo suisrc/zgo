@@ -171,8 +171,12 @@ func (a *Auther) GetUserInfo(c context.Context) (auth.UserInfo, error) {
 
 	claims, err := a.opts.parseClaimsFunc(c, tokenString)
 	if err != nil {
-		var e *jwt.ValidationError
-		if errors.As(err, &e) {
+		// var e *jwt.ValidationError
+		// if errors.As(err, &e) {
+		if erx, b := err.(*jwt.ValidationError); b {
+			if erx.Errors&jwt.ValidationErrorExpired > 0 {
+				return nil, auth.ErrExpiredToken // 令牌本身过期
+			}
 			return nil, auth.ErrInvalidToken
 		}
 		return nil, err
@@ -183,7 +187,7 @@ func (a *Auther) GetUserInfo(c context.Context) (auth.UserInfo, error) {
 		if exists, err := store.Check(c, "token:"+claims.GetTokenID()); err != nil {
 			return err
 		} else if exists {
-			return auth.ErrInvalidToken
+			return auth.ErrExpiredToken // 人工标记令牌过期
 		}
 		return nil
 	})
@@ -246,6 +250,15 @@ func (a *Auther) RefreshToken(c context.Context, tkn string, chk func(auth.UserI
 		}
 		return nil, nil, err
 	}
+	err = a.callStore(func(store store.Storer) error {
+		// 反向验证该用户是否已经登出
+		if exists, err := store.Check(c, "token:"+claims.GetTokenID()); err != nil {
+			return err
+		} else if exists {
+			return auth.ErrExpiredToken // 人工标记令牌过期
+		}
+		return nil
+	})
 	// 外部自定义验证令牌
 	if chk != nil {
 		if err := chk(claims, a.opts.refresh); err != nil {
