@@ -38,9 +38,6 @@ func BuildInjector() (*Injector, func(), error) {
 		Entc: client,
 		Sqlx: db,
 	}
-	demo := &api.Demo{
-		GPA: gpaGPA,
-	}
 	storer, cleanup3, err := module.NewStorer()
 	if err != nil {
 		cleanup2()
@@ -92,6 +89,11 @@ func BuildInjector() (*Injector, func(), error) {
 		SigninService: signin,
 		CasbinAuther:  casbinAuther,
 	}
+	connect := &api.Connect{
+		GPA:          gpaGPA,
+		Signin:       apiSignin,
+		CasbinAuther: casbinAuther,
+	}
 	user := service.User{
 		GPA:            gpaGPA,
 		Store:          storer,
@@ -103,6 +105,9 @@ func BuildInjector() (*Injector, func(), error) {
 		CasbinAuther: casbinAuther,
 	}
 	system := &api.System{
+		GPA: gpaGPA,
+	}
+	weixin := &api.Weixin{
 		GPA: gpaGPA,
 	}
 	managerUser := &manager.User{
@@ -130,11 +135,12 @@ func BuildInjector() (*Injector, func(), error) {
 	options := &api.Options{
 		Engine:       engine,
 		Router:       router,
-		Demo:         demo,
 		Auth:         auth,
+		Connect:      connect,
 		Signin:       apiSignin,
 		User:         apiUser,
 		System:       system,
+		Weixin:       weixin,
 		CasbinAuther: casbinAuther,
 		ManagerWire:  wire,
 	}

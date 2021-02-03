@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/suisrc/zgo/app/module"
+	"github.com/suisrc/zgo/app/schema"
 	"github.com/suisrc/zgo/app/service"
 	"github.com/suisrc/zgo/modules/helper"
 )
@@ -23,7 +24,7 @@ func (a *Auth) Register(r gin.IRouter) {
 	uax := a.CasbinAuther.UserAuthBasicMiddleware()
 	r.GET("authz", uaz, a.authorize)
 	r.GET("authx", uax, a.authorize)
-	r.GET("authz/clear", uax, a.clear)
+	r.GET("authc", uax, a.clear)
 }
 
 // fixRequestHeaderParam 修复请求头的内容
@@ -46,19 +47,14 @@ func fixRequestHeaderParam(c *gin.Context, k string) (string, error) {
 }
 
 func (a *Auth) clear(c *gin.Context) {
-	a.CasbinAuther.ClearEnforcer(true, "")
+	if c.Request.FormValue("sercet") != "nrob5mplr22g0t" {
+		helper.ResError(c, helper.Err403Forbidden)
+		return
+	}
+
+	user, _ := helper.GetUserInfo(c)
+	a.CasbinAuther.ClearEnforcer(user.GetOrgCode() == schema.PlatformCode, user.GetOrgCode())
 	helper.ResSuccess(c, "ok")
-
-	//user, _ := helper.GetUserInfo(c)
-	//
-	//if user.GetOrgCode() == schema.PlatformCode && user.GetOrgAdmin() == schema.SuperUser {
-	//	org := c.Request.FormValue("org")
-	//	a.CasbinAuther.ClearEnforcer(org == "", org)
-	//	helper.ResSuccess(c, "ok")
-	//} else {
-	//	helper.ResSuccess(c, "error")
-	//}
-
 }
 
 // @Param Authorization header string true "Bearer token"

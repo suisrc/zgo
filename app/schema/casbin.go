@@ -57,7 +57,7 @@ type CasbinGpaSvcOrg struct {
 }
 
 // QueryByOrgAndSvc 查询
-func (a *CasbinGpaSvcOrg) QueryByOrgAndSvc(sqlx *sqlx.DB, org string, sid int) error {
+func (a *CasbinGpaSvcOrg) QueryByOrgAndSvc(sqlx *sqlx.DB, org string, sid int64) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}app_service_org where org_cod = ? and svc_id = ?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, org, sid)

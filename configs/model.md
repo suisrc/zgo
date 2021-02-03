@@ -292,26 +292,27 @@ Org-Code="P6M"(platform)， 可以认为是归属平台的账户
 
 ---
 
-## 服务实体(`app_client`)
+## 服务实体(`web_token`)
 
-为第三方应用授权
+JSON Web Tokens are an open, industry standard RFC 7519 method for representing claims securely between two parties.
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| id            | 唯一标识       | 数值     |                                                     | int(11) NOT NULL AUTO_INCREMENT, primary             |
-| kid           | 客户端标识     | 字符串   | jwt的header[kid], 请求未指定看audience              | varchar(64)  NOT NULL, udx_app_client_kid            |
-| secret        | 客户端密钥     | 字符串   | 主要用于应用间通信                                  | varchar(1024)                                        |
-| org_cod       | 租户标识       | 数值     | 如果不为空,表示账户和租户绑定                       | int(11), fk_app_client_org_cod->tenant.id            |
+| kid           | 客户端标识     | 字符串   | jwt的header[kid], 请求未指定看audience              | varchar(64)  NOT NULL, primary                       |
+| org           | 租户标识       | 字符串   | 为机构提供独立的签发令牌                            | varchar(64), fk_web_token_org->tenant.code           |
+| target        | 终端标识       | 字符串   | 签发令牌对象                                        | int(11),     udx_web_token_target                    |
+| type          | 终端类型       | 字符串   | 'usr', 'aps'                                        | varchar(16), udx_web_token_target                    |
 | status        | 状态           | 数值     | 1:启用 0:禁用                                       | tinyint(4) DEFAULT 1                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| jwt_audience  | 令牌接受平台   | 字符串   |                                                     | varchar(255)                                         |
-| jwt_issuer    | 令牌签发平台   | 字符串   |                                                     | varchar(255)                                         |
 | jwt_expired   | 令牌有效期     | 数值     | 7200                                                | int(11) DEFAULT 7200                                 |
+| jwt_refresh   | 令牌有效期     | 数值     | 86400                                               | int(11) DEFAULT 86400                                |
 | jwt_type      | 令牌类型       | 数值     | JWT 不可修改                                        | varchar(32) DEFAULT 'JWT'                            |
 | jwt_method    | 令牌方法       | 字符串   | HS512 不可修改                                      | varchar(32) DEFAULT 'HS512'                          |
 | jwt_secret    | 令牌密钥       | 字符串   | signing secret                                      | varchar(255) NOT NULL                                |
 | jwt_getter    | 令牌获取方法   | 字符串   | 1.header(authorization) 2.query(token)              | varchar(32)                                          |
 | -             |                |          | 3.cookie(authorization) (备用字段)                  |                                                      |
+| jwt_issuer    | 令牌签发平台   | 字符串   |                                                     | varchar(255)                                         |
+| jwt_audience  | 令牌接受平台   | 字符串   |                                                     | varchar(255)                                         |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | signin_url    | 登陆地址       | 字符串   | 未指定redirect时候,默认的跳转地址， 默认为audience  | varchar(2048)                                        |
 | signin_check  | 登陆确认       | 数值     | false, 登陆是否需要确认                             | tinyint(4) DEFAULT 0                                 |
@@ -613,8 +614,8 @@ condition: 条件， 策略预计成立的条件
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | app_id        | 应用标识       | 字符串   |                                                     | varchar(128)                                         |
 | app_secret    | 应用密钥       | 字符串   |                                                     | varchar(1024)                                        |
-| agent_id      | 代理商标识     | 字符串   |                                                     | varchar(128)                                         |
-| agent_secret  | 代理商密钥     | 字符串   |                                                     | varchar(1024)                                        |
+| agent_id      | 代理标识       | 字符串   |                                                     | varchar(128)                                         |
+| agent_secret  | 代理密钥       | 字符串   |                                                     | varchar(1024)                                        |
 | suite_id      | 套件标识       | 字符串   |                                                     | varchar(128)                                         |
 | suite_secret  | 套件密钥       | 字符串   |                                                     | varchar(1024)                                        |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -648,17 +649,19 @@ condition: 条件， 策略预计成立的条件
 
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
-| token_kid     | 角色标识       | 字符串   |                                                     | varchar(64) NOT NULL, primary                        |
+| token_kid     | 令牌标识       | 字符串   |                                                     | varchar(64) NOT NULL, primary                        |
 | account_id    | 令牌归属       | 数值     |                                                     | int(11), idx_token_account_id                        |
-| org_cod       | 组织标识       | 字符串   |                                                     | varchar(64)                                          |
+| org_cod       | 组织标识       | 字符串   | 冗余字段， 一般和account相同， 但是也有可能不同     | varchar(64)                                          |
+| token_pid     | 令牌依赖       | 字符串   |                                                     | varchar(64), idx_token_token_pid                     |
+| platform_kid  | 账户归属平台   | 字符串   | 被授权平台, NULL标识不归属任何平台                  | varchar(64), idx_token_platform_kid                  |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | access_token  | 访问令牌       | 字符串   |                                                     | varchar(4096)                                        |
 | expires_at    | 访问令牌       | 数值     |                                                     | int(11)                                              |
 | refresh_token | 刷新令牌       | 字符串   |                                                     | varchar(255), idx_token_refresh_token                |
 | refresh_exp   | 刷新令牌       | 数值     |                                                     | int(11)                                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| delay_token   | 延迟令牌       | 字符串   | 延迟令牌， 用于第三方用户延迟拉取                   | varchar(255), idx_token_delay_token                  |
-| delay_exp     | 延迟令牌       | 数值     |                                                     | int(11)                                              |
+| code_token    | 延迟令牌       | 字符串   | 延迟令牌， 用于第三方用户延迟拉取                   | varchar(255), idx_token_code_token                   |
+| code_exp      | 延迟令牌       | 数值     |                                                     | int(11)                                              |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | call_count    | 调用次数       | 数值     | 令牌被使用的次数, 注意开发时需要降低更新频次        | int(11) DEFAULT 0                                    |
 | sync_lock     | 同步锁         | 数值     | 同步锁,使用时间锁,防止死锁                          | int(11)                                              |

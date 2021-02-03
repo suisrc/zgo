@@ -14,7 +14,7 @@ type System struct {
 // Register 注册路由,认证接口特殊,需要独立注册
 func (a *System) Register(r gin.IRouter) {
 	r.GET("pub/system/info", a.getSystemInfo)
-	r.GET("/pub/3rd/apps", a.getAppList)
+	r.GET("pub/3rd/apps", a.getAppList)
 	//r.GET("signin/mfa", a.signinMFA)
 	//r.POST("signup", a.signup) // 注册
 	//r.GET("signin/oauth2/:kid", a.oauth2) // OAUTH2登陆使用GET请求

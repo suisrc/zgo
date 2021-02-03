@@ -222,13 +222,15 @@ func (a *SigninGpaAccount) UpdateAndSaveX(sqlx *sqlx.DB) error {
 type SigninGpaAccountToken struct {
 	TokenID      string         `db:"token_kid"`
 	AccountID    int64          `db:"account_id"`
-	DelayToken   sql.NullString `db:"delay_token"`
-	DelayExpAt   sql.NullInt64  `db:"delay_exp"`
 	OrgCode      sql.NullString `db:"org_cod"`
+	TokenPID     sql.NullString `db:"token_pid"`
+	Platform     sql.NullString `db:"platform_kid"`
 	AccessToken  sql.NullString `db:"access_token"`
 	ExpiresAt    sql.NullInt64  `db:"expires_at"`
 	RefreshToken sql.NullString `db:"refresh_token"`
 	RefreshExpAt sql.NullInt64  `db:"refresh_exp"`
+	CodeToken    sql.NullString `db:"code_token"`
+	CodeExpAt    sql.NullInt64  `db:"code_exp"`
 	CallCount    sql.NullInt64  `db:"call_count"`
 	RefreshCount sql.NullInt64  `db:"refresh_count" set:"=refresh_count+1"`
 	LastIP       sql.NullString `db:"last_ip"`

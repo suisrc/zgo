@@ -22,11 +22,12 @@ var EndpointSet = wire.NewSet(
 	manager.EndpointSet,            // 管理页面接口
 
 	// 接口注册
-	wire.Struct(new(Demo), "*"),
 	wire.Struct(new(Auth), "*"),
+	wire.Struct(new(Connect), "*"),
 	wire.Struct(new(Signin), "*"),
 	wire.Struct(new(User), "*"),
 	wire.Struct(new(System), "*"),
+	wire.Struct(new(Weixin), "*"),
 
 	// 界面管理
 	wire.Struct(new(manager.Wire), "*"),
@@ -42,15 +43,15 @@ type Options struct {
 	Router middlewire.Router // 根路由
 
 	// 接口注入
-	Demo   *Demo
-	Auth   *Auth
-	Signin *Signin
-	User   *User
-	System *System
+	Auth    *Auth
+	Connect *Connect
+	Signin  *Signin
+	User    *User
+	System  *System
+	Weixin  *Weixin
 
 	// 权限管理
 	CasbinAuther *module.CasbinAuther
-
 	// 管理界面
 	ManagerWire *manager.Wire
 }
@@ -65,6 +66,10 @@ func InitEndpoints(o *Options) *Endpoints {
 	// 在nginx注册认证接口时候,请放行zgo服务器其他接口,防止重复认证
 	// 注意，改接口为内容接口，为提供国际化语言支持
 	o.Auth.Register(o.Engine)
+	// 外部认证使用
+	o.Connect.Register(o.Engine)
+	// 微信对接服务
+	o.Weixin.Register(o.Engine)
 
 	// ContextPath路由
 	r := o.Router
@@ -98,9 +103,7 @@ func InitEndpoints(o *Options) *Endpoints {
 	// 注册登陆接口
 	o.Signin.Register(r)
 	o.User.Register(r)
-
 	o.System.Register(r)
-	o.Demo.Register(o.Engine)
 
 	o.ManagerWire.Register(r)
 	return &Endpoints{}

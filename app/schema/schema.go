@@ -50,6 +50,8 @@ const (
 	StatusDeleted // value -> 4
 	// StatusExpired 过期
 	StatusExpired // value -> 5
+	// StatusPrivate 私有
+	StatusPrivate // value -> 6
 )
 
 // UserType 用户类型

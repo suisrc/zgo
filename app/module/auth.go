@@ -30,8 +30,8 @@ type AuthOpts struct {
 
 // AuthJwt 验证器
 type AuthJwt struct {
-	JwtOpts  *schema.JwtGpaOpts // 加密配置
-	ExpireAt time.Time          // 刷新时间
+	JwtOpt   *schema.ClientGpaWebToken // 加密配置
+	ExpireAt time.Time                 // 刷新时间
 }
 
 // NewAuther of auth.Auther
@@ -60,19 +60,59 @@ func NewAuther(opts *AuthOpts) auth.Auther {
 	return auther
 }
 
+// clear 清理缓存
+func (a *AuthOpts) clear(force bool, kid string) {
+	if a.CachedJwtOtps1 == nil {
+		// do nothing
+	} else if force {
+		a.CachedJwtOtps1 = nil
+		a.CachedExpireAt = time.Now().Add(AuthCachedExpireAt)
+	} else if kid != "" {
+		delete(a.CachedJwtOtps1, kid) // 清除指定缓存
+	} else {
+		now := time.Now()
+		for k, v := range a.CachedJwtOtps1 {
+			if v.ExpireAt.Before(now) {
+				delete(a.CachedJwtOtps1, k) // 清除过期缓存
+			}
+		}
+	}
+}
+
 // jwt 获取加密认证的jwt配置信息
-func (a *AuthOpts) jwtopt(ctx context.Context, kid interface{}) (*AuthJwt, bool) {
-	// TODO JWT多加密配置方案
-	// jwt, ok := a.CachedJwtOtps1[kid]
-	// return jwt, ok
+func (a *AuthOpts) opts(ctx context.Context, kid interface{}) (*schema.ClientGpaWebToken, bool) {
+	if a.CachedJwtOtps1 == nil {
+		a.CachedJwtOtps1 = map[interface{}]*AuthJwt{}
+		a.CachedExpireAt = time.Now().Add(AuthCachedExpireAt)
+	} else if a.CachedExpireAt.Before(time.Now()) {
+		a.CachedExpireAt = time.Now().Add(AuthCachedExpireAt) // 设定04分钟后刷新
+		// a.clear(false, "")
+		go a.clear(false, "")
+		// defer func() { go a.clear(false, "") }()
+	}
+
+	if jwt, ok := a.CachedJwtOtps1[kid]; ok {
+		return jwt.JwtOpt, ok // 使用缓存
+	}
+	if kidstr, ok := kid.(string); ok {
+		cgw := schema.ClientGpaWebToken{}
+		if err := cgw.QueryByKID(a.Sqlx, kidstr); err == nil && cgw.KID != "" {
+			cgw.SecretByte = []byte(cgw.JwtSecret.String)
+			a.CachedJwtOtps1[kid] = &AuthJwt{
+				JwtOpt:   &cgw,
+				ExpireAt: time.Now().Add(2 * AuthCachedExpireAt),
+			}
+			// log.Println(cgw)
+			return &cgw, true // 从数据库获取
+		}
+	}
 	return nil, false
 }
 
 // 更新认证
 func (a *AuthOpts) update(c context.Context) error {
 	// 使用按需加载的方式， 所以这里的更新， 只要清除缓存即可， 我们可以通过jwtopt方法重新加载缓存
-	a.CachedJwtOtps1 = map[interface{}]*AuthJwt{}
-	a.CachedExpireAt = time.Now().Add(2 * time.Minute)
+	a.clear(true, "")
 	return nil
 }
 
@@ -96,22 +136,22 @@ func (a *AuthOpts) token(ctx context.Context) (string, error) {
 // 修正令牌
 func (a *AuthOpts) claims(c context.Context, claims *jwt.UserClaims) (int, error) {
 	if kid, ok := helper.GetCtxValueToString(c, helper.ResJwtKey); ok {
-		opt, ok := a.jwtopt(c, kid)
+		opt, ok := a.opts(c, kid)
 		if !ok {
 			return -1, errors.New("signing jwt, kid error")
 		}
-		if opt.JwtOpts.Expired.Valid && opt.JwtOpts.Expired.Int64 > 0 {
+		if opt.JwtExpired.Valid && opt.JwtExpired.Int64 > 0 {
 			now := time.Unix(claims.IssuedAt, 0)
-			claims.ExpiresAt = now.Add(time.Duration(opt.JwtOpts.Expired.Int64) * time.Second).Unix() // 修改时间
+			claims.ExpiresAt = now.Add(time.Duration(opt.JwtExpired.Int64) * time.Second).Unix() // 修改时间
 		}
-		if opt.JwtOpts.Audience.Valid {
-			claims.Audience = opt.JwtOpts.Audience.String
+		if opt.JwtAudience.Valid {
+			claims.Audience = opt.JwtAudience.String
 		}
-		if opt.JwtOpts.Issuer.Valid {
-			claims.Issuer = opt.JwtOpts.Issuer.String
+		if opt.JwtIssuer.Valid {
+			claims.Issuer = opt.JwtIssuer.String
 		}
-		if opt.JwtOpts.Refresh.Valid && opt.JwtOpts.Refresh.Int64 > 0 {
-			return int(opt.JwtOpts.Refresh.Int64), nil
+		if opt.JwtRefresh.Valid && opt.JwtRefresh.Int64 > 0 {
+			return int(opt.JwtRefresh.Int64), nil
 		}
 	}
 	return -1, nil
@@ -124,8 +164,8 @@ func (a *AuthOpts) key(c context.Context, token *jwtgo.Token, method jwtgo.Signi
 	// 获取处理的密钥
 	if kid, ok := token.Header["kid"]; ok {
 		helper.SetCtxValue(c, helper.ResJwtKey, kid)
-		if opt, ok := a.jwtopt(c, kid); ok {
-			return opt.JwtOpts.SecretByte, nil
+		if opt, ok := a.opts(c, kid); ok {
+			return opt.SecretByte, nil
 		}
 		return nil, errors.New("parse jwt, kid error")
 	}
@@ -137,7 +177,7 @@ func (a *AuthOpts) key(c context.Context, token *jwtgo.Token, method jwtgo.Signi
 func (a *AuthOpts) signing(c context.Context, claims *jwt.UserClaims, method jwtgo.SigningMethod, secret interface{}) (string, error) {
 	if kid, ok := helper.GetCtxValueToString(c, helper.ResJwtKey); ok {
 		// 使用jwt私有密钥
-		if opt, ok := a.jwtopt(c, kid); ok {
+		if opt, ok := a.opts(c, kid); ok {
 			token := &jwtgo.Token{
 				Header: map[string]interface{}{
 					"typ": "JWT",
@@ -147,7 +187,7 @@ func (a *AuthOpts) signing(c context.Context, claims *jwt.UserClaims, method jwt
 				Claims: claims,
 				Method: method,
 			}
-			return token.SignedString(opt.JwtOpts.SecretByte)
+			return token.SignedString(opt.SecretByte)
 		}
 		return "", errors.New("signing jwt kid error")
 	}

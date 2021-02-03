@@ -58,7 +58,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, l func(*gin.Contex
 }
 
 // OAuth2 登陆控制
-// func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, last func(c *gin.Context, aid, cid int) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
+// func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Context, int64) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 // 	if b.KID == "" {
 // 		b.KID = c.Param("kid")
 // 	}
@@ -199,7 +199,7 @@ func (a *Signin) GetSignUserInfo(c *gin.Context, b *schema.SigninBody, sa *schem
 	if err := a.SetSignUserWithUser(c, sa, &suser); err != nil { // 用户信息
 		return nil, err
 	}
-	if err := a.SetSignUserWithClient(c, sa, &suser); err != nil { // 访问令牌签名
+	if err := a.SetSignUserWithToken(c, b, sa, &suser); err != nil { // 访问令牌签名
 		return nil, err
 	}
 	if suser.OrgAdmin != schema.SuperUser {
@@ -269,22 +269,34 @@ func (a *Signin) SetSignUserWithRole(c *gin.Context, sa *schema.SigninGpaAccount
 	return nil // 账户和用户上都没有角色
 }
 
-// SetSignUserWithClient with client info
+// SetSignUserWithToken with token
 // 登录客户端加密方式
-func (a *Signin) SetSignUserWithClient(c *gin.Context, sa *schema.SigninGpaAccount, suser *schema.SigninUser) error {
-	// TODO JWT多加密配置方案
-	// domain := c.Request.Host // 用户请求域名
-	// client := schema.JwtGpaOpts{}
-	// if err := client.QueryByAudience(a.Sqlx, domain, suser.OrgCode); err == nil && client.ID > 0 {
-	// 	// return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CLIENT-NOEXIST", Other: "用户请求的客户端不存在"})
-	// 	helper.SetCtxValue(c, helper.ResJwtKey, client.KID) // 配置客户端, 该内容会影响JWT签名方式
-	// 	if client.Issuer.Valid {
-	// 		suser.Issuer = client.Issuer.String
-	// 	}
-	// 	if client.Audience.Valid {
-	// 		suser.Audience = client.Audience.String
-	// 	}
+func (a *Signin) SetSignUserWithToken(c *gin.Context, b *schema.SigninBody, sa *schema.SigninGpaAccount, suser *schema.SigninUser) error {
+	cgw := schema.ClientGpaWebToken{}
+	if b.JWT != "" {
+		// 使用指定的令牌
+		if err := cgw.QueryByKID(a.Sqlx, b.JWT); err != nil {
+			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-WEB-TOKEN-NONE", Other: "JWT令牌密钥不存在"})
+		} else if cgw.Status != schema.StatusPrivate {
+			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-WEB-TOKEN-INVALID", Other: "JWT令牌密钥失效"})
+		}
+	}
+	//  else if err := cgw.QueryByUsr(a.Sqlx, sa.UserID.Int64); err == nil {
+	// 	// 判断当前用户是否需要专用JWT
+	// 	// do nothings
+	// } else if err := cgw.QueryByOrg(a.Sqlx, b.Org); err == nil {
+	// 	// 判断当前租户是否需要专用JWT
+	// 	// do nothings
 	// }
+	if cgw.KID != "" {
+		helper.SetCtxValue(c, helper.ResJwtKey, cgw.KID) // 配置客户端, 该内容会影响JWT签名方式
+		if cgw.JwtIssuer.Valid {
+			suser.Issuer = cgw.JwtIssuer.String
+		}
+		if cgw.JwtAudience.Valid {
+			suser.Audience = cgw.JwtAudience.String
+		}
+	}
 	if suser.Issuer == "" {
 		suser.Issuer = c.Request.Host
 	}

@@ -695,7 +695,7 @@ func (a *CasbinAuther) CreateCasbinPolicy(org string, c *CasbinPolicy) error {
 
 // QueryServiceCode 查询服务
 // "zgo:svc-cox:" + host + ":" + resource
-func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, host, path, org string) (string, int, error) {
+func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, host, path, org string) (string, int64, error) {
 	resource := ""
 	if strings.HasPrefix(path, "/api/") {
 		// 后端API服务使用3级模糊匹配
@@ -720,7 +720,7 @@ func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, ho
 			return "", 0, errors.New("系统缓存异常:[" + key + "]" + svc)
 		}
 		sid, _ := strconv.Atoi(svc[offset+1:])
-		return svc[:offset], sid, nil
+		return svc[:offset], int64(sid), nil
 	}
 
 	// 由于查询是居于全局的， 所以1分钟的缓存是一个合理的范围
@@ -734,12 +734,12 @@ func (a *CasbinAuther) QueryServiceCode(ctx *gin.Context, user auth.UserInfo, ho
 		return "", 0, errors.New("no service")
 	}
 	a.Storer.Set(ctx, key, sa.SvcCode.String+"/"+strconv.Itoa(int(sa.SvcID.Int64)), CasbinServiceCodeExpireAt) // 查询结果缓存1分钟
-	return sa.SvcCode.String, int(sa.SvcID.Int64), nil
+	return sa.SvcCode.String, sa.SvcID.Int64, nil
 }
 
 // CheckTenantService 验证租户是否有访问该服务的权限服务
 // "zgo:svc-orx:" + svc_cod + ":" + org_cod -> CasbinGpaSvcOrg
-func (a *CasbinAuther) CheckTenantService(ctx *gin.Context, user auth.UserInfo, org, svc string, sid int) (bool, error) {
+func (a *CasbinAuther) CheckTenantService(ctx *gin.Context, user auth.UserInfo, org, svc string, sid int64) (bool, error) {
 	if org == "" || org == schema.PlatformCode {
 		return true, nil // 平台用户， 没有服务权限问题
 	}

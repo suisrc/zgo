@@ -42,10 +42,10 @@ func (a *Signin) Register(r gin.IRouter) {
 	r.GET("signin/refresh", a.refresh) // 刷新令牌
 	r.GET("signin/captcha", a.captcha) // 发送验证码
 
-	r.POST("pub/3rd/token", a.signin)              // 获取新的访问令牌
-	r.GET("pub/3rd/token/new", uax, a.token3rdNew) // 构建新的访问令牌
-	r.GET("pub/3rd/token/get", a.token3rdGet)      // 获取新的访问令牌
-	r.GET("pub/3rd/token/refresh", a.refresh)      // 获取新的访问令牌
+	r.POST("pub/3rd/token", a.signin)            // 获取新的访问令牌
+	r.GET("pub/3rd/token/new", uax, a.token3new) // 构建新的访问令牌
+	r.GET("pub/3rd/token/get", a.token3get)      // 获取新的访问令牌
+	r.GET("pub/3rd/token/refresh", a.refresh)    // 获取新的访问令牌
 
 }
 
@@ -367,7 +367,7 @@ func (a *Signin) captcha(c *gin.Context) {
 
 // 新建3方令牌
 // 该方法不好在于， 签发令牌后， 令牌有可能一次也不会使用， 所以这里应该对令牌进行二次签名
-func (a *Signin) token3rdNew(c *gin.Context) {
+func (a *Signin) token3new(c *gin.Context) {
 	// 确定登陆用户的身份
 	usr, _ := helper.GetUserInfo(c)
 
@@ -377,13 +377,13 @@ func (a *Signin) token3rdNew(c *gin.Context) {
 
 	// a.logSignIn(c
 	o2a := schema.SigninGpaAccountToken{
-		TokenID:    tid,
-		AccountID:  aid,
-		OrgCode:    sql.NullString{Valid: usr.GetOrgCode() != "", String: usr.GetOrgCode()},
-		Number1:    sql.NullInt64{Valid: true, Int64: uid},
-		String1:    sql.NullString{Valid: true, String: usr.GetTokenID()},
-		DelayToken: sql.NullString{Valid: true, String: tkn},
-		DelayExpAt: sql.NullInt64{Valid: true, Int64: time.Now().Unix() + 300},
+		TokenID:   tid,
+		AccountID: aid,
+		OrgCode:   sql.NullString{Valid: usr.GetOrgCode() != "", String: usr.GetOrgCode()},
+		Number1:   sql.NullInt64{Valid: true, Int64: uid},
+		String1:   sql.NullString{Valid: true, String: usr.GetTokenID()},
+		CodeToken: sql.NullString{Valid: true, String: tkn},
+		CodeExpAt: sql.NullInt64{Valid: true, Int64: time.Now().Unix() + 300},
 	}
 	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, false); err != nil {
 		helper.FixResponse500Error(c, err, func() {
@@ -397,7 +397,7 @@ func (a *Signin) token3rdNew(c *gin.Context) {
 }
 
 // 获取3方令牌
-func (a *Signin) token3rdGet(c *gin.Context) {
+func (a *Signin) token3get(c *gin.Context) {
 	o2a := a.getSigninGpaAccountTokenByDelay(c)
 	if o2a == nil {
 		return // 结束处理
@@ -422,7 +422,7 @@ func (a *Signin) token3rdGet(c *gin.Context) {
 
 	a.logSignIn(c, user, token, true, func(sga *schema.SigninGpaAccountToken) {
 		// 注销延迟令牌， 延迟令牌只允许使用一次
-		sga.DelayExpAt = sql.NullInt64{Valid: true, Int64: -1}
+		sga.CodeExpAt = sql.NullInt64{Valid: true, Int64: -1}
 	})
 	// 令牌结果
 	result := schema.SigninResult{
@@ -456,11 +456,11 @@ func (a *Signin) getSigninGpaAccountTokenByDelay(c *gin.Context) *schema.SigninG
 		}
 		return nil
 	}
-	if o2a.DelayExpAt.Int64 == -1 {
-		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-USED", Other: "令牌已被使用"}))
+	if o2a.CodeExpAt.Int64 == -1 {
+		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-USED", Other: "令牌已使用"}))
 		return nil
-	} else if o2a.DelayExpAt.Int64 < time.Now().Unix() {
-		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "令牌过期"}))
+	} else if o2a.CodeExpAt.Int64 < time.Now().Unix() {
+		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "令牌已过期"}))
 		return nil
 	}
 	if o2a.AccessToken.Valid {

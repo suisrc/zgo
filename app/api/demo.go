@@ -14,53 +14,11 @@ type Demo struct {
 
 // Register 注册路由
 func (a *Demo) Register(r gin.IRouter) {
-	//r.POST("wx", a.wx)
 	// r.GET("hello", a.Hello)
 	// r.GET("get", a.Get)
 	// r.POST("set", a.Set)
 	// r.GET("get1", a.Get1)
 }
-
-//func (a *Demo) wx(c *gin.Context) {
-//
-//	query := &crypto.WxEncryptSignature{}
-//	if err := helper.ParseQuery(c, query); err != nil {
-//		c.String(200, "success")
-//		return
-//	}
-//	body := &crypto.WxEncryptMessage{}
-//	if err := helper.ParseJSON(c, body); err != nil {
-//		c.String(200, "success")
-//		return
-//	}
-//
-//	logger.Infof(c, body.Encrypt)
-//
-//	wc := crypto.WxNewCrypto2("123456", "IDKxiddis98", "lBXYSlGJuQcFPiS4KCfLGxQjmcHJRrJuoIfrKC2NPwt")
-//	content, err := wc.Decrypt(body.Encrypt)
-//	if err != nil {
-//		logger.Errorf(c, logger.ErrorWW(err))
-//		c.String(200, "success")
-//		return
-//	}
-//	logger.Infof(c, content)
-//	result, err := wc.Encrypt(content)
-//	if err != nil {
-//		logger.Errorf(c, logger.ErrorWW(err))
-//		c.String(200, "success")
-//		return
-//	}
-//
-//	em := crypto.WxEncryptMessage{
-//		Encrypt:   result,
-//		Nonce:     crypto.UUID(16),
-//		TimeStamp: strconv.Itoa(int(time.Now().UnixNano() / 1e6)),
-//	}
-//	// 生成签名
-//	em.MsgSignature = crypto.WxGenSHA1(wc.Token, em.TimeStamp, em.Nonce, em.Encrypt)
-//
-//	c.JSON(200, em)
-//}
 
 //
 //  // @Tags demo

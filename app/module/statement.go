@@ -48,6 +48,8 @@ m = `
 )
 
 var (
+	// AuthCachedExpireAt 缓存定时器刷新时间
+	AuthCachedExpireAt = 4 * time.Minute
 	// CasbinCachedExpireAt 缓存定时器刷新时间
 	CasbinCachedExpireAt = 4 * time.Minute
 	// CasbinEnforcerCheckAt 引擎检测版本时间

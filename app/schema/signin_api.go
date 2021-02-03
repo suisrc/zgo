@@ -8,9 +8,8 @@ type SigninBody struct {
 	Code     string `json:"code"`                        // 标识码
 	KID      string `json:"kid"`                         // 授权平台
 	Org      string `json:"org"`                         // 租户
-	Role     string `json:"role"`                        // 角色
 	Scope    string `form:"scope"`                       // 作用域
-	Domain   string `json:"host"`                        // 域, 如果无,使用c.Reqest.Host代替
+	JWT      string `json:"jwt"`                         // JWT令牌， 高级用法， 使用非系统默认JWT令牌
 }
 
 // SigninOfCaptcha 使用登陆发生认证信息
@@ -29,8 +28,6 @@ type SigninOfOAuth2 struct {
 	Scope    string `form:"scope"`    // 作用域
 	KID      string `form:"kid"`      // kid
 	Org      string `form:"org"`      // 租户
-	Role     string `form:"role"`     // 角色
-	Domain   string `form:"host"`     // 域, 如果无,使用c.Reqest.Host代替
 	Redirect string `form:"redirect"` // redirect
 }
 
