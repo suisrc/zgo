@@ -11,9 +11,9 @@ POST {{base_url}}/api/ka/v1/signin
 Content-Type: application/json
 
 {
-  "jwt": "test",
+  // "w": "test",
+  "g": "ORGCM3558",
   "scope": "snsapi_login",
-  "org": "ORGCM3558",
   "password": "123456",
   "username": "it-100002"
 }

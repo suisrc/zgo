@@ -58,7 +58,7 @@ func (a *Signin) Signin(c *gin.Context, b *schema.SigninBody, l func(*gin.Contex
 		return a.SigninByCaptcha(c, b, l)
 	}
 	// 没有合理的登录方式， 无法登录
-	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-NONE", Other: "无效登陆"})
+	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-TYPE-NONE", Other: "无效登陆方式"})
 }
 
 //============================================================================================

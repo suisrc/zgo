@@ -3,10 +3,10 @@ package schema
 // SigninBody 登陆参数
 type SigninBody struct {
 	Username string `json:"username" binding:"required"` // 账户
-	Password string `json:"passworpd"`                   // 密码
+	Password string `json:"password"`                    // 密码
 	Captcha  string `json:"captcha"`                     // 验证码
 	Code     string `json:"code"`                        // 标识码
-	Scope    string `form:"scope"`                       // 作用域
+	Scope    string `json:"scope"`                       // 作用域
 	Platform string `json:"p"`                           // 授权平台
 	OrgCode  string `json:"g"`                           // 租户
 	WebToken string `json:"w"`                           // JWT令牌密钥， 高级用法， 使用非系统默认JWT令牌
