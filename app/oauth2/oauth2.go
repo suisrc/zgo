@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"net/url"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -33,15 +34,98 @@ func NewSelector(GPA gpa.GPA, Storer store.Storer) (Selector, error) {
 	return selector, nil
 }
 
+//===================================================================================================
+//===================================================================================================
+//===================================================================================================
+
 // Handler 认证接口
 type Handler interface {
+	// 获取用户信息
+	GetUser(c *gin.Context, rp RequestPlatform, rt RequestToken, relation, userid string) (*UserInfo, error)
+
 	// Handle 处理OAuth2认证, 被动函数回调得到用户的openid
-	// bool 必须是成员,我们在平台的OAuth2认证时候,可能非成员用户扫码,是否将非成员的openid带入被动处理函数中
-	// func (openid string) (accountid int, err error)
-	Handle(*gin.Context, RequestParams, RequestPlatfrm, bool, func(string) (int, error)) error
+	// func (member bool, openid string, name string) (accountid int, err error)
+	Handle(*gin.Context, RequestParams, RequestPlatform, RequestToken, RequestOAuth2) error
 }
 
-//===================================================================================================AccessToken-START
+// UserInfo 目前对接微信， 展示保留这些内容
+type UserInfo struct {
+	Relation    string // 成员关系
+	Name        string // 成员名称
+	Mobile      string // 手机号码
+	Gender      string // 性别: 0表示未定义, 1表示男性, 2表示女性
+	Email       string // 邮箱
+	Avatar      string // 头像url
+	ThumbAvatar string // 头像缩略图url
+	Extattr     map[string]interface{}
+}
+
+// RequestParams ...
+type RequestParams interface {
+	GetCode() string
+	GetState() string
+	GetScope() string
+}
+
+// RequestPlatform ...
+type RequestPlatform interface {
+	GetID() int64
+	GetAppID() string
+	GetAppSecret() string
+	GetAgentID() string
+	GetAgentSecret() string
+}
+
+// RequestToken ...
+type RequestToken interface {
+	// 获取应用访问令牌（从数据库获取）
+	FindAccessToken(sqlx *sqlx.DB, token *AccessToken, platform int64) error
+	// 存储应用访问令牌（向数据库存储）
+	SaveAccessToken(sqlx *sqlx.DB, token *AccessToken) error
+	// 异步锁定, 防止多次更新
+	LockAsync(sqlx *sqlx.DB, platform int64) error
+}
+
+// RequestOAuth2 ...
+type RequestOAuth2 interface {
+	// 获取重定向Host
+	GetRedirectHost() string
+	// relation: none (无), member(成员), external(外部联系人)
+	FindAccount(relation, openid, userid, deviceid string) (int64, error)
+}
+
+//===================================================================================================
+//===================================================================================================
+//===================================================================================================
+
+// GetRedirectURIByOAuth2Platform Redirect URI by OAuth2Platform
+func GetRedirectURIByOAuth2Platform(c *gin.Context, uri string, platform RequestPlatform, oauth2 RequestOAuth2) string {
+	if uri == "" {
+		uri := oauth2.GetRedirectHost()
+		if uri == "" {
+			uri = "https://" + c.Request.Host
+		}
+		uri += c.Request.RequestURI
+		uri = url.QueryEscape(uri) // 进行URL编码
+	} else if uri[:4] != "http" {
+		uri = url.PathEscape("https://"+c.Request.Host) + uri
+	}
+	return uri
+}
+
+// AccessToken xxx
+type AccessToken struct {
+	Account      int64
+	Platform     int64
+	TokenID      sql.NullString
+	AccessToken  sql.NullString
+	ExpiresIn    sql.NullInt64
+	ExpiresAt    sql.NullTime
+	RefreshToken sql.NullString
+	RefreshExpAt sql.NullTime
+	Scope        sql.NullString
+	AsyncLock    sql.NullTime
+}
 
 // ExecWithTokenRetry  exec
 // 系统只会重新获取一次令牌
@@ -94,42 +178,52 @@ type TokenHandler interface {
 	NewToken(context.Context) (string, error)  // 新获取令牌
 }
 
+//===================================================================================================
+//===================================================================================================
+//===================================================================================================
+
 var _ TokenHandler = (*TokenManager)(nil)
 
 // TokenManager manager
 type TokenManager struct {
-	gpa.GPA                                                       // 数据库操作
-	Key          string                                           // 令牌Key, 注意不能未空,且必须全局唯一
-	PlatformID   int                                              // 平台ID
-	Storer       store.Storer                                     // 缓存
-	NewTokenFunc func(context.Context, int) (*TokenOAuth2, error) // 获取新令牌
-	MaxCacheIdle int                                              // 使用缓存的临界值, 达到临界值会被动更新令牌, 如果Token是2个小时,推荐使用300秒
-	MinCacheIdle int                                              // 使用缓存的TTL值, 不要高于MaxCacheIdle,推荐使用60秒
+	gpa.GPA                                   // 数据库操作
+	TokenKey     string                       // 令牌Key, 必须全局唯一
+	Platform     int64                        // 平台Kid
+	Storer       store.Storer                 // 缓存控制器
+	OAuth2Handle RequestToken                 // 访问控制器
+	NewTokenFunc func() (*AccessToken, error) // 获取新令牌
+	MaxCacheIdle int                          // 使用缓存的临界值, 达到临界值会被动更新令牌, 如果Token是2个小时,推荐使用300秒
+	MinCacheIdle int                          // 使用缓存的TTL值, 不要高于MaxCacheIdle,推荐使用60秒
+	NewCacheIdle int                          // 有效期低于阈值时候， 异步更新, 推荐使用1800秒
 }
 
 // FindToken find
 func (a *TokenManager) FindToken(c context.Context) (string, error) {
-	value, _, _ := a.Storer.Get(c, "access_token:"+a.Key)
+	value, _, _ := a.Storer.Get(c, a.TokenKey)
 	if value != "" {
 		// 缓存中存在
 		return value, nil
 	}
-	if a.PlatformID > 0 {
-		toa2 := &TokenOAuth2{}
-		if err := toa2.QueryByPlatformMust(a.Sqlx, a.PlatformID); err != nil {
+	if a.TokenKey != "" {
+		toa2 := &AccessToken{}
+		if err := a.OAuth2Handle.FindAccessToken(a.Sqlx, toa2, a.Platform); err != nil {
 			if !sqlxc.IsNotFound(err) {
 				return "", err
 			}
 			// 数据不存在
-		} else {
-			// 数据存在
+		} else if toa2.Platform == 0 {
+			// 数据不存在
+		} else if idle := toa2.ExpiresAt.Time.Sub(time.Now()); idle > 0 {
+			// 数据存在, 令牌有效
 			if a.MaxCacheIdle > 0 && a.MinCacheIdle > 0 {
-				if toa2.ExpiresAt.Time.Sub(time.Now()) > time.Duration(a.MaxCacheIdle)*time.Second {
-					// 将令牌缓存到缓存池中缓存
-					a.Storer.Set(c, "access_token:"+a.Key, toa2.AccessToken.String, time.Duration(a.MinCacheIdle)*time.Second)
-				} else if !toa2.SyncLock.Valid || toa2.SyncLock.Time.Before(time.Now()) {
-					// 异步更新令牌, 需要判定锁, 锁定延迟5s, 不主动释放锁定内容
-					if err := toa2.LockSync(a.Sqlx); err == nil {
+				// 异步更新
+				if idle > time.Duration(a.MaxCacheIdle)*time.Second {
+					// 有效期还有300s, 令牌完全可用，将令牌缓存到缓存池中缓存
+					a.Storer.Set(c, a.TokenKey, toa2.AccessToken.String, time.Duration(a.MinCacheIdle)*time.Second)
+				}
+				if idle < time.Duration(a.NewCacheIdle) && toa2.AsyncLock.Valid && toa2.AsyncLock.Time.Add(5*time.Second).Before(time.Now()) {
+					// 有效期小于阈值, 异步更新， 锁定的是未来5s中的数据
+					if err := a.OAuth2Handle.LockAsync(a.Sqlx, a.Platform); err == nil {
 						go a.NewToken(c)
 					}
 				}
@@ -142,63 +236,68 @@ func (a *TokenManager) FindToken(c context.Context) (string, error) {
 
 // NewToken new
 func (a *TokenManager) NewToken(c context.Context) (string, error) {
-	token, err := a.NewTokenFunc(c, a.PlatformID)
+	token, err := a.NewTokenFunc()
 	if err != nil {
 		return "", err
 	} else if token.AccessToken.String == "" {
 		return "", errors.New("access token empty")
 	}
-	token.SyncLock = sql.NullTime{Valid: true, Time: time.Now()} // 具有解除锁定的功能
-	if err := token.UpdateOAuth2(a.Sqlx); err != nil {
+	token.AsyncLock = sql.NullTime{Valid: true, Time: time.Now()} // 具有解除锁定的功能
+	if err := a.OAuth2Handle.SaveAccessToken(a.Sqlx, token); err != nil {
 		return "", err
 	}
-	a.Storer.Set(c, "access_token:"+a.Key, token.AccessToken.String, time.Duration(a.MinCacheIdle)*time.Second)
+	a.Storer.Set(c, a.TokenKey, token.AccessToken.String, time.Duration(a.MinCacheIdle)*time.Second)
 	return token.AccessToken.String, nil
 }
 
-//===================================================================================================AccessToken-END
+//===================================================================================================
 
-// RequestPlatfrm xxx
-type RequestPlatfrm interface {
-	GetID() int
-	GetAppID() string
-	GetAppSecret() string
-	GetAgentID() string
-	GetSigninURL() string
-	CheckConfig() error
+// RequestOAuth2X ...
+type RequestOAuth2X struct {
+	FindHost func() string
+	FindUser func(relation, openid, userid, deviceid string) (int64, error)
 }
 
-// RequestParams xxx
-type RequestParams interface {
-	GetCode() string
-	GetState() string
-	GetScope() string
+// GetRedirectHost ...
+func (a *RequestOAuth2X) GetRedirectHost() string {
+	if a.FindHost == nil {
+		return ""
+	}
+	return a.FindHost()
 }
 
-// TokenOAuth2 xxx
-type TokenOAuth2 struct {
-	Account      int
-	PlatformID   int
-	TokenID      sql.NullString
-	AccessToken  sql.NullString
-	ExpiresIn    sql.NullInt64
-	ExpiresAt    sql.NullTime
-	RefreshToken sql.NullString
-	Scope        sql.NullString
-	SyncLock     sql.NullTime
+// FindAccount ...
+func (a *RequestOAuth2X) FindAccount(relation, openid, userid, deviceid string) (int64, error) {
+	return a.FindUser(relation, openid, userid, deviceid)
 }
 
-// UpdateOAuth2 update
-func (u *TokenOAuth2) UpdateOAuth2(sqlx *sqlx.DB) error {
-	return nil
+// RequestToken1X ...
+type RequestToken1X struct {
+	FindToken func(sqlx *sqlx.DB, token *AccessToken, platform int64) error
+	SaveToken func(sqlx *sqlx.DB, token *AccessToken) error
+	LockToken func(sqlx *sqlx.DB, platform int64) error
 }
 
-// QueryByPlatformMust query
-func (u *TokenOAuth2) QueryByPlatformMust(sqlx *sqlx.DB, platform int) error {
-	return nil
+// FindAccessToken ...
+func (a *RequestToken1X) FindAccessToken(sqlx *sqlx.DB, token *AccessToken, platform int64) error {
+	if a.FindToken == nil {
+		return nil
+	}
+	return a.FindToken(sqlx, token, platform)
 }
 
-// LockSync lock, 延迟锁定5秒
-func (u *TokenOAuth2) LockSync(sqlx *sqlx.DB) error {
-	return nil
+// SaveAccessToken ...
+func (a *RequestToken1X) SaveAccessToken(sqlx *sqlx.DB, token *AccessToken) error {
+	if a.SaveToken == nil {
+		return nil
+	}
+	return a.SaveToken(sqlx, token)
+}
+
+// LockAsync ...
+func (a *RequestToken1X) LockAsync(sqlx *sqlx.DB, platform int64) error {
+	if a.LockToken == nil {
+		return nil
+	}
+	return a.LockToken(sqlx, platform)
 }

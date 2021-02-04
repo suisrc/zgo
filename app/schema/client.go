@@ -12,7 +12,7 @@ import (
 // ClientGpaWebToken 登录使用的平台
 type ClientGpaWebToken struct {
 	KID          string         `db:"kid"`          // 三方标识
-	Org          sql.NullString `db:"org"`          // 平台标识
+	OrgCode      sql.NullString `db:"org_cod"`      // 平台标识
 	Target       sql.NullInt64  `db:"target"`       // 终端标识
 	Type         sql.NullString `db:"type"`         // 终端类型
 	Status       StatusType     `db:"status"`       // 状态
@@ -39,7 +39,7 @@ func (a *ClientGpaWebToken) QueryByOrg(sqlx *sqlx.DB, org string) error {
 	if org == "" {
 		return errors.New("sql: no arg in params")
 	}
-	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}web_token where org = ? and status = 1 order by created_at desc limit 1"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}web_token where org_cod = ? and type = 'org' and status = 1 order by created_at desc limit 1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, org)
 }

@@ -3,7 +3,7 @@ package oauth2
 import (
 	"bytes"
 	"database/sql"
-	"net/url"
+	"errors"
 	"strconv"
 	"strings"
 	"sync"
@@ -42,18 +42,22 @@ type WeixinQm struct {
 	parseQrError    error                // qr error
 }
 
-// Handle handle
-func (a *WeixinQm) Handle(c *gin.Context, body RequestParams, platfrm RequestPlatfrm, member bool, find func(string) (int, error)) error {
-	if err := a.CheckPlatfrmConfig(c, platfrm); err != nil {
-		return err
-	}
+// GetUser ...
+func (a *WeixinQm) GetUser(c *gin.Context, rp RequestPlatform, rt RequestToken, relation, userid string) (*UserInfo, error) {
+	return nil, errors.New("no implemented")
+}
 
+// Handle handle
+func (a *WeixinQm) Handle(c *gin.Context, body RequestParams, platform RequestPlatform, token1 RequestToken, oauth2 RequestOAuth2) error {
+	if platform.GetAppID() == "" || platform.GetAppSecret() == "" {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONFIG", Other: "应用配置异常"})
+	}
 	// 重定向到微信服务器
 	if body.GetCode() == "" {
 		if strings.Contains(c.Request.UserAgent(), "MicroMessenger/") {
-			return a.Connect(c, body, platfrm)
+			return a.Connect(c, body, platform, oauth2)
 		}
-		return a.QrConnect(c, body, platfrm)
+		return a.QrConnect(c, body, platform, oauth2)
 	}
 	// 通过微信服务器回调
 	if body.GetState() == "" {
@@ -66,68 +70,49 @@ func (a *WeixinQm) Handle(c *gin.Context, body RequestParams, platfrm RequestPla
 
 	// 获取用户令牌（注意，这里是用户令牌， 不是应用令牌）
 	token := WeixinQmAccessToken{}
-	if err := token.GetAccessToken(platfrm.GetAppID(), platfrm.GetAppSecret(), body.GetCode()); err != nil {
+	if err := token.GetAccessToken(platform.GetAppID(), platform.GetAppSecret(), body.GetCode()); err != nil {
 		return err // 网络异常
 	} else if token.ErrCode != 0 || token.ErrMsg != "ok" {
 		return &token // 微信服务器异常
 	}
 
-	acc, err := find(token.OpenID)
+	acc, err := oauth2.FindAccount("none", token.OpenID, "", "")
 	if err != nil {
 		return err
 	}
 
 	if acc > 0 {
 		// 更新Account内容
-		oa2 := &TokenOAuth2{
+		atoken := &AccessToken{
 			Account:      acc,
+			Platform:     platform.GetID(),
 			AccessToken:  sql.NullString{Valid: true, String: token.AccessToken},
-			ExpiresAt:    sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-30) * time.Second)},
+			ExpiresIn:    sql.NullInt64{Valid: true, Int64: int64(token.ExpiresIn)},
+			ExpiresAt:    sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-120) * time.Second)}, // 提前2分钟失效
 			RefreshToken: sql.NullString{Valid: true, String: token.RefreshToken},
+			RefreshExpAt: sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(29*24) * time.Hour)}, // 提前1天失效
 			Scope:        sql.NullString{Valid: true, String: token.Scope},
 		}
-		if err := oa2.UpdateOAuth2(a.Sqlx); err != nil {
-			// do nothing
-			logger.Errorf(c, logger.ErrorWW(err))
+		if err := token1.SaveAccessToken(a.Sqlx, atoken); err != nil {
+			logger.Errorf(c, logger.ErrorWW(err)) // do nothing
 		}
 	}
 	return nil
 }
 
-// CheckPlatfrmConfig check Config
-func (a *WeixinQm) CheckPlatfrmConfig(c *gin.Context, platfrm RequestPlatfrm) error {
-	// 验证配置
-	// if !o2p.AppID.Valid || !o2p.AppSecret.Valid {
-	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONFIG", Other: "应用配置异常"})
-	// }
-	// if !o2p.Status.Valid || !o2p.Status.Bool {
-	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-DISABLE", Other: "应用被禁用"})
-	// }
-	// if !o2p.Signin.Valid || !o2p.Signin.Bool {
-	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOSIGNIN", Other: "应用无法授权"})
-	// }
-	return platfrm.CheckConfig()
-}
-
 // Connect 应用认证
-func (a *WeixinQm) Connect(c *gin.Context, body RequestParams, platfrm RequestPlatfrm) error {
+func (a *WeixinQm) Connect(c *gin.Context, body RequestParams, platform RequestPlatform, oauth2 RequestOAuth2) error {
 
 	// 未取得code内容,需要重定向回到微信服务器
 	state := crypto.UUID(32)
 	a.Storer.Set1(c, state, time.Duration(60)*time.Second)
 
-	uri := c.Query("redirect_uri")
-	if uri == "" {
-		uri = GetRedirectURIByOAuth2Platfrm(c, platfrm)
-		uri = url.QueryEscape(uri) // 进行URL编码
-	} else if uri[:4] != "http" {
-		uri = url.PathEscape("https://"+c.Request.Host) + uri
-	}
+	uri := GetRedirectURIByOAuth2Platform(c, c.Query("redirect_uri"), platform, oauth2)
 	scope := body.GetScope()
 	if scope == "" {
 		scope = "snsapi_base"
 	}
-	appid := platfrm.GetAppID()
+	appid := platform.GetAppID()
 	// 参数
 	params := helper.H{
 		"appid":         appid,  // 公众号的唯一标识
@@ -160,19 +145,13 @@ func (a *WeixinQm) Connect(c *gin.Context, body RequestParams, platfrm RequestPl
 
 // QrConnect 扫码认证
 // https://developers.weixin.qq.com/doc/oplatform/Website_App/WeChat_Login/Wechat_Login.html
-func (a *WeixinQm) QrConnect(c *gin.Context, body RequestParams, platfrm RequestPlatfrm) error {
+func (a *WeixinQm) QrConnect(c *gin.Context, body RequestParams, platform RequestPlatform, oauth2 RequestOAuth2) error {
 	// 未取得code内容,需要重定向回到微信服务器
 	state := crypto.UUID(32)
 	a.Storer.Set1(c, state, time.Duration(300)*time.Second) // 5分钟等待,如果5分钟没有进行扫描登陆,直接拒绝
 
-	uri := c.Query("redirect_uri")
-	if uri == "" {
-		uri = GetRedirectURIByOAuth2Platfrm(c, platfrm)
-		uri = url.QueryEscape(uri) // 进行URL编码
-	} else if uri[:4] != "http" {
-		uri = url.PathEscape("https://"+c.Request.Host) + uri
-	}
-	appid := platfrm.GetAppID()
+	uri := GetRedirectURIByOAuth2Platform(c, c.Query("redirect_uri"), platform, oauth2)
+	appid := platform.GetAppID()
 	// 参数
 	params := helper.H{
 		"appid":         appid,          // 公众号的唯一标识
@@ -230,7 +209,7 @@ type WeixinQmAccessToken struct {
 	AppID        string `json:"app_id,omitempty"`        // 应用ID
 	AccessToken  string `json:"access_token,omitempty"`  // 网页授权接口调用凭证,注意：此access_token与基础支持的access_token不同
 	ExpiresIn    int    `json:"expires_in,omitempty"`    // access_token接口调用凭证超时时间，单位（秒）
-	RefreshToken string `json:"refresh_token,omitempty"` // 用户刷新access_token
+	RefreshToken string `json:"refresh_token,omitempty"` // 用户刷新access_token, refresh_token有效期为30天，当refresh_token失效之后
 	OpenID       string `json:"openid,omitempty"`        // 用户唯一标识，请注意，在未关注公众号时，用户访问公众号的网页，也会产生一个用户和公众号唯一的OpenID
 	Scope        string `json:"scope,omitempty"`         // 用户授权的作用域，使用逗号（,）分隔
 }

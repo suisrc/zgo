@@ -63,10 +63,10 @@ type SigninGpaAccount struct {
 	ID           int64          `db:"id"`
 	PID          sql.NullInt64  `db:"pid"`           // 上级账户
 	Account      string         `db:"account"`       // 账户
-	AccountType  int            `db:"account_type"`  // 账户类型 1:name 2:mobile 3:email 4:openid 5:unionid 6:token
+	AccountType  AccountType    `db:"account_type"`  // 账户类型 1:name 2:mobile 3:email 4:openid 5:unionid 6:token
 	PlatformKID  sql.NullString `db:"platform_kid"`  // 账户归属平台
+	OrgCode      sql.NullString `db:"org_cod"`       // 角色标识
 	UserID       sql.NullInt64  `db:"user_id"`       // 用户标识
-	OrgCod       sql.NullString `db:"org_cod"`       // 角色标识
 	Password     sql.NullString `db:"password"`      // 登录密码
 	PasswordSalt sql.NullString `db:"password_salt"` // 密码盐值
 	PasswordType sql.NullString `db:"password_type"` // 密码方式
@@ -76,6 +76,7 @@ type SigninGpaAccount struct {
 	CreatedAt    sql.NullTime   `db:"created_at"`    // 创建时间
 	UpdatedAt    sql.NullTime   `db:"updated_at"`    // 更新时间
 	Version      sql.NullInt64  `db:"version" set:"=version+1"`
+	String1      sql.NullString `db:"string_1"`
 }
 
 // QueryByID 查询
@@ -86,7 +87,7 @@ func (a *SigninGpaAccount) QueryByID(sqlx *sqlx.DB, id int64) error {
 }
 
 // QueryByAccount sql select
-func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, kid, org string) error {
+func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ AccountType, kid, org string, valid bool) error {
 	sqr := strings.Builder{}
 	sqr.WriteString("select " + sqlxc.SelectColumns(a))
 	sqr.WriteString(" from {{TP}}account")
@@ -105,15 +106,50 @@ func (a *SigninGpaAccount) QueryByAccount(sqlx *sqlx.DB, acc string, typ int, ki
 	} else {
 		sqr.WriteString(" and org_cod is null")
 	}
-	sqr.WriteString(" and status=1")
+	if valid {
+		sqr.WriteString(" and status=1")
+	}
 	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
 	// log.Println(SQL)
 	return sqlx.Get(a, SQL, params...)
 }
 
+// SelectByAccount sql select
+func (a *SigninGpaAccount) SelectByAccount(sqlx *sqlx.DB, acc string, typ AccountType, kid, org string, status StatusType, limit int, user bool) (*[]SigninGpaAccount, error) {
+	sqr := strings.Builder{}
+	sqr.WriteString("select " + sqlxc.SelectColumns(a))
+	sqr.WriteString(" from {{TP}}account")
+	sqr.WriteString(" where account=? and account_type=?")
+
+	params := []interface{}{acc, typ}
+	if kid != "" {
+		sqr.WriteString(" and platform_kid=?")
+		params = append(params, kid)
+	}
+	if org != "" {
+		sqr.WriteString(" and org_cod=?")
+		params = append(params, org)
+	}
+	if status >= 0 {
+		sqr.WriteString(" and status=?")
+		params = append(params, status)
+	}
+	if user {
+		// 必须实现归一
+		sqr.WriteString(" and user_id is not null")
+	}
+	if limit > 0 {
+		sqr.WriteString(" limit ?")
+	}
+	SQL := strings.ReplaceAll(sqr.String(), "{{TP}}", TablePrefix)
+	res := []SigninGpaAccount{}
+	err := sqlx.Select(&res, SQL, params...)
+	return &res, err
+}
+
 // QueryByParentAccount sql select
-func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ int, kid, org string) error {
-	err := a.QueryByAccount(sqlx, acc, typ, kid, org)
+func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ AccountType, kid, org string) error {
+	err := a.QueryByAccount(sqlx, acc, typ, kid, org, true)
 	if err != nil {
 		return err
 	}
@@ -123,7 +159,7 @@ func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ i
 	paccount := SigninGpaAccount{}
 	if err = paccount.QueryByID(sqlx, a.PID.Int64); err != nil {
 		return err
-	} else if paccount.AccountType == int(AccountTypeName) || paccount.Status != StatusEnable {
+	} else if paccount.AccountType == AccountTypeName || paccount.Status != StatusEnable {
 		// 主账户不是密码账户或者主账户被禁用
 		return errors.New("account pid is error")
 	}
@@ -135,7 +171,7 @@ func (a *SigninGpaAccount) QueryByParentAccount(sqlx *sqlx.DB, acc string, typ i
 }
 
 // QueryByAccountSkipStatus sql select
-func (a *SigninGpaAccount) QueryByAccountSkipStatus(sqlx *sqlx.DB, acc string, typ int, kid string) error {
+func (a *SigninGpaAccount) QueryByAccountSkipStatus(sqlx *sqlx.DB, acc string, typ AccountType, kid string) error {
 	sqr := strings.Builder{}
 	sqr.WriteString("select " + sqlxc.SelectColumns(a))
 	sqr.WriteString(" from {{TP}}account")
@@ -153,7 +189,7 @@ func (a *SigninGpaAccount) QueryByAccountSkipStatus(sqlx *sqlx.DB, acc string, t
 }
 
 // QueryByUserAndKind user and kid
-func (a *SigninGpaAccount) QueryByUserAndKind(sqlx *sqlx.DB, uid int64, typ int, kid string) error {
+func (a *SigninGpaAccount) QueryByUserAndKind(sqlx *sqlx.DB, uid int64, typ AccountType, kid string) error {
 	sqr := strings.Builder{}
 	sqr.WriteString("select " + sqlxc.SelectColumns(a))
 	sqr.WriteString(" from {{TP}}account")
@@ -171,7 +207,7 @@ func (a *SigninGpaAccount) QueryByUserAndKind(sqlx *sqlx.DB, uid int64, typ int,
 }
 
 // DeleteByUserAndKind user and kid
-func (a *SigninGpaAccount) DeleteByUserAndKind(sqlx *sqlx.DB, uid int64, typ int, kid string) error {
+func (a *SigninGpaAccount) DeleteByUserAndKind(sqlx *sqlx.DB, uid int64, typ AccountType, kid string) error {
 	sqr := strings.Builder{}
 	sqr.WriteString("delete from {{TP}}account")
 	sqr.WriteString(" where user_id=? and account_type=?")
@@ -226,11 +262,11 @@ type SigninGpaAccountToken struct {
 	TokenPID     sql.NullString `db:"token_pid"`
 	Platform     sql.NullString `db:"platform_kid"`
 	AccessToken  sql.NullString `db:"access_token"`
-	ExpiresAt    sql.NullInt64  `db:"expires_at"`
+	ExpiresAt    sql.NullTime   `db:"expires_at"`
 	RefreshToken sql.NullString `db:"refresh_token"`
-	RefreshExpAt sql.NullInt64  `db:"refresh_exp"`
+	RefreshExpAt sql.NullTime   `db:"refresh_exp"`
 	CodeToken    sql.NullString `db:"code_token"`
-	CodeExpAt    sql.NullInt64  `db:"code_exp"`
+	CodeExpAt    sql.NullTime   `db:"code_exp"`
 	CallCount    sql.NullInt64  `db:"call_count"`
 	RefreshCount sql.NullInt64  `db:"refresh_count" set:"=refresh_count+1"`
 	LastIP       sql.NullString `db:"last_ip"`

@@ -68,7 +68,7 @@ func (a *Signin) signin(c *gin.Context) {
 		return
 	}
 	if offset := strings.IndexRune(body.Username, '@'); offset > 0 {
-		body.Org = body.Username[offset+1:]
+		body.OrgCode = body.Username[offset+1:]
 		body.Username = body.Username[:offset]
 	}
 
@@ -154,10 +154,10 @@ func (a *Signin) lastSignIn(c *gin.Context, aid int64) (*schema.SigninGpaAccount
 			TokenType:    "Bearer",
 			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
-			ExpiresAt:    o2a.ExpiresAt.Int64,
-			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
+			ExpiresAt:    o2a.ExpiresAt.Time.Unix(),
+			ExpiresIn:    int64(o2a.ExpiresAt.Time.Unix() - time.Now().Unix()),
 			RefreshToken: o2a.RefreshToken.String,
-			RefreshExpAt: o2a.RefreshExpAt.Int64,
+			RefreshExpAt: o2a.RefreshExpAt.Time.Unix(),
 		})
 	}
 	return &o2a, nil
@@ -178,9 +178,9 @@ func (a *Signin) logSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, up
 		AccountID:    aid,
 		OrgCode:      sql.NullString{Valid: u.GetOrgCode() != "", String: u.GetOrgCode()},
 		AccessToken:  sql.NullString{Valid: t.GetAccessToken() != "", String: t.GetAccessToken()},
-		ExpiresAt:    sql.NullInt64{Valid: t.GetExpiresAt() > 0, Int64: t.GetExpiresAt()},
+		ExpiresAt:    sql.NullTime{Valid: t.GetExpiresAt() > 0, Time: time.Unix(t.GetExpiresAt(), 0)},
 		RefreshToken: sql.NullString{Valid: t.GetRefreshToken() != "", String: t.GetRefreshToken()},
-		RefreshExpAt: sql.NullInt64{Valid: t.GetRefreshExpAt() > 0, Int64: t.GetRefreshExpAt()},
+		RefreshExpAt: sql.NullTime{Valid: t.GetRefreshExpAt() > 0, Time: time.Unix(t.GetRefreshExpAt(), 0)},
 		LastIP:       sql.NullString{Valid: true, String: helper.GetClientIP(c)},
 		LastAt:       sql.NullTime{Valid: true, Time: time.Now()},
 	}
@@ -197,7 +197,7 @@ func (a *Signin) logSignOut(c *gin.Context, u auth.UserInfo, t string) {
 	// 销毁刷新令牌
 	o2a := schema.SigninGpaAccountToken{
 		TokenID:      u.GetTokenID(),
-		RefreshExpAt: sql.NullInt64{Valid: true, Int64: 0},
+		RefreshExpAt: sql.NullTime{Valid: true, Time: time.Unix(0, 0)},
 	}
 	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, true); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err))
@@ -229,20 +229,23 @@ func (a *Signin) refresh(c *gin.Context) {
 			TokenType:    "Bearer",
 			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
-			ExpiresAt:    o2a.ExpiresAt.Int64,
-			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
+			ExpiresAt:    o2a.ExpiresAt.Time.Unix(),
+			ExpiresIn:    o2a.ExpiresAt.Time.Unix() - time.Now().Unix(),
 			RefreshToken: o2a.RefreshToken.String,
-			RefreshExpAt: o2a.RefreshExpAt.Int64,
+			RefreshExpAt: o2a.RefreshExpAt.Time.Unix(),
 		}
 		helper.ResSuccess(c, &result)
 		return
 	}
 	// 通过刷新令牌生成新令牌
 	token, user, err := a.Auther.RefreshToken(c, o2a.AccessToken.String, func(usrInfo auth.UserInfo, expIn int) error {
-		if time.Now().Unix() > o2a.RefreshExpAt.Int64 {
+		if o2a.RefreshExpAt.Time.Unix() == 0 {
+			// 刷新令牌被销毁
+			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EESTROY", Other: "刷新令牌已销毁"})
+		} else if o2a.RefreshExpAt.Time.Before(time.Now()) {
 			// 刷新令牌已经过期， 无法执行刷新
 			// return errors.New("token is expired")
-			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "刷新令牌过期"})
+			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "刷新令牌已过期"})
 		}
 		return nil
 	})
@@ -383,7 +386,7 @@ func (a *Signin) token3new(c *gin.Context) {
 		Number1:   sql.NullInt64{Valid: true, Int64: uid},
 		String1:   sql.NullString{Valid: true, String: usr.GetTokenID()},
 		CodeToken: sql.NullString{Valid: true, String: tkn},
-		CodeExpAt: sql.NullInt64{Valid: true, Int64: time.Now().Unix() + 300},
+		CodeExpAt: sql.NullTime{Valid: true, Time: time.Now().Add(300 * time.Second)},
 	}
 	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, false); err != nil {
 		helper.FixResponse500Error(c, err, func() {
@@ -398,7 +401,7 @@ func (a *Signin) token3new(c *gin.Context) {
 
 // 获取3方令牌
 func (a *Signin) token3get(c *gin.Context) {
-	o2a := a.getSigninGpaAccountTokenByDelay(c)
+	o2a := a.getSigninGpaAccountTokenByCode(c)
 	if o2a == nil {
 		return // 结束处理
 	}
@@ -422,7 +425,7 @@ func (a *Signin) token3get(c *gin.Context) {
 
 	a.logSignIn(c, user, token, true, func(sga *schema.SigninGpaAccountToken) {
 		// 注销延迟令牌， 延迟令牌只允许使用一次
-		sga.CodeExpAt = sql.NullInt64{Valid: true, Int64: -1}
+		sga.CodeExpAt = sql.NullTime{Valid: true, Time: time.Unix(0, 0)}
 	})
 	// 令牌结果
 	result := schema.SigninResult{
@@ -440,7 +443,7 @@ func (a *Signin) token3get(c *gin.Context) {
 }
 
 // 获取旧的访问令牌
-func (a *Signin) getSigninGpaAccountTokenByDelay(c *gin.Context) *schema.SigninGpaAccountToken {
+func (a *Signin) getSigninGpaAccountTokenByCode(c *gin.Context) *schema.SigninGpaAccountToken {
 	// 需要注意, 刷新令牌只有一次有效
 	tid := c.Request.FormValue("code")
 	if tid == "" {
@@ -456,10 +459,11 @@ func (a *Signin) getSigninGpaAccountTokenByDelay(c *gin.Context) *schema.SigninG
 		}
 		return nil
 	}
-	if o2a.CodeExpAt.Int64 == -1 {
+	if o2a.CodeExpAt.Time.Unix() == 0 {
+		// Code令牌被使用
 		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-USED", Other: "令牌已使用"}))
 		return nil
-	} else if o2a.CodeExpAt.Int64 < time.Now().Unix() {
+	} else if o2a.CodeExpAt.Time.Before(time.Now()) {
 		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EXPIRED", Other: "令牌已过期"}))
 		return nil
 	}
@@ -469,10 +473,10 @@ func (a *Signin) getSigninGpaAccountTokenByDelay(c *gin.Context) *schema.SigninG
 			TokenType:    "Bearer",
 			TokenID:      o2a.TokenID,
 			AccessToken:  o2a.AccessToken.String,
-			ExpiresAt:    o2a.ExpiresAt.Int64,
-			ExpiresIn:    o2a.ExpiresAt.Int64 - time.Now().Unix(),
+			ExpiresAt:    o2a.ExpiresAt.Time.Unix(),
+			ExpiresIn:    o2a.ExpiresAt.Time.Unix() - time.Now().Unix(),
 			RefreshToken: o2a.RefreshToken.String,
-			RefreshExpAt: o2a.RefreshExpAt.Int64,
+			RefreshExpAt: o2a.RefreshExpAt.Time.Unix(),
 		}
 		helper.ResSuccess(c, &result)
 		return nil

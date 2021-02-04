@@ -3,32 +3,48 @@ package schema
 // SigninBody 登陆参数
 type SigninBody struct {
 	Username string `json:"username" binding:"required"` // 账户
-	Password string `json:"password"`                    // 密码
+	Password string `json:"passworpd"`                   // 密码
 	Captcha  string `json:"captcha"`                     // 验证码
 	Code     string `json:"code"`                        // 标识码
-	KID      string `json:"kid"`                         // 授权平台
-	Org      string `json:"org"`                         // 租户
 	Scope    string `form:"scope"`                       // 作用域
-	JWT      string `json:"jwt"`                         // JWT令牌， 高级用法， 使用非系统默认JWT令牌
+	Platform string `json:"p"`                           // 授权平台
+	OrgCode  string `json:"g"`                           // 租户
+	WebToken string `json:"w"`                           // JWT令牌密钥， 高级用法， 使用非系统默认JWT令牌
 }
 
 // SigninOfCaptcha 使用登陆发生认证信息
 type SigninOfCaptcha struct {
-	Mobile string `form:"mobile"` // 手机
-	Email  string `form:"email"`  // 邮箱
-	Openid string `form:"openid"` // openid
-	KID    string `form:"kid"`    // 平台标识
-	Org    string `form:"org"`    // 租户
+	Mobile   string `form:"mobile"` // 手机
+	Email    string `form:"email"`  // 邮箱
+	Openid   string `form:"openid"` // openid
+	Platform string `form:"p"`      // 授权平台
+	OrgCode  string `form:"g"`      // 租户
 }
 
 // SigninOfOAuth2 登陆参数
 type SigninOfOAuth2 struct {
-	Code     string `form:"code"`     // 票据
-	State    string `form:"state"`    // 验签
-	Scope    string `form:"scope"`    // 作用域
-	KID      string `form:"kid"`      // kid
-	Org      string `form:"org"`      // 租户
-	Redirect string `form:"redirect"` // redirect
+	Code     string `form:"code"`         // 票据
+	State    string `form:"state"`        // 验签
+	Scope    string `form:"scope"`        // 作用域
+	Platform string `form:"p"`            // 授权平台
+	OrgCode  string `form:"g"`            // 租户
+	WebToken string `form:"w"`            // JWT令牌密钥， 高级用法， 使用非系统默认JWT令牌
+	Redirect string `form:"redirect_uri"` // 重定向地址
+}
+
+// GetCode ...
+func (a *SigninOfOAuth2) GetCode() string {
+	return a.Code
+}
+
+// GetState ...
+func (a *SigninOfOAuth2) GetState() string {
+	return a.Scope
+}
+
+// GetScope ...
+func (a *SigninOfOAuth2) GetScope() string {
+	return a.Scope
 }
 
 // SigninResult 登陆返回值

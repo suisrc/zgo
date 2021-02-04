@@ -1,6 +1,6 @@
 -- -------------------------------------------------------
 -- build by cmd/db/mysql/mysql.go
--- time: 2021-02-03 17:23:37 CST
+-- time: 2021-02-04 16:04:08 CST
 -- -------------------------------------------------------
 -- 表结构
 -- -------------------------------------------------------
@@ -11,8 +11,8 @@ CREATE TABLE `zgo_account` (
   `account` varchar(255) NOT NULL COMMENT '账户',
   `account_type` tinyint(4) DEFAULT '1' COMMENT '账户类型',
   `platform_kid` varchar(64) DEFAULT NULL COMMENT '账户归属平台',
-  `user_id` int(11) DEFAULT NULL COMMENT '用户标识',
   `org_cod` varchar(64) DEFAULT NULL COMMENT '租户标识',
+  `user_id` int(11) DEFAULT NULL COMMENT '用户标识',
   `password` varchar(255) DEFAULT NULL COMMENT '登录密码',
   `password_salt` varchar(255) DEFAULT NULL COMMENT '密码盐值',
   `password_type` varchar(16) DEFAULT NULL COMMENT '密码方式',
@@ -26,7 +26,7 @@ CREATE TABLE `zgo_account` (
   `version` int(11) DEFAULT 0 COMMENT '数据版本',
   `string_1` varchar(255) DEFAULT NULL COMMENT '备用字段',
   `number_1` int(11) DEFAULT NULL COMMENT '备用字段',
-  UNIQUE udx_account(`account`,`account_type`,`platform_kid`),
+  UNIQUE udx_account(`account`,`account_type`,`platform_kid`,`org_cod`),
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 -- -------------------------------------------------------
@@ -193,7 +193,7 @@ CREATE TABLE `zgo_app_service_audience` (
 -- 服务实体
 CREATE TABLE `zgo_web_token` (
   `kid` varchar(64)  NOT NULL COMMENT '客户端标识',
-  `org` varchar(64) DEFAULT NULL COMMENT '租户标识',
+  `org_cod` varchar(64) DEFAULT NULL COMMENT '租户标识',
   `target` int(11) DEFAULT NULL COMMENT '终端标识',
   `type` varchar(16) DEFAULT NULL COMMENT '终端类型',
   `status` tinyint(4) DEFAULT 1 COMMENT '状态',
@@ -389,6 +389,7 @@ CREATE TABLE `zgo_platform` (
   `token_url` varchar(1024) DEFAULT NULL COMMENT '令牌地址',
   `profile_url` varchar(1024) DEFAULT NULL COMMENT '个人资料地址',
   `signin_url` varchar(128) DEFAULT NULL COMMENT '重定向回调地址',
+  `token_kid` varchar(255) DEFAULT NULL COMMENT '当前使用的令牌',
   `js_secret` varchar(255) DEFAULT NULL COMMENT 'javascript密钥',
   `state_secret` varchar(255) DEFAULT NULL COMMENT '回调state密钥',
   `callback` tinyint(4) DEFAULT 0 COMMENT '是否支持回调',
@@ -497,9 +498,9 @@ CREATE TABLE `zgo_i18n_language` (
 -- -------------------------------------------------------
 ALTER TABLE `zgo_account`
 ADD CONSTRAINT `fk_account_user_id` FOREIGN KEY (`user_id`)  REFERENCES `zgo_user` (`id`),
-ADD CONSTRAINT `fk_account_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_account_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_account` (`id`),
-ADD CONSTRAINT `fk_account_platform_kid` FOREIGN KEY (`platform_kid`)  REFERENCES `zgo_platform` (`kid`);
+ADD CONSTRAINT `fk_account_platform_kid` FOREIGN KEY (`platform_kid`)  REFERENCES `zgo_platform` (`kid`),
+ADD CONSTRAINT `fk_account_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_user`
 ADD CONSTRAINT `fk_user_pid` FOREIGN KEY (`pid`)  REFERENCES `zgo_user` (`id`);
@@ -539,7 +540,7 @@ ADD CONSTRAINT `fk_app_service_audience_sid` FOREIGN KEY (`svc_id`)  REFERENCES 
 ADD CONSTRAINT `fk_app_service_audience_ocd` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_web_token`
-ADD CONSTRAINT `fk_web_token_org` FOREIGN KEY (`org`)  REFERENCES `zgo_tenant` (`code`);
+ADD CONSTRAINT `fk_web_token_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_role`
 ADD CONSTRAINT `fk_role_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`),
@@ -556,14 +557,14 @@ ADD CONSTRAINT `fk_user_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_r
 ADD CONSTRAINT `fk_user_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
 
 ALTER TABLE `zgo_account_role`
+ADD CONSTRAINT `fk_account_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
 ADD CONSTRAINT `fk_account_role_account` FOREIGN KEY (`account`)  REFERENCES `zgo_user` (`account_id`),
-ADD CONSTRAINT `fk_account_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_account_role_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`);
+ADD CONSTRAINT `fk_account_role_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`);
 
 ALTER TABLE `zgo_role_policy`
+ADD CONSTRAINT `fk_role_policy_plcy_id` FOREIGN KEY (`plcy_id`)  REFERENCES `zgo_policy` (`id`),
 ADD CONSTRAINT `fk_role_policy_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_tenant` (`code`),
-ADD CONSTRAINT `fk_role_policy_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`),
-ADD CONSTRAINT `fk_role_policy_plcy_id` FOREIGN KEY (`plcy_id`)  REFERENCES `zgo_policy` (`id`);
+ADD CONSTRAINT `fk_role_policy_role_id` FOREIGN KEY (`role_id`)  REFERENCES `zgo_role` (`id`);
 
 ALTER TABLE `zgo_policy_service_action`
 ADD CONSTRAINT `fk_policy_service_action_sid` FOREIGN KEY (`svc_id`)  REFERENCES `zgo_app_service` (`id`);
@@ -584,7 +585,7 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- -------------------------------------------------------
 -- insert into 
 -- -------------------------------------------------------
--- INSERT INTO `zgo_account`(`id`, `pid`, `account`, `account_type`, `platform_kid`, `user_id`, `org_cod`, `password`, `password_salt`, `password_type`, `verify_secret`, `custom_id`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_account`(`id`, `pid`, `account`, `account_type`, `platform_kid`, `org_cod`, `user_id`, `password`, `password_salt`, `password_type`, `verify_secret`, `custom_id`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_user`(`id`, `pid`, `kid`, `type`, `name`, `status`, `delete`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_user_detail`(`id`, `avatar`, `description`, `creator`, `created_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_user_security`(`id`, `mfa13`, `phone`, `email`, `version`, `string_1`, `number_1`) VALUES ();
@@ -596,7 +597,7 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- INSERT INTO `zgo_app_service`(`id`, `name`, `code`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_app_service_org`(`svc_id`, `org_cod`, `expired`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_app_service_audience`(`id`, `svc_id`, `org_cod`, `audience`, `resource`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
--- INSERT INTO `zgo_web_token`(`kid`, `org`, `target`, `type`, `status`, `jwt_expired`, `jwt_refresh`, `jwt_type`, `jwt_method`, `jwt_secret`, `jwt_getter`, `jwt_issuer`, `jwt_audience`, `signin_url`, `signin_check`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_web_token`(`kid`, `org_cod`, `target`, `type`, `status`, `jwt_expired`, `jwt_refresh`, `jwt_type`, `jwt_method`, `jwt_secret`, `jwt_getter`, `jwt_issuer`, `jwt_audience`, `signin_url`, `signin_check`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_role`(`id`, `kid`, `svc_id`, `name`, `org_cod`, `org_adm`, `status`, `description`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_role_role`(`pid`, `cid`, `org_cod`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_user_role`(`user_id`, `role_id`, `org_cod`, `expired`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
@@ -607,7 +608,7 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- INSERT INTO `zgo_policy_statement`(`pid`, `ver`, `effect`, `action`, `resource`, `condition`, `description`) VALUES ();
 -- INSERT INTO `zgo_policy_casbin_model`(`id`, `ver`, `org`, `name`, `statement`, `description`, `status`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_policy_casbin_rule`(`mid`, `ver`, `p_type`, `v0`, `v1`, `v2`, `v3`, `v4`, `v5`, `v6`, `v7`, `v8`, `v9`, `created_at`) VALUES ();
--- INSERT INTO `zgo_platform`(`id`, `kid`, `type`, `signin`, `org_cod`, `avatar`, `status`, `description`, `app_id`, `app_secret`, `agent_id`, `agent_secret`, `suite_id`, `suite_secret`, `authorize_url`, `token_url`, `profile_url`, `signin_url`, `js_secret`, `state_secret`, `callback`, `cb_domain`, `cb_scheme`, `cb_encrypt`, `cb_token`, `cb_encoding`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
+-- INSERT INTO `zgo_platform`(`id`, `kid`, `type`, `signin`, `org_cod`, `avatar`, `status`, `description`, `app_id`, `app_secret`, `agent_id`, `agent_secret`, `suite_id`, `suite_secret`, `authorize_url`, `token_url`, `profile_url`, `signin_url`, `token_kid`, `js_secret`, `state_secret`, `callback`, `cb_domain`, `cb_scheme`, `cb_encrypt`, `cb_token`, `cb_encoding`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`) VALUES ();
 -- INSERT INTO `zgo_token`(`token_kid`, `account_id`, `org_cod`, `token_pid`, `platform_kid`, `access_token`, `expires_at`, `refresh_token`, `refresh_exp`, `code_token`, `code_exp`, `call_count`, `sync_lock`, `refresh_count`, `last_ip`, `last_at`, `error_code`, `error_message`, `creator`, `created_at`, `updated_at`, `version`, `string_1`, `number_1`, `string_2`, `number_2`, `string_3`, `number_3`) VALUES ();
 -- INSERT INTO `zgo_tag_system`(`type`, `bid`, `tag`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
 -- INSERT INTO `zgo_tag_custom`(`type`, `bid`, `tag`, `deleted`, `creator`, `created_at`, `updated_at`, `version`) VALUES ();
@@ -620,8 +621,8 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- ALTER TABLE `zgo_account`
 -- DROP FOREIGN KEY `fk_account_pid`,
 -- DROP FOREIGN KEY `fk_account_platform_kid`,
--- DROP FOREIGN KEY `fk_account_user_id`,
--- DROP FOREIGN KEY `fk_account_org_cod`;
+-- DROP FOREIGN KEY `fk_account_org_cod`,
+-- DROP FOREIGN KEY `fk_account_user_id`;
 -- ALTER TABLE `zgo_user`
 -- DROP FOREIGN KEY `fk_user_pid`;
 -- ALTER TABLE `zgo_user_detail`
@@ -637,27 +638,27 @@ ADD CONSTRAINT `fk_platform_org_cod` FOREIGN KEY (`org_cod`)  REFERENCES `zgo_te
 -- DROP FOREIGN KEY `fk_store_id`,
 -- DROP FOREIGN KEY `fk_store_org_cod`;
 -- ALTER TABLE `zgo_tenant_user`
--- DROP FOREIGN KEY `fk_org_user_uid`,
--- DROP FOREIGN KEY `fk_org_user_ocd`;
+-- DROP FOREIGN KEY `fk_org_user_ocd`,
+-- DROP FOREIGN KEY `fk_org_user_uid`;
 -- ALTER TABLE `zgo_user_union`
--- DROP FOREIGN KEY `fk_user_union_user_id`,
 -- DROP FOREIGN KEY `fk_user_union_pid`,
--- DROP FOREIGN KEY `fk_user_union_org_cod`;
+-- DROP FOREIGN KEY `fk_user_union_org_cod`,
+-- DROP FOREIGN KEY `fk_user_union_user_id`;
 -- ALTER TABLE `zgo_app_service_org`
 -- DROP FOREIGN KEY `fk_app_service_org_sid`,
 -- DROP FOREIGN KEY `fk_app_service_org_orcd`;
 -- ALTER TABLE `zgo_app_service_audience`
--- DROP FOREIGN KEY `fk_app_service_audience_ocd`,
--- DROP FOREIGN KEY `fk_app_service_audience_sid`;
+-- DROP FOREIGN KEY `fk_app_service_audience_sid`,
+-- DROP FOREIGN KEY `fk_app_service_audience_ocd`;
 -- ALTER TABLE `zgo_web_token`
--- DROP FOREIGN KEY `fk_web_token_org`;
+-- DROP FOREIGN KEY `fk_web_token_org_cod`;
 -- ALTER TABLE `zgo_role`
 -- DROP FOREIGN KEY `fk_role_sid`,
 -- DROP FOREIGN KEY `fk_role_org_cod`;
 -- ALTER TABLE `zgo_role_role`
+-- DROP FOREIGN KEY `fk_role_role_pid`,
 -- DROP FOREIGN KEY `fk_role_role_cid`,
--- DROP FOREIGN KEY `fk_role_role_org_cod`,
--- DROP FOREIGN KEY `fk_role_role_pid`;
+-- DROP FOREIGN KEY `fk_role_role_org_cod`;
 -- ALTER TABLE `zgo_user_role`
 -- DROP FOREIGN KEY `fk_user_role_user_id`,
 -- DROP FOREIGN KEY `fk_user_role_role_id`,

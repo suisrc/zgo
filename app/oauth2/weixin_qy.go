@@ -5,7 +5,6 @@ import (
 	"context"
 	"database/sql"
 	"errors"
-	"net/url"
 	"strconv"
 	"strings"
 	"sync"
@@ -41,17 +40,22 @@ type WeixinQy struct {
 	parseQrError    error                // qr error
 }
 
+// GetUser ...
+func (a *WeixinQy) GetUser(c *gin.Context, rp RequestPlatform, rt RequestToken, relation, userid string) (*UserInfo, error) {
+	return nil, errors.New("no implemented")
+}
+
 // Handle handle
-func (a *WeixinQy) Handle(c *gin.Context, body RequestParams, platfrm RequestPlatfrm, member bool, find func(string) (int, error)) error {
-	if err := a.CheckPlatfrmConfig(c, platfrm); err != nil {
-		return err
+func (a *WeixinQy) Handle(c *gin.Context, body RequestParams, platform RequestPlatform, token1 RequestToken, oauth2 RequestOAuth2) error {
+	if platform.GetAppID() == "" || platform.GetAgentID() == "" || (platform.GetAppSecret() == "" && platform.GetAgentSecret() == "") {
+		return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONFIG", Other: "应用配置异常"})
 	}
 	// 重定向选择
 	if body.GetCode() == "" {
 		if strings.Contains(c.Request.UserAgent(), "MicroMessenger/") {
-			return a.Connect(c, body, platfrm)
+			return a.Connect(c, body, platform, oauth2)
 		}
-		return a.QrConnect(c, body, platfrm)
+		return a.QrConnect(c, body, platform, oauth2)
 	}
 	// 微信服务器重定向
 	if body.GetState() == "" {
@@ -64,11 +68,17 @@ func (a *WeixinQy) Handle(c *gin.Context, body RequestParams, platfrm RequestPla
 
 	// 获取当前用户信息
 	user := WeixinQyUserInfo{}
-	if err := WeixinQyExecWithAccessToken(c, a.GPA, a.Storer, platfrm.GetID(), func(token string) error {
+	if err := WeixinQyExecWithAccessToken(c, a.GPA, a.Storer, platform, token1, func(token string) error {
 		if err := user.GetUserInfo(token, body.GetCode()); err != nil {
 			return err
 		} else if user.ErrCode != 0 || user.ErrMsg != "ok" {
 			return &user // 微信服务器异常, 当发生42001异常,会直接获取令牌重试一次
+		} else if user.OpenID == "" && user.UserID != "" {
+			// 成员用户， 强制取成员openid， 归一操作
+			openid := WeixinQyOpenid{}
+			if err := openid.ConvertToOpenid(token, user.UserID); err == nil && openid.ErrCode == 0 {
+				user.OpenID = openid.OpenID
+			}
 		}
 		return nil
 	}); err != nil {
@@ -76,49 +86,31 @@ func (a *WeixinQy) Handle(c *gin.Context, body RequestParams, platfrm RequestPla
 	}
 
 	if user.UserID != "" {
-		_, err := find(user.UserID)
+		_, err := oauth2.FindAccount("member", user.OpenID, user.UserID, user.DeviceID)
 		return err
 	}
 	if user.OpenID != "" {
-		if member {
-			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-MEMBER", Other: "非成员用户"})
+		// return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-MEMBER", Other: "非成员用户"})
+		if user.ExternalUserid != "" {
+			// 外部联系人
+			_, err := oauth2.FindAccount("external", user.OpenID, user.ExternalUserid, user.DeviceID)
+			return err
 		}
-		_, err := find(user.OpenID)
+		_, err := oauth2.FindAccount("none", user.OpenID, "", user.DeviceID)
 		return err
 	}
 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-OPENID", Other: "无法获取用户的OPEN-ID"})
 }
 
-// CheckPlatfrmConfig check Config
-func (a *WeixinQy) CheckPlatfrmConfig(c *gin.Context, platfrm RequestPlatfrm) error {
-	// 验证
-	// if !o2p.AppID.Valid || !o2p.AgentID.Valid || !o2p.AgentSecret.Valid {
-	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONFIG", Other: "应用配置异常"})
-	// }
-	// if !o2p.Status.Valid || !o2p.Status.Bool {
-	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-DISABLE", Other: "应用被禁用"})
-	// }
-	// if !o2p.Signin.Valid || !o2p.Signin.Bool {
-	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOSIGNIN", Other: "应用无法授权"})
-	// }
-	return platfrm.CheckConfig()
-}
-
 // Connect 应用认证
-func (a *WeixinQy) Connect(c *gin.Context, body RequestParams, platfrm RequestPlatfrm) error {
+func (a *WeixinQy) Connect(c *gin.Context, body RequestParams, platform RequestPlatform, oauth2 RequestOAuth2) error {
 	// 未取得code内容,需要重定向回到微信服务器
 	state := crypto.UUID(32)
 	a.Storer.Set1(c, state, time.Duration(60)*time.Second)
 
-	uri := c.Query("redirect_uri")
-	if uri == "" {
-		uri = GetRedirectURIByOAuth2Platfrm(c, platfrm)
-		uri = url.QueryEscape(uri) // 进行URL编码
-	} else if uri[:4] != "http" {
-		uri = url.PathEscape("https://"+c.Request.Host) + uri
-	}
+	uri := GetRedirectURIByOAuth2Platform(c, c.Query("redirect_uri"), platform, oauth2)
 	scope := "snsapi_base"
-	appid := platfrm.GetAppID()
+	appid := platform.GetAppID()
 	// 参数
 	params := helper.H{
 		"appid":         appid,  // 公众号的唯一标识
@@ -150,20 +142,14 @@ func (a *WeixinQy) Connect(c *gin.Context, body RequestParams, platfrm RequestPl
 }
 
 // QrConnect 扫码认证
-func (a *WeixinQy) QrConnect(c *gin.Context, body RequestParams, platfrm RequestPlatfrm) error {
+func (a *WeixinQy) QrConnect(c *gin.Context, body RequestParams, platform RequestPlatform, oauth2 RequestOAuth2) error {
 	// 未取得code内容,需要重定向回到微信服务器
 	state := crypto.UUID(32)
 	a.Storer.Set1(c, state, time.Duration(300)*time.Second) // 5分钟等待,如果5分钟没有进行扫描登陆,直接拒绝
 
-	uri := c.Query("redirect_uri")
-	if uri == "" {
-		uri = GetRedirectURIByOAuth2Platfrm(c, platfrm)
-		uri = url.QueryEscape(uri) // 进行URL编码
-	} else if uri[:4] != "http" {
-		uri = url.PathEscape("https://"+c.Request.Host) + uri
-	}
-	appid := platfrm.GetAppID()
-	agentid := platfrm.GetAgentID()
+	uri := GetRedirectURIByOAuth2Platform(c, c.Query("redirect_uri"), platform, oauth2)
+	appid := platform.GetAppID()
+	agentid := platform.GetAgentID()
 	// 参数
 	params := helper.H{
 		"appid":        appid,   // 公众号的唯一标识
@@ -193,58 +179,40 @@ func (a *WeixinQy) QrConnect(c *gin.Context, body RequestParams, platfrm Request
 	}
 }
 
-// GetRedirectURIByOAuth2Platfrm Redirect URI by OAuth2Platfrm
-func GetRedirectURIByOAuth2Platfrm(c *gin.Context, platfrm RequestPlatfrm) string {
-	uri := platfrm.GetSigninURL()
-	if uri == "" {
-		uri = "https://" + c.Request.Host
-	}
-	uri += c.Request.RequestURI
-	return uri
-}
-
 //===================================================================================================AccessToken-START
 
 // WeixinQyExecWithAccessToken 执行访问, 带有token
-func WeixinQyExecWithAccessToken(c context.Context, GPA gpa.GPA, Storer store.Storer, PlatformID int, fn func(token string) error) error {
-	tokenFunc := func(c context.Context, plid int) (*TokenOAuth2, error) {
-		// o2p := &schema.SigninGpaOAuth2Platfrm{}
-		// if err := o2p.QueryByID(GPA.Sqlx, plid); err != nil {
-		// 	return nil, err
-		// }
-		// // 检查配置
-		// if !o2p.AppID.Valid || !o2p.AgentID.Valid || !o2p.AgentSecret.Valid {
-		// 	if ctx, ok := c.(*gin.Context); ok {
-		// 		return nil, helper.New0Error(ctx, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONFIG", Other: "应用配置异常"})
-		// 	}
-		// 	return nil, errors.New("oauth2 config error: id_" + strconv.Itoa(PlatformID))
-		// }
-		//  获取令牌
+func WeixinQyExecWithAccessToken(c context.Context, GPA gpa.GPA, Storer store.Storer, platform RequestPlatform, token1 RequestToken, fn func(token string) error) error {
+	GetAccessToken := func() (*AccessToken, error) {
 		token := WeixinQyAccessToken{}
-		if err := token.GetAccessToken("", ""); err != nil {
+		// 优先使用代理令牌， 如果代理令牌不存在， 使用应用令牌（理论上， 应用令牌具有更高的权限）
+		secret := helper.IfString(platform.GetAgentSecret() != "", platform.GetAgentSecret(), platform.GetAppSecret())
+		if err := token.GetAccessToken(platform.GetAppID(), secret); err != nil {
 			return nil, err // 网络异常
 		} else if token.ErrCode != 0 {
 			return nil, &token // 微信服务器异常
 		} else if token.AccessToken == "" {
-			return nil, errors.New(token.ErrMsg)
+			return nil, errors.New(token.ErrMsg) // 未知异常
 		}
 		tid, tok := helper.GetCtxValueToString(c, helper.ResTokenKey)
-		return &TokenOAuth2{
-			PlatformID:  PlatformID,
+		return &AccessToken{
+			Platform:    platform.GetID(),
 			TokenID:     sql.NullString{Valid: tok, String: tid},
 			AccessToken: sql.NullString{Valid: true, String: token.AccessToken},
 			ExpiresIn:   sql.NullInt64{Valid: true, Int64: int64(token.ExpiresIn)},
-			ExpiresAt:   sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-30) * time.Second)}, // 有效期缩短30秒
+			ExpiresAt:   sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-120) * time.Second)}, // 有效期缩短120秒
 		}, nil
 	}
 	manager := &TokenManager{
 		GPA:          GPA,
-		Key:          "weixin:qy:platform_id_" + strconv.Itoa(PlatformID),
-		PlatformID:   PlatformID,
+		TokenKey:     "token:weixin:qy:platform_id_" + strconv.Itoa(int(platform.GetID())),
+		Platform:     platform.GetID(),
 		Storer:       Storer,
+		OAuth2Handle: token1,
+		NewTokenFunc: GetAccessToken,
 		MaxCacheIdle: 300,
 		MinCacheIdle: 60,
-		NewTokenFunc: tokenFunc,
+		NewCacheIdle: 1800,
 	}
 	// 执行内容
 	execFunc := func(token string) (bool, interface{}, error) {
@@ -317,14 +285,16 @@ b) 非企业成员授权时返回示例如下：
    "errcode": 0,
    "errmsg": "ok",
    "OpenId":"OPENID",
-   "DeviceId":"DEVICEID"
+   "DeviceId":"DEVICEID",
+   "external_userid":"EXTERNAL_USERID"
 }
 */
 type WeixinQyUserInfo struct {
 	WeixinQyError
-	OpenID   string `json:"OpenId,omitempty"`   // 非企业成员的标识，对当前企业唯一。不超过64字节
-	UserID   string `json:"UserId,omitempty"`   // 成员UserID。若需要获得用户详情信息，可调用通讯录接口：读取成员。如果是互联企业，则返回的UserId格式如：CorpId/userid
-	DeviceID string `json:"DeviceId,omitempty"` // 手机设备号(由企业微信在安装时随机生成，删除重装会改变，升级不受影响)
+	OpenID         string `json:"OpenId,omitempty"`          // 非企业成员的标识，对当前企业唯一。不超过64字节
+	UserID         string `json:"UserId,omitempty"`          // 成员UserID。若需要获得用户详情信息，可调用通讯录接口：读取成员。如果是互联企业，则返回的UserId格式如：CorpId/userid
+	DeviceID       string `json:"DeviceId,omitempty"`        // 手机设备号(由企业微信在安装时随机生成，删除重装会改变，升级不受影响)
+	ExternalUserid string `json:"external_userid,omitempty"` // 外部联系人id，当且仅当用户是企业的客户，且跟进人在应用的可见范围内时返回。
 }
 
 // GetUserInfo 获取访问令牌
@@ -339,6 +309,34 @@ func (a *WeixinQyUserInfo) GetUserInfo(token, code string) error {
 		SetQuery(gout.H{
 			"access_token": token,
 			"code":         code,
+		}).
+		BindJSON(a).
+		Do()
+}
+
+// WeixinQyOpenid ...
+type WeixinQyOpenid struct {
+	WeixinQyError
+	OpenID string `json:"openid,omitempty"` // 非企业成员的标识，对当前企业唯一。不超过64字节
+}
+
+// ConvertToOpenid 获取访问令牌
+// https://work.weixin.qq.com/api/doc/90000/90135/90202
+/*
+权限说明：
+成员必须处于应用的可见范围内
+
+该接口使用场景为企业支付，在使用企业红包和向员工付款时，需要自行将企业微信的userid转成openid。
+注：需要成员使用微信登录企业微信或者关注微工作台（原企业号）才能转成openid;
+如果是外部联系人，请使用外部联系人openid转换转换openid
+*/
+func (a *WeixinQyOpenid) ConvertToOpenid(token, userid string) error {
+	return gout.POST(WeixinQyAPI + " https://qyapi.weixin.qq.com/cgi-bin/user/convert_to_openid").
+		SetQuery(gout.H{
+			"access_token": token,
+		}).
+		SetBody(gout.H{
+			"userid": userid,
 		}).
 		BindJSON(a).
 		Do()
