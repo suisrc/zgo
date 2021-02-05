@@ -19,7 +19,6 @@ const (
 // UserInfo 用户信息
 type UserInfo interface {
 	GetUserID() string
-	GetRoleID() string
 }
 
 // GetUserInfo 用户

@@ -200,7 +200,7 @@ func (a *Signin) LogSignOut(c *gin.Context, u auth.UserInfo, t string) {
 	// 销毁刷新令牌
 	o2a := schema.SigninGpaAccountToken{
 		TokenID:      u.GetTokenID(),
-		RefreshExpAt: sql.NullTime{Valid: true, Time: time.Unix(0, 0)},
+		RefreshExpAt: sql.NullTime{Valid: true, Time: time.Unix(1, 0)},
 	}
 	if err := o2a.UpdateAndSaveByTokenKID2(a.Sqlx2, true); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err))
@@ -242,7 +242,7 @@ func (a *Signin) refresh(c *gin.Context) {
 	}
 	// 通过刷新令牌生成新令牌
 	token, user, err := a.Auther.RefreshToken(c, o2a.AccessToken.String, func(usrInfo auth.UserInfo, expIn int) error {
-		if o2a.RefreshExpAt.Time.Unix() == 0 {
+		if o2a.RefreshExpAt.Time.Unix() == 1 {
 			// 刷新令牌被销毁
 			return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-EESTROY", Other: "刷新令牌已销毁"})
 		} else if o2a.RefreshExpAt.Time.Before(time.Now()) {
@@ -428,7 +428,7 @@ func (a *Signin) token3get(c *gin.Context) {
 
 	a.LogSignIn(c, user, token, true, func(sga *schema.SigninGpaAccountToken) {
 		// 注销延迟令牌， 延迟令牌只允许使用一次
-		sga.CodeExpAt = sql.NullTime{Valid: true, Time: time.Unix(0, 0)}
+		sga.CodeExpAt = sql.NullTime{Valid: true, Time: time.Unix(1, 0)}
 	})
 	// 令牌结果
 	result := schema.SigninResult{
@@ -462,7 +462,7 @@ func (a *Signin) getSigninGpaAccountTokenByCode(c *gin.Context) *schema.SigninGp
 		}
 		return nil
 	}
-	if o2a.CodeExpAt.Time.Unix() == 0 {
+	if o2a.CodeExpAt.Time.Unix() == 1 {
 		// Code令牌被使用
 		helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-USED", Other: "令牌已使用"}))
 		return nil

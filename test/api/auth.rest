@@ -1,8 +1,8 @@
 @base_url=http://127.0.0.1
 
-@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiIxMjcuMC4wLjEiLCJleHAiOjE2MTI1Mzk0OTYsImp0aSI6IjFnMXFpaTgxMmxqMzRtb2UzeTNkcng4bm41NTJ0dGoiLCJpYXQiOjE2MTI1MzIyOTYsImlzcyI6IjEyNy4wLjAuMSIsIm5iZiI6MTYxMjUzMjI5Niwic3ViIjoidTAwMHh4MTAwMDAxMjAyMTAxMTJ4eDEwMDAwMjExMTEwMDAwMDAwMSIsImF0aSI6IlEwanU2MXVEc0NDYjl6cW1GZ3VtQ1M2MTY4XzIxQnZpQUozamdweHFDZ2c9IiwiYXRjIjoiMTIzOURLY2oxMjM5REtjajEyMzlES2NqMTIzOURLY2oxMjM5REtjaiIsIm5hbSI6Iui1oui_qua1i-ivlTIiLCJyb3MiOlsibGhkZzpPcGVyYXRvciIsIk9wZXJhdG9yT3JnIl0sIm9nYyI6Ik9SR0NNMzU1OCIsInNjbyI6InNuc2FwaV9sb2dpbiJ9.QvRxjvj5CMeTmni8LxuYX6KagtzNe3t4uePrHYodcAKl3chAyAwJBnnGnWff7FbNyq-2kzb9IK9aKSNqeWVVlw
+@bearer=eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJsaGRnMi5kZXYuazhzLmxvY2FsIiwiZXhwIjoxNjEyNTQ5NzYyLCJqdGkiOiIxZzFxc2oyMTJucDk2ZXNycG83dnh1Y2s3ZG00M2d6IiwiaWF0IjoxNjEyNTQyNTYyLCJpc3MiOiJsaGRnMi5kZXYuazhzLmxvY2FsIiwibmJmIjoxNjEyNTQyNTYyLCJhdGkiOiJQMWRsSjZqd3k3ODI1OGdQaGRSVzN0R0J6Qnk3N3ZwSnU4SGJ2ZGh0QUpRPSIsImF0YyI6IjEyMzlES2NqMTIzOURLY2oxMjM5REtjajEyMzlES2NqMTIzOURLY2oiLCJuYW0iOiJpdC0xMDAwMDQiLCJvZ2MiOiJPUkdDTTM1NTgifQ.dlDfdyrhDhfjmcynprAkzZynUI9ief9jf1ipN18lkPRAIerUm0MNUe08E4J_HiAff7AUJ9SSdKwtWGG-PVrV9w
 
-@refresh_token=1g16unr12lsdmkd6h3x1dznby4k9bme_gf79fkq0u8w2u3dz8ohu1g16unrob5mplr22g0t
+@refresh_token=1g1qscl12nz1j7ef1ytqav2meet3xqc_w0h12uk0nwu7kinizs711g1qsclppn553k52n0o
 
 @code=1g12fe569tootc0tp9hlp1f1c764d_icf32o640emkc0oeet60j
 
@@ -15,8 +15,13 @@ Content-Type: application/json
   "g": "ORGCM3558",
   "scope": "snsapi_login",
   "password": "123456",
-  "username": "it-100002"
+  "username": "it-100004"
 }
+
+###
+Get {{base_url}}/api/ka/v1/signout
+Content-Type: application/json
+Authorization: Bearer {{bearer}}
 
 ###
 Get {{base_url}}/api/ka/v1/user/current
