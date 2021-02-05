@@ -33,7 +33,7 @@ type CasbinRule struct {
 
 // Adapter 适配器
 type Adapter struct {
-	DB     *sqlx.DB // database
+	DB2    *sqlx.DB // database
 	Tbl    string   //table name
 	Mid    int64    // model id
 	Ver    string   // model ver
@@ -44,9 +44,9 @@ type Adapter struct {
 // var _ persist.FilteredAdapter = (*Adapter)(nil)
 
 // NewCasbinAdapter is the constructor for Adapter with existed connection
-func NewCasbinAdapter(db *sqlx.DB, tbl string, mid int64, ver string) *Adapter {
+func NewCasbinAdapter(db2 *sqlx.DB, tbl string, mid int64, ver string) *Adapter {
 	a := &Adapter{
-		DB:  db,
+		DB2: db2,
 		Tbl: tbl,
 		Mid: mid,
 		Ver: ver,
@@ -98,7 +98,7 @@ func (a *Adapter) SavePolicy(model model.Model) (err error) {
 	if !a.Enable {
 		return nil // 未启用， 阻止持久化
 	}
-	err = withTx(a.DB, func(tx *sqlx.Tx) (err error) {
+	err = withTx(a.DB2, func(tx *sqlx.Tx) (err error) {
 		lines := []CasbinRule{}
 		for ptype, ast := range model["p"] {
 			for _, rule := range ast.Policy {
@@ -165,7 +165,7 @@ func (a *Adapter) RemovePolicies(sec string, ptype string, rules [][]string) (er
 }
 
 func (a *Adapter) ensureTable() {
-	_, err := a.DB.Exec(fmt.Sprintf("SELECT 1 FROM `%s` LIMIT 1", a.Tbl))
+	_, err := a.DB2.Exec(fmt.Sprintf("SELECT 1 FROM `%s` LIMIT 1", a.Tbl))
 	if err != nil {
 		panic(err)
 	}
@@ -174,7 +174,7 @@ func (a *Adapter) ensureTable() {
 func (a *Adapter) queryPolicies() (rules *[]CasbinRule, err error) {
 	rules = new([]CasbinRule)
 	query := fmt.Sprintf("SELECT * FROM `%s` WHERE mid = ? and ver = ?", a.Tbl)
-	err = a.DB.Select(rules, query, a.Mid, a.Ver)
+	err = a.DB2.Select(rules, query, a.Mid, a.Ver)
 	// for _, r := range *rules {
 	// 	log.Println(r)
 	// }

@@ -70,6 +70,14 @@ func (a *CasbinGpaSvcOrg) QueryByOrgAndSvc(sqlx *sqlx.DB, org string, sid int64)
 // TableCasbinRule ...
 var TableCasbinRule = TablePrefix + "policy_casbin_rule"
 
+// HasRules 角色策略规则表被误删自动重建
+func (a *CasbinGpaModel) HasRules(sqlx *sqlx.DB, mid int64, ver string) bool {
+	query := "SELECT mid FROM " + TableCasbinRule + " WHERE mid = ? and ver = ? limit 1"
+	err := sqlx.Get(&sql.NullString{}, query, mid, ver)
+	// log.Println(err)
+	return err == nil
+}
+
 // CasbinGpaModel model
 type CasbinGpaModel struct {
 	ID          int64          `db:"id"`

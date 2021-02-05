@@ -478,7 +478,7 @@ func (a *CasbinAuther) GetEnforcer2(conf config.Casbin, user auth.UserInfo,
 		}
 		// *Adapter
 		// 数据库访问适配器（使用redis缓存请改写这里）
-		adapter := NewCasbinAdapter(a.Sqlx, schema.TableCasbinRule, cps.Mid, cps.Ver)
+		adapter := NewCasbinAdapter(a.Sqlx2, schema.TableCasbinRule, cps.Mid, cps.Ver)
 		// 构建新的认证引擎
 		e, err := casbin.NewSyncedEnforcer(m, adapter)
 		if err != nil {
@@ -577,7 +577,7 @@ func (a *CasbinAuther) QueryCasbinPolicies(org, ver string) (*CasbinPolicy, erro
 	} else {
 		c.ModelText = CasbinPolicyModel + CasbinDefaultMatcher
 	}
-	if cgm.Status == schema.StatusEnable {
+	if cgm.Status == schema.StatusEnable && cgm.HasRules(a.Sqlx2, c.Mid, c.Ver) {
 		// 访问策略已经构建完成，不用重新构建
 		return &c, nil
 	} else if cgm.Status == schema.StatusDisable {
@@ -594,6 +594,12 @@ func (a *CasbinAuther) QueryCasbinPolicies(org, ver string) (*CasbinPolicy, erro
 	// 获取基础配置访问策略
 	if err := a.CreateCasbinPolicy(org, &c); err != nil {
 		return nil, err
+	}
+	if len(c.Grouping) == 0 && len(c.Policies) == 0 {
+		// 无法处理规则, 给出默认无用规则
+		// sub,  svc, org, path, meth, eft, c8n
+		pp := []string{"none", "", "", "", "", "deny", ""}
+		c.Policies = append(c.Policies, pp)
 	}
 	c.New = true // 模型需要重新构建
 	return &c, nil
