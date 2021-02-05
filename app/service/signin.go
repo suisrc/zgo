@@ -637,7 +637,11 @@ func (a *Signin) findAccountByOAuth2Code(c *gin.Context, b *schema.SigninOfOAuth
 		if val != "" {
 			t3n := schema.OAuth2GpaAccountToken{}
 			t3n.QueryByPlatformAndCode2(a.Sqlx2, b.Platform, val)
-			if t3n.AccountID.Int64 > 0 && t3n.TokenType.Int32 == 2 && t3n.CodeExpAt.Valid && time.Now().Before(t3n.ExpiresAt.Time) {
+			// TokenType: 2, 标识是来自三方授权令牌
+			// ErrCode: "", 标识该令牌未被主动销毁
+			// CodeExpAt: > now, 标识授权有效
+			if t3n.AccountID.Int64 > 0 && t3n.TokenType.Int32 == 2 && t3n.ErrCode.String == "" &&
+				t3n.CodeExpAt.Valid && time.Now().Before(t3n.ExpiresAt.Time) {
 				if account.QueryByID(a.Sqlx, t3n.AccountID.Int64); account.ID > 0 {
 					// 直接查询上次认证信息, 该方法存在安全隐患, 但是可以减少OAuth2认证次数
 					helper.SetCtxValue(c, helper.ResTknKey, val)
