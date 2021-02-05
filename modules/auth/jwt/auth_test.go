@@ -98,6 +98,11 @@ func (u *UserInfo) GetAccount() string {
 	return ""
 }
 
+// GetTokenPID xxx
+func (u *UserInfo) GetTokenPID() string {
+	return ""
+}
+
 // GetAccount2 xxx
 func (u *UserInfo) GetAccount2() string {
 	return ""

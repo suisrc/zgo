@@ -280,29 +280,29 @@ type SigninGpaAccountToken struct {
 	String1      sql.NullString `db:"string_1"` // 扩展字段
 }
 
-// QueryByRefreshToken rtk
-func (a *SigninGpaAccountToken) QueryByRefreshToken(sqlx *sqlx.DB, token string) error {
+// QueryByRefreshToken2 rtk
+func (a *SigninGpaAccountToken) QueryByRefreshToken2(sqlx *sqlx.DB, token string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where refresh_token=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, token)
 }
 
-// QueryByDelayToken rtk
-func (a *SigninGpaAccountToken) QueryByDelayToken(sqlx *sqlx.DB, token string) error {
+// QueryByDelayToken2 rtk
+func (a *SigninGpaAccountToken) QueryByDelayToken2(sqlx *sqlx.DB, token string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where delay_token=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, token)
 }
 
-// QueryByTokenKID kid
-func (a *SigninGpaAccountToken) QueryByTokenKID(sqlx *sqlx.DB, kid string) error {
+// QueryByTokenKID2 kid
+func (a *SigninGpaAccountToken) QueryByTokenKID2(sqlx *sqlx.DB, kid string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, kid)
 }
 
-// QueryByAccountAndClient kid
-func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, acc int64, cip string) error {
+// QueryByAccountAndClient2 kid
+func (a *SigninGpaAccountToken) QueryByAccountAndClient2(sqlx *sqlx.DB, acc int64, cip string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where account_id=?"
 	params := []interface{}{acc}
 	if cip != "" {
@@ -316,8 +316,8 @@ func (a *SigninGpaAccountToken) QueryByAccountAndClient(sqlx *sqlx.DB, acc int64
 	return sqlx.Get(a, SQL, params...)
 }
 
-// UpdateAndSaveByTokenKID 更新
-func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, update bool) error {
+// UpdateAndSaveByTokenKID2 更新
+func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID2(sqlx *sqlx.DB, update bool) error {
 	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "token", IDCol: "token_kid", IDVal: a.TokenID, Update: sql.NullBool{Valid: true, Bool: update}}
 	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(tic, a)
 	if err != nil {
@@ -333,18 +333,6 @@ func (a *SigninGpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, update bo
 //=========================================================================
 //=========================================================================
 //=========================================================================
-
-// type SigninGpaUserRole struct {
-// 	UserID  int            `tbl:"ur" db:"user_id"`
-// 	RoleID  int            `tbl:"ur" db:"role_id"`
-// 	OrgCode string         `tbl:"ur" db:"org_cod"`
-// 	OrgAdm  bool           `tbl:"ro" db:"org_adm"`
-// 	KID     string         `tbl:"ro" db:"kid"`
-// 	Name    string         `tbl:"ro" db:"name"`
-// 	Status  StatusType     `tbl:"ro" db:"status"`
-// 	SvcID   sql.NullInt64  `tbl:"ro" db:"svc_id"`
-// 	SvcCode sql.NullString `tbl:"sv" db:"code"`
-// }
 
 // SigninGpaRole role
 type SigninGpaRole struct {

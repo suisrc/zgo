@@ -50,11 +50,11 @@ func FixResponseError(c *gin.Context, err error) bool {
 		ResJSON(c, http.StatusOK, err)
 		return true
 	case *ErrorRedirect:
-		code := err.(*ErrorRedirect).Code
-		if code <= 0 {
-			code = http.StatusSeeOther
+		status := err.(*ErrorRedirect).Status
+		if status <= 0 {
+			status = http.StatusSeeOther
 		}
-		c.Redirect(code, err.(*ErrorRedirect).Location)
+		c.Redirect(status, err.(*ErrorRedirect).Location)
 		return true
 	case *ErrorNone:
 		// do nothing

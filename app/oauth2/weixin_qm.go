@@ -57,6 +57,9 @@ func (a *WeixinQm) Handle(c *gin.Context, body RequestParams, platform RequestPl
 		if strings.Contains(c.Request.UserAgent(), "MicroMessenger/") {
 			return a.Connect(c, body, platform, oauth2)
 		}
+		// else if strings.Contains(c.Request.UserAgent(), "MQQBrowser/") {
+		// 	return a.Connect(c, body, platform, oauth2)
+		// }
 		return a.QrConnect(c, body, platform, oauth2)
 	}
 	// 通过微信服务器回调
@@ -72,7 +75,7 @@ func (a *WeixinQm) Handle(c *gin.Context, body RequestParams, platform RequestPl
 	token := WeixinQmAccessToken{}
 	if err := token.GetAccessToken(platform.GetAppID(), platform.GetAppSecret(), body.GetCode()); err != nil {
 		return err // 网络异常
-	} else if token.ErrCode != 0 || token.ErrMsg != "ok" {
+	} else if token.ErrCode != 0 {
 		return &token // 微信服务器异常
 	}
 
@@ -124,7 +127,7 @@ func (a *WeixinQm) Connect(c *gin.Context, body RequestParams, platform RequestP
 
 	a.parseOnce.Do(func() {
 		// 只加载一次, 该内容是模板 解析一次即可
-		url := "https://open.weixin.qq.com/connect/oauth2/authorize?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type=code&scope={{.scope}}&state={{.state}}#wechat_redirect"
+		url := "https://open.weixin.qq.com/connect/oauth2/authorize?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type={{.response_type}}&scope={{.scope}}&state={{.state}}#wechat_redirect"
 		a.parseTemplate, a.parseError = gotemplate.New("").Parse(url)
 	})
 
@@ -152,6 +155,18 @@ func (a *WeixinQm) QrConnect(c *gin.Context, body RequestParams, platform Reques
 
 	uri := GetRedirectURIByOAuth2Platform(c, c.Query("redirect_uri"), platform, oauth2)
 	appid := platform.GetAppID()
+	if result := c.Query("result"); result == "wxLogin" {
+		return helper.NewSuccess(c, helper.H{
+			"self_redirect": true,              // true：手机点击确认登录后可以在 iframe 内跳转到 redirect_uri，false：手机点击确认登录后可以在 top window 跳转到 redirect_uri。默认为 false。
+			"id":            "login_container", // 第三方页面显示二维码的容器id
+			"appid":         appid,             // 应用唯一标识，在微信开放平台提交应用审核通过后获得
+			"scope":         "snsapi_login",    // 应用授权作用域，拥有多个作用域用逗号（,）分隔，网页应用目前仅填写snsapi_login即可
+			"redirect_uri":  uri,               // 重定向地址，需要进行UrlEncode
+			"state":         state,             // 用于保持请求和回调的状态，授权请求后原样带回给第三方。该参数可用于防止csrf攻击（跨站请求伪造攻击）
+			"style":         "",                // 提供"black"、"white"可选，默认为黑色文字描述
+			"href":          "",                // 自定义样式链接，第三方可根据实际需求覆盖默认样式
+		})
+	}
 	// 参数
 	params := helper.H{
 		"appid":         appid,          // 公众号的唯一标识
@@ -163,7 +178,7 @@ func (a *WeixinQm) QrConnect(c *gin.Context, body RequestParams, platform Reques
 
 	a.parseOnce.Do(func() {
 		// 只加载一次, 该内容是模板 解析一次即可
-		url := "https://open.weixin.qq.com/connect/qrconnect?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type={{.code}}&scope={{.scope}}&state={{.state}}#wechat_redirect"
+		url := "https://open.weixin.qq.com/connect/qrconnect?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type={{.response_type}}&scope={{.scope}}&state={{.state}}#wechat_redirect"
 		a.parseTemplate, a.parseError = gotemplate.New("").Parse(url)
 	})
 

@@ -41,7 +41,7 @@ func (e *ErrorInfo) Error() string {
 
 // ErrorRedirect 重定向
 type ErrorRedirect struct {
-	Code     int    // http.StatusSeeOther
+	Status   int    // http.StatusSeeOther
 	State    string // 状态, 用户还原缓存现场
 	Location string
 }

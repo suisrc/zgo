@@ -10,8 +10,13 @@ import (
 
 // NewClient client
 func NewClient() (*sqlx.DB, func(), error) {
-	//db, err := sqlx.Connect("sqlite3", "file:db1?mode=memory&cache=shared&_fk=1")
-	db, err := sqlx.Connect(gpa.DatabaseType, gpa.DatabaseDSN())
+	//return NewClient2("sqlite3", "file:db1?mode=memory&cache=shared&_fk=1")
+	return NewClient2(gpa.DatabaseType, gpa.DatabaseDSN())
+}
+
+// NewClient2 client
+func NewClient2(typ, dsn string) (*sqlx.DB, func(), error) {
+	db, err := sqlx.Connect(typ, dsn)
 	if err != nil {
 		return nil, nil, err
 	}

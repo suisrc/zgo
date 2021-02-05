@@ -12,8 +12,8 @@ import (
 // OAuth2GpaPlatform 登录使用的平台
 type OAuth2GpaPlatform struct {
 	ID          int64          `db:"id"`           // 唯一标识
-	KID         string         `db:"kid"`          // 三方标识
-	Type        string         `db:"type"`         // 平台标识
+	KID         sql.NullString `db:"kid"`          // 三方标识
+	Type        sql.NullString `db:"type"`         // 平台标识
 	IsSign      sql.NullBool   `db:"signin"`       // 登录标识
 	OrgCode     sql.NullString `db:"org_cod"`      // 组织字段
 	Status      StatusType     `db:"status"`       // 状态
@@ -51,7 +51,7 @@ func (a *OAuth2GpaPlatform) QueryByKID(sqlx *sqlx.DB, kid string) error {
 
 // UpdateAndSaveByID 更新
 func (a *OAuth2GpaPlatform) UpdateAndSaveByID(sqlx *sqlx.DB) error {
-	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "platform", IDCol: "id"}
+	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "platform", IDVal: a.ID}
 	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(tic, a)
 	if err != nil {
 		return err
@@ -95,11 +95,14 @@ type OAuth2GpaAccountToken struct {
 	TokenID      string         `db:"token_kid"`
 	AccountID    sql.NullInt64  `db:"account_id"`
 	TokenPID     sql.NullString `db:"token_pid"`
+	TokenType    sql.NullInt32  `db:"token_type"`
 	Platform     sql.NullString `db:"platform_kid"`
 	AccessToken  sql.NullString `db:"access_token"`
 	ExpiresAt    sql.NullTime   `db:"expires_at"`
 	RefreshToken sql.NullString `db:"refresh_token"`
 	RefreshExpAt sql.NullTime   `db:"refresh_exp"`
+	CodeToken    sql.NullString `db:"code_token"`
+	CodeExpAt    sql.NullTime   `db:"code_exp"`
 	CallCount    sql.NullInt64  `db:"call_count"`
 	ErrCode      sql.NullString `db:"error_code"`
 	ErrMessage   sql.NullString `db:"error_message"`
@@ -109,15 +112,22 @@ type OAuth2GpaAccountToken struct {
 	String2      sql.NullString `db:"string_2"` // 扩展字段
 }
 
-// QueryByTokenKID kid
-func (a *OAuth2GpaAccountToken) QueryByTokenKID(sqlx *sqlx.DB, kid string) error {
+// QueryByTokenKID2 kid
+func (a *OAuth2GpaAccountToken) QueryByTokenKID2(sqlx *sqlx.DB, kid string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, kid)
 }
 
-// UpdateAndSaveByTokenKID 更新
-func (a *OAuth2GpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, update bool) error {
+// QueryByPlatformAndCode2 code
+func (a *OAuth2GpaAccountToken) QueryByPlatformAndCode2(sqlx *sqlx.DB, platform, code string) error {
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where code_token=? and platform_kid=? order by code_exp desc limit 1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, code, platform)
+}
+
+// UpdateAndSaveByTokenKID2 更新
+func (a *OAuth2GpaAccountToken) UpdateAndSaveByTokenKID2(sqlx *sqlx.DB, update bool) error {
 	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "token", IDCol: "token_kid", IDVal: a.TokenID, Update: sql.NullBool{Valid: true, Bool: update}}
 	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(tic, a)
 	if err != nil {

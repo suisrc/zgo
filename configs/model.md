@@ -651,9 +651,10 @@ condition: 条件， 策略预计成立的条件
 | 字段          | 中文说明       | 字段类型 | 备注                                                | MYSQL                                                |
 | ------------- | -------------- | -------- | ---------------------------------------------------------------------------------------------------------- |
 | token_kid     | 令牌标识       | 字符串   |                                                     | varchar(64) NOT NULL, primary                        |
-| account_id    | 令牌归属       | 数值     |                                                     | int(11), idx_token_account_id                        |
 | org_cod       | 组织标识       | 字符串   | 冗余字段， 一般和account相同， 但是也有可能不同     | varchar(64)                                          |
+| account_id    | 令牌归属       | 数值     |                                                     | int(11), idx_token_account_id                        |
 | token_pid     | 令牌依赖       | 字符串   |                                                     | varchar(64), idx_token_token_pid                     |
+| token_type    | 令牌类型       | 字符串   | 1:account, 2:platform                               | tinyint(4) DEFAULT 1                                 |
 | platform_kid  | 账户归属平台   | 字符串   | 被授权平台, NULL标识不归属任何平台                  | varchar(64), idx_token_platform_kid                  |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | access_token  | 访问令牌       | 字符串   |                                                     | varchar(4096)                                        |

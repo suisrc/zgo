@@ -12,6 +12,7 @@ var _ auth.UserInfo = &SigninUser{}
 type SigninUser struct {
 	TokenID   string
 	Account   string
+	TokenPID  string
 	Account2  string
 	UserID    string
 	UserName  string
@@ -34,6 +35,11 @@ func (u *SigninUser) GetTokenID() string {
 // GetAccount xxx
 func (u *SigninUser) GetAccount() string {
 	return u.Account
+}
+
+// GetTokenPID xxx
+func (u *SigninUser) GetTokenPID() string {
+	return u.TokenPID
 }
 
 // GetAccount2 xxx

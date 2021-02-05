@@ -8,9 +8,7 @@ package injector
 import (
 	"github.com/suisrc/zgo/app/api"
 	"github.com/suisrc/zgo/app/api/manager"
-	"github.com/suisrc/zgo/app/model/entc"
-	"github.com/suisrc/zgo/app/model/gpa"
-	"github.com/suisrc/zgo/app/model/sqlxc"
+	"github.com/suisrc/zgo/app/model/gpaf"
 	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/oauth2"
 	"github.com/suisrc/zgo/app/service"
@@ -25,32 +23,22 @@ func BuildInjector() (*Injector, func(), error) {
 	useEngine := api.NewUseEngine(bundle)
 	engine := middlewire.InitGinEngine(useEngine)
 	router := middlewire.NewRouter(engine)
-	client, cleanup, err := entc.NewClient()
+	gpa, cleanup, err := gpaf.NewGPA()
 	if err != nil {
 		return nil, nil, err
 	}
-	db, cleanup2, err := sqlxc.NewClient()
+	storer, cleanup2, err := module.NewStorer()
 	if err != nil {
-		cleanup()
-		return nil, nil, err
-	}
-	gpaGPA := gpa.GPA{
-		Entc: client,
-		Sqlx: db,
-	}
-	storer, cleanup3, err := module.NewStorer()
-	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	authOpts := &module.AuthOpts{
-		GPA:    gpaGPA,
+		GPA:    gpa,
 		Storer: storer,
 	}
 	auther := module.NewAuther(authOpts)
 	casbinAuther := &module.CasbinAuther{
-		GPA:    gpaGPA,
+		GPA:    gpa,
 		Storer: storer,
 		Auther: auther,
 	}
@@ -59,30 +47,28 @@ func BuildInjector() (*Injector, func(), error) {
 	}
 	validator := &passwd.Validator{}
 	mobileSender := service.MobileSender{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	emailSender := service.EmailSender{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	threeSender := service.ThreeSender{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
-	selector, err := oauth2.NewSelector(gpaGPA, storer)
+	selector, err := oauth2.NewSelector(gpa, storer)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	bus, cleanup4, err := module.NewEventBus()
+	bus, cleanup3, err := module.NewEventBus()
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
 	signin := &service.Signin{
-		GPA:            gpaGPA,
+		GPA:            gpa,
 		Passwd:         validator,
 		Store:          storer,
 		MSender:        mobileSender,
@@ -92,48 +78,48 @@ func BuildInjector() (*Injector, func(), error) {
 		Bus:            bus,
 	}
 	apiSignin := &api.Signin{
-		GPA:           gpaGPA,
+		GPA:           gpa,
 		Auther:        auther,
 		SigninService: signin,
 		CasbinAuther:  casbinAuther,
 	}
 	connect := &api.Connect{
-		GPA:           gpaGPA,
+		GPA:           gpa,
 		Auther:        auther,
 		SigninService: signin,
 		CasbinAuther:  casbinAuther,
 		SigninAPI:     apiSignin,
 	}
 	user := service.User{
-		GPA:            gpaGPA,
+		GPA:            gpa,
 		Store:          storer,
 		OAuth2Selector: selector,
 	}
 	apiUser := &api.User{
-		GPA:          gpaGPA,
+		GPA:          gpa,
 		UserService:  user,
 		CasbinAuther: casbinAuther,
 	}
 	system := &api.System{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	weixin := &api.Weixin{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	managerUser := &manager.User{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	account := &manager.Account{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	role := &manager.Role{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	menu := &manager.Menu{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	gateway := &manager.Gateway{
-		GPA: gpaGPA,
+		GPA: gpa,
 	}
 	wire := &manager.Wire{
 		User:    managerUser,
@@ -156,7 +142,7 @@ func BuildInjector() (*Injector, func(), error) {
 	}
 	endpoints := api.InitEndpoints(options)
 	i18n := &service.I18n{
-		GPA:    gpaGPA,
+		GPA:    gpa,
 		Bundle: bundle,
 	}
 	i18nLoader := service.InitI18nLoader(i18n)
@@ -171,7 +157,6 @@ func BuildInjector() (*Injector, func(), error) {
 		Healthz:    healthz,
 	}
 	return injector, func() {
-		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()

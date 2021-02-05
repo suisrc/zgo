@@ -5,6 +5,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"log"
 	"strconv"
 	"strings"
 	"sync"
@@ -71,13 +72,15 @@ func (a *WeixinQy) Handle(c *gin.Context, body RequestParams, platform RequestPl
 	if err := WeixinQyExecWithAccessToken(c, a.GPA, a.Storer, platform, token1, func(token string) error {
 		if err := user.GetUserInfo(token, body.GetCode()); err != nil {
 			return err
-		} else if user.ErrCode != 0 || user.ErrMsg != "ok" {
+		} else if user.ErrCode != 0 {
 			return &user // 微信服务器异常, 当发生42001异常,会直接获取令牌重试一次
 		} else if user.OpenID == "" && user.UserID != "" {
 			// 成员用户， 强制取成员openid， 归一操作
 			openid := WeixinQyOpenid{}
 			if err := openid.ConvertToOpenid(token, user.UserID); err == nil && openid.ErrCode == 0 {
 				user.OpenID = openid.OpenID
+			} else {
+				log.Println(err)
 			}
 		}
 		return nil
@@ -150,6 +153,17 @@ func (a *WeixinQy) QrConnect(c *gin.Context, body RequestParams, platform Reques
 	uri := GetRedirectURIByOAuth2Platform(c, c.Query("redirect_uri"), platform, oauth2)
 	appid := platform.GetAppID()
 	agentid := platform.GetAgentID()
+
+	if result := c.Query("result"); result == "wwLogin" {
+		return helper.NewSuccess(c, helper.H{
+			"id":           "wx_reg", // 企业页面显示二维码的容器id
+			"appid":        appid,    // 企业微信的CorpID，在企业微信管理端查看
+			"agentid":      agentid,  // 授权方的网页应用ID，在具体的网页应用中查看
+			"redirect_uri": uri,      // 重定向地址，需要进行UrlEncode
+			"state":        state,    // 用于保持请求和回调的状态，授权请求后原样带回给企业。该参数可用于防止csrf攻击（跨站请求伪造攻击）
+			"href":         "",       //自定义样式链接，企业可根据实际需求覆盖默认样式
+		})
+	}
 	// 参数
 	params := helper.H{
 		"appid":        appid,   // 公众号的唯一标识
@@ -194,10 +208,8 @@ func WeixinQyExecWithAccessToken(c context.Context, GPA gpa.GPA, Storer store.St
 		} else if token.AccessToken == "" {
 			return nil, errors.New(token.ErrMsg) // 未知异常
 		}
-		tid, tok := helper.GetCtxValueToString(c, helper.ResTokenKey)
 		return &AccessToken{
 			Platform:    platform.GetID(),
-			TokenID:     sql.NullString{Valid: tok, String: tid},
 			AccessToken: sql.NullString{Valid: true, String: token.AccessToken},
 			ExpiresIn:   sql.NullInt64{Valid: true, Int64: int64(token.ExpiresIn)},
 			ExpiresAt:   sql.NullTime{Valid: true, Time: time.Now().Add(time.Duration(token.ExpiresIn-120) * time.Second)}, // 有效期缩短120秒
@@ -331,11 +343,11 @@ type WeixinQyOpenid struct {
 如果是外部联系人，请使用外部联系人openid转换转换openid
 */
 func (a *WeixinQyOpenid) ConvertToOpenid(token, userid string) error {
-	return gout.POST(WeixinQyAPI + " https://qyapi.weixin.qq.com/cgi-bin/user/convert_to_openid").
+	return gout.POST(WeixinQyAPI + "/cgi-bin/user/convert_to_openid").
 		SetQuery(gout.H{
 			"access_token": token,
 		}).
-		SetBody(gout.H{
+		SetJSON(gout.H{
 			"userid": userid,
 		}).
 		BindJSON(a).

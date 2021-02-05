@@ -141,7 +141,7 @@ func (a *Signin) LastSignIn(c *gin.Context, aid int64) (*schema.SigninGpaAccount
 	}
 	o2a := schema.SigninGpaAccountToken{}
 	// 防止意外放生， 使用客户端IP作为影响因子
-	if err := o2a.QueryByAccountAndClient(a.Sqlx, aid, helper.GetClientIP(c)); err != nil {
+	if err := o2a.QueryByAccountAndClient2(a.Sqlx2, aid, helper.GetClientIP(c)); err != nil {
 		if !sqlxc.IsNotFound(err) {
 			// 数据库查询发生异常
 			logger.Errorf(c, logger.ErrorWW(err))
@@ -178,6 +178,7 @@ func (a *Signin) LogSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, up
 	o2a := schema.SigninGpaAccountToken{
 		TokenID:      u.GetTokenID(),
 		AccountID:    aid,
+		TokenPID:     sql.NullString{Valid: u.GetTokenPID() != "", String: u.GetTokenPID()},
 		OrgCode:      sql.NullString{Valid: u.GetOrgCode() != "", String: u.GetOrgCode()},
 		AccessToken:  sql.NullString{Valid: t.GetAccessToken() != "", String: t.GetAccessToken()},
 		ExpiresAt:    sql.NullTime{Valid: t.GetExpiresAt() > 0, Time: time.Unix(t.GetExpiresAt(), 0)},
@@ -189,7 +190,7 @@ func (a *Signin) LogSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, up
 	if fix != nil {
 		fix(&o2a)
 	}
-	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, update); err != nil {
+	if err := o2a.UpdateAndSaveByTokenKID2(a.Sqlx2, update); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err))
 	}
 }
@@ -201,7 +202,7 @@ func (a *Signin) LogSignOut(c *gin.Context, u auth.UserInfo, t string) {
 		TokenID:      u.GetTokenID(),
 		RefreshExpAt: sql.NullTime{Valid: true, Time: time.Unix(0, 0)},
 	}
-	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, true); err != nil {
+	if err := o2a.UpdateAndSaveByTokenKID2(a.Sqlx2, true); err != nil {
 		logger.Errorf(c, logger.ErrorWW(err))
 	}
 }
@@ -295,7 +296,7 @@ func (a *Signin) getSigninGpaAccountTokenByRefresh(c *gin.Context) *schema.Signi
 	}
 	if tid == "" {
 		// 兼容方案， 只使用刷新令牌
-		if err := o2a.QueryByRefreshToken(a.Sqlx, rid); err != nil {
+		if err := o2a.QueryByRefreshToken2(a.Sqlx2, rid); err != nil {
 			if sqlxc.IsNotFound(err) {
 				helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID", Other: "令牌无效"}))
 			} else {
@@ -307,7 +308,7 @@ func (a *Signin) getSigninGpaAccountTokenByRefresh(c *gin.Context) *schema.Signi
 		}
 	} else {
 		// 使用 TID + RID 方案
-		if err := o2a.QueryByTokenKID(a.Sqlx, tid); err != nil {
+		if err := o2a.QueryByTokenKID2(a.Sqlx2, tid); err != nil {
 			if sqlxc.IsNotFound(err) {
 				helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID", Other: "令牌无效"}))
 			} else {
@@ -390,7 +391,7 @@ func (a *Signin) token3new(c *gin.Context) {
 		CodeToken: sql.NullString{Valid: true, String: tkn},
 		CodeExpAt: sql.NullTime{Valid: true, Time: time.Now().Add(300 * time.Second)},
 	}
-	if err := o2a.UpdateAndSaveByTokenKID(a.Sqlx, false); err != nil {
+	if err := o2a.UpdateAndSaveByTokenKID2(a.Sqlx2, false); err != nil {
 		helper.FixResponse500Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
 		})
@@ -453,7 +454,7 @@ func (a *Signin) getSigninGpaAccountTokenByCode(c *gin.Context) *schema.SigninGp
 		return nil
 	}
 	o2a := schema.SigninGpaAccountToken{}
-	if err := o2a.QueryByDelayToken(a.Sqlx, tid); err != nil {
+	if err := o2a.QueryByDelayToken2(a.Sqlx2, tid); err != nil {
 		if sqlxc.IsNotFound(err) {
 			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID", Other: "令牌无效"}))
 		} else {
@@ -484,7 +485,7 @@ func (a *Signin) getSigninGpaAccountTokenByCode(c *gin.Context) *schema.SigninGp
 		return nil
 	}
 	o2b := schema.SigninGpaAccountToken{}
-	if err := o2b.QueryByTokenKID(a.Sqlx, o2a.String1.String); err != nil {
+	if err := o2b.QueryByTokenKID2(a.Sqlx2, o2a.String1.String); err != nil {
 		if sqlxc.IsNotFound(err) {
 			helper.ResJSON(c, http.StatusOK, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-TOKEN-INVALID2", Other: "原始令牌无效"}))
 		} else {

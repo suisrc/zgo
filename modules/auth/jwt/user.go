@@ -38,12 +38,13 @@ func NewRefreshToken(_ati string) string {
 func NewUserInfo(user auth.UserInfo) *UserClaims {
 	claims := UserClaims{}
 
-	tokenID := user.GetTokenID()
-	if tokenID == "" {
-		tokenID = NewTokenID(user.GetAccount())
+	claims.Id = user.GetTokenID()
+	if claims.Id == "" {
+		claims.Id = NewTokenID(user.GetAccount())
 	}
-	claims.Id = tokenID
+
 	claims.Account = user.GetAccount()
+	claims.TokenPID = user.GetTokenPID()
 	claims.Account2 = user.GetAccount2()
 
 	claims.Subject = user.GetUserID()
@@ -72,6 +73,7 @@ type UserClaims struct {
 	// TokenID -> Id
 	// UserID -> Subject -> sub, GetOrgCode为空，提供用户平台ID， 否则提供用户租户ID
 	Account   string   `json:"ati,omitempty"` // 登陆ID, 本身不具备任何意义,只是标记登陆方式, 使用token反向加密
+	TokenPID  string   `json:"pti,omitempty"` // 子母令牌
 	Account2  string   `json:"atc,omitempty"` // 用户自定义ID
 	UserName  string   `json:"nam,omitempty"` // 用户名
 	UserRoles []string `json:"ros,omitempty"` // 角色ID, 该角色是平台角色， 也可以理解为平台给机构的角色
@@ -95,6 +97,11 @@ func (u *UserClaims) GetTokenID() string {
 // GetAccount xxx
 func (u *UserClaims) GetAccount() string {
 	return u.Account
+}
+
+// GetTokenPID xxx
+func (u *UserClaims) GetTokenPID() string {
+	return u.TokenPID
 }
 
 // GetAccount2 xxx
