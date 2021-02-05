@@ -15,11 +15,11 @@ import (
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/schema"
-	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/modules/auth"
 	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/helper"
 	"github.com/suisrc/zgo/modules/logger"
+	"github.com/suisrc/zgo/modules/middleware"
 	"github.com/suisrc/zgo/modules/store"
 
 	"github.com/gin-gonic/gin"

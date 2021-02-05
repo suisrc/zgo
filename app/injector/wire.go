@@ -16,7 +16,7 @@ package injector
 */
 import (
 	"github.com/suisrc/zgo/app/api"
-	"github.com/suisrc/zgo/middlewire"
+	"github.com/suisrc/zgo/modules/app"
 
 	"github.com/google/wire"
 )
@@ -24,10 +24,11 @@ import (
 // BuildInjector 生成注入器
 func BuildInjector() (*Injector, func(), error) {
 	wire.Build(
-		InjectorSet,              // wire索引
-		middlewire.DefaultGinSet, // gin引擎
-		api.EndpointSet,          // 服务接口
-		InjectorEndSet,           // wire索引
+		InjectorSet,       // wire索引
+		app.InitGinEngine, //*gin.Engine
+		app.NewRouter,     // router
+		api.EndpointSet,   // 服务接口
+		InjectorEndSet,    // wire索引
 	)
 	return new(Injector), nil, nil
 }

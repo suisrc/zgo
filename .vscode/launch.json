@@ -11,7 +11,7 @@
             "mode": "debug",
             "cwd": "${workspaceFolder}",
             "program": "${workspaceFolder}/cmd/app",
-            "args": ["web", "-c", "./configs/__config.toml"],
+            "args": ["web", "-c", "./conf/__config.toml"],
             "env": {
                 // "CONFIG_MYSQL_PORT": 3306,
             }

@@ -1,27 +1,27 @@
 package casbincustom
 
-import (
-	"github.com/suisrc/zgo/modules/casbin"
+// import (
+// 	"github.com/suisrc/zgo/modules/casbin"
+//
+// 	"github.com/casbin/casbin/v2/persist"
+//
+// 	"github.com/google/wire"
+// )
 
-	"github.com/casbin/casbin/v2/persist"
-
-	"github.com/google/wire"
-)
-
-var _ persist.Adapter = (*Adapter)(nil)
-
-// CasbinAdapterSet 注入casbin
-var CasbinAdapterSet = wire.NewSet(casbin.NewCasbinEnforcer, NewCasbinAdapter)
-
-// NewCasbinAdapter 构建Casbin Adapter
-func NewCasbinAdapter() persist.Adapter {
-	// Initialize a JSON adapter and use it in a Casbin enforcer:
-
-	b := []byte{}             // b stores Casbin policy in JSON bytes.
-	adapter := NewAdapter(&b) // Use b as the data source.
-
-	return adapter
-}
+// var _ persist.Adapter = (*Adapter)(nil)
+//
+// // CasbinAdapterSet 注入casbin
+// var CasbinAdapterSet = wire.NewSet(casbin.NewCasbinEnforcer, NewCasbinAdapter)
+//
+// // NewCasbinAdapter 构建Casbin Adapter
+// func NewCasbinAdapter() persist.Adapter {
+// 	// Initialize a JSON adapter and use it in a Casbin enforcer:
+//
+// 	b := []byte{}             // b stores Casbin policy in JSON bytes.
+// 	adapter := NewAdapter(&b) // Use b as the data source.
+//
+// 	return adapter
+// }
 
 // rbac_policy.json
 // [

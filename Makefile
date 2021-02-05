@@ -30,11 +30,11 @@ build:
 # 调试过程中,会产生一些僵尸进程,这个时候,可以通过杀死父进程解决
 # ps -ef | grep defunct | more (kill -9 pid 是无法删除进程)
 debug:
-	dlv debug --headless --api-version=2 --listen=127.0.0.1:2345 cmd/app/main.go -- web -c ./configs/config.toml
-	#echo c | dlv debug --accept-multiclient --api-version=2 --listen=127.0.0.1:2345 cmd/app/main.go -- web -c ./configs/config.toml
+	dlv debug --headless --api-version=2 --listen=127.0.0.1:2345 cmd/app/main.go -- web -c ./conf/config.toml
+	#echo c | dlv debug --accept-multiclient --api-version=2 --listen=127.0.0.1:2345 cmd/app/main.go -- web -c ./conf/config.toml
 
 start:
-	go run cmd/app/main.go web -c ./configs/__config.toml
+	go run cmd/app/main.go web -c ./conf/__config.toml
 
 # go get -u github.com/swaggo/swag/cmd/swag
 swagger:
@@ -72,7 +72,7 @@ clean:
 
 pack: build
 	rm -rf $(RELEASE_ROOT) && mkdir -p $(RELEASE_SERVER)
-	cp -r $(SERVER_BIN) configs $(RELEASE_SERVER)
+	cp -r $(SERVER_BIN) conf $(RELEASE_SERVER)
 	cd $(RELEASE_ROOT) && tar -cvf $(APP).tar ${APP} && rm -rf ${APP}
 
 cli:
@@ -80,8 +80,8 @@ cli:
 
 # database
 db-mysql:
-	go run cmd/db/main.go mysql -m configs/model.md -o configs/model.mysql.sql
+	go run cmd/db/main.go mysql -m conf/model.md -o conf/model.mysql.sql
 db-entc:
-	go run cmd/db/main.go entc  -m configs/model.md -o app/model/ent/schema
+	go run cmd/db/main.go entc  -m conf/model.md -o app/model/ent/schema
 db-entc-del:
 	go run cmd/db/main.go entc-del -o app/model/ent -es $(es)

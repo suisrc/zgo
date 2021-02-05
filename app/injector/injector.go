@@ -7,7 +7,7 @@ import (
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"github.com/suisrc/zgo/app/api"
 	"github.com/suisrc/zgo/app/service"
-	"github.com/suisrc/zgo/middlewire"
+	"github.com/suisrc/zgo/modules/app"
 	"golang.org/x/text/language"
 )
 
@@ -21,8 +21,8 @@ var InjectorSet = wire.NewSet(
 
 // InjectorEndSet 注入Injector
 var InjectorEndSet = wire.NewSet(
-	middlewire.NewHealthz,           // 健康检查
-	middlewire.NewSwagger,           // swagger
+	// app.NewSwagger,                  // swagger
+	app.NewHealthz,                  // 健康检查
 	wire.Struct(new(Injector), "*"), // 注册器
 )
 
@@ -38,8 +38,8 @@ type Injector struct {
 	Bundle     *i18n.Bundle       // 国际化
 	I18nLoader service.I18nLoader // i18n 数据库加载器
 
-	Swagger middlewire.Swagger
-	Healthz middlewire.Healthz
+	// Swagger app.Swagger
+	Healthz app.Healthz
 }
 
 //======================================

@@ -1,4 +1,4 @@
-package middlewire
+package app
 
 // 服务器健康检查
 import (

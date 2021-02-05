@@ -12,7 +12,7 @@ import (
 	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/oauth2"
 	"github.com/suisrc/zgo/app/service"
-	"github.com/suisrc/zgo/middlewire"
+	"github.com/suisrc/zgo/modules/app"
 	"github.com/suisrc/zgo/modules/passwd"
 )
 
@@ -21,8 +21,8 @@ import (
 func BuildInjector() (*Injector, func(), error) {
 	bundle := NewBundle()
 	useEngine := api.NewUseEngine(bundle)
-	engine := middlewire.InitGinEngine(useEngine)
-	router := middlewire.NewRouter(engine)
+	engine := app.InitGinEngine(useEngine)
+	router := app.NewRouter(engine)
 	gpa, cleanup, err := gpaf.NewGPA()
 	if err != nil {
 		return nil, nil, err
@@ -146,14 +146,12 @@ func BuildInjector() (*Injector, func(), error) {
 		Bundle: bundle,
 	}
 	i18nLoader := service.InitI18nLoader(i18n)
-	swagger := middlewire.NewSwagger(engine)
-	healthz := middlewire.NewHealthz(engine)
+	healthz := app.NewHealthz(engine)
 	injector := &Injector{
 		Engine:     engine,
 		Endpoints:  endpoints,
 		Bundle:     bundle,
 		I18nLoader: i18nLoader,
-		Swagger:    swagger,
 		Healthz:    healthz,
 	}
 	return injector, func() {

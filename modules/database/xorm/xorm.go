@@ -5,9 +5,9 @@ package xorm
 /*
  不推荐使用xorm或者gorm
 */
-import "xorm.io/xorm"
+// import "xorm.io/xorm"
 
 // Demo demo
 func Demo() {
-	xorm.NewEngine("sqlite3", "./test.db")
+	// xorm.NewEngine("sqlite3", "./test.db")
 }

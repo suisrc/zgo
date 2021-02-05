@@ -11,17 +11,17 @@ import (
 	"context"
 
 	"github.com/gin-gonic/gin"
-	"github.com/suisrc/zgo/middleware"
-	"github.com/suisrc/zgo/middlewire"
+	"github.com/suisrc/zgo/modules/app"
 	cmd "github.com/suisrc/zgo/modules/app"
 	"github.com/suisrc/zgo/modules/config"
+	"github.com/suisrc/zgo/modules/middleware"
 	// // 引入swagger
 	// _ "github.com/suisrc/zgo/app/swagger"
 )
 
 func main() {
 	a := newApp()
-	middlewire.NewHealthz(a)
+	app.NewHealthz(a)
 
 	r := newRouter(a)
 	c, err := router(r)

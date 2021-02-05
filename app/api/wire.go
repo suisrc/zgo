@@ -5,9 +5,9 @@ import (
 	"github.com/suisrc/zgo/app/api/manager"
 	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/service"
-	"github.com/suisrc/zgo/middleware"
-	"github.com/suisrc/zgo/middlewire"
+	"github.com/suisrc/zgo/modules/app"
 	"github.com/suisrc/zgo/modules/config"
+	"github.com/suisrc/zgo/modules/middleware"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/wire"
@@ -39,8 +39,8 @@ var EndpointSet = wire.NewSet(
 
 // Options options
 type Options struct {
-	Engine *gin.Engine       // 服务器
-	Router middlewire.Router // 根路由
+	Engine *gin.Engine // 服务器
+	Router app.Router  // 根路由
 
 	// 接口注入
 	Auth    *Auth
@@ -110,7 +110,7 @@ func InitEndpoints(o *Options) *Endpoints {
 }
 
 // NewUseEngine 绑定中间件
-func NewUseEngine(bundle *i18n.Bundle) middlewire.UseEngine {
+func NewUseEngine(bundle *i18n.Bundle) app.UseEngine {
 	return func(app *gin.Engine) {
 		app.Use(gin.Logger())
 		//app.Use(middleware.LoggerMiddleware())

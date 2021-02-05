@@ -1,22 +1,26 @@
-package module
+package middleware
 
 import (
-	"github.com/suisrc/zgo/middleware"
 	"github.com/suisrc/zgo/modules/auth"
+	"github.com/suisrc/zgo/modules/config"
 	"github.com/suisrc/zgo/modules/helper"
 
 	"github.com/gin-gonic/gin"
 )
 
-// UserAuthBasicMiddleware 用户授权中间件, 只判定登录权限
-func (a *CasbinAuther) UserAuthBasicMiddleware(skippers ...middleware.SkipperFunc) gin.HandlerFunc {
+// UserAuthMiddleware 用户授权中间件,废弃,请使用UserAuthCasbinMiddleware
+func UserAuthMiddleware(a auth.Auther, skippers ...SkipperFunc) gin.HandlerFunc {
+	if !config.C.JWTAuth.Enable {
+		return EmptyMiddleware()
+	}
+
 	return func(c *gin.Context) {
-		if middleware.SkipHandler(c, skippers...) {
-			c.Next() // 需要跳过权限验证的uri内容
+		if SkipHandler(c, skippers...) {
+			c.Next()
 			return
 		}
 
-		user, err := a.Auther.GetUserInfo(c)
+		user, err := a.GetUserInfo(c)
 		if err != nil {
 			if err == auth.ErrNoneToken || err == auth.ErrInvalidToken {
 				helper.ResError(c, helper.Err401Unauthorized)

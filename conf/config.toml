@@ -9,8 +9,8 @@ printconfig = false
 
 [casbin]
 enable = true
-model = "./configs/rbac_restful.conf"
-policysource = "./configs/rbac_policy.json"
+model = "./conf/rbac_restful.conf"
+policysource = "./conf/rbac_policy.json"
 
 [http]
 port = 80
