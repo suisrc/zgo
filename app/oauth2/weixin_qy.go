@@ -72,7 +72,7 @@ func (a *WeixinQy) Handle(c *gin.Context, body RequestParams, platform RequestPl
 	if err := WeixinQyExecWithAccessToken(c, a.GPA, a.Storer, platform, token1, func(token string) error {
 		if err := user.GetUserInfo(token, body.GetCode()); err != nil {
 			return err
-		} else if user.ErrCode != 0 || user.ErrMsg != "ok" {
+		} else if user.ErrCode != 0 {
 			return &user // 微信服务器异常, 当发生42001异常,会直接获取令牌重试一次
 		} else if user.OpenID == "" && user.UserID != "" {
 			// 成员用户， 强制取成员openid， 归一操作

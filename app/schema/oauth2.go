@@ -95,6 +95,7 @@ type OAuth2GpaAccountToken struct {
 	TokenID      string         `db:"token_kid"`
 	AccountID    sql.NullInt64  `db:"account_id"`
 	TokenPID     sql.NullString `db:"token_pid"`
+	TokenType    sql.NullInt32  `db:"token_type"`
 	Platform     sql.NullString `db:"platform_kid"`
 	AccessToken  sql.NullString `db:"access_token"`
 	ExpiresAt    sql.NullTime   `db:"expires_at"`
@@ -120,7 +121,7 @@ func (a *OAuth2GpaAccountToken) QueryByTokenKID(sqlx *sqlx.DB, kid string) error
 
 // QueryByPlatformAndCode code
 func (a *OAuth2GpaAccountToken) QueryByPlatformAndCode(sqlx *sqlx.DB, platform, code string) error {
-	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where code_token=? and platform_kid=? desc code_exp limit 1"
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where code_token=? and platform_kid=? order by code_exp desc limit 1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, code, platform)
 }

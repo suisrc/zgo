@@ -18,6 +18,7 @@ const (
 	ReqBodyKey  = Prefix + "/req-body"    // request body
 	ResBodyKey  = Prefix + "/res-body"    // response body
 	ResJwtKey   = Prefix + "/res-jwt-kid" // jwt kid
+	ResTknKey   = Prefix + "/res-tkn-kid" // tkn kid
 
 	XReqOriginHostKey   = "X-Request-Origin-Host"
 	XReqOriginPathKey   = "X-Request-Origin-Path"

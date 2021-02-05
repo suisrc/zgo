@@ -57,6 +57,9 @@ func (a *WeixinQm) Handle(c *gin.Context, body RequestParams, platform RequestPl
 		if strings.Contains(c.Request.UserAgent(), "MicroMessenger/") {
 			return a.Connect(c, body, platform, oauth2)
 		}
+		// else if strings.Contains(c.Request.UserAgent(), "MQQBrowser/") {
+		// 	return a.Connect(c, body, platform, oauth2)
+		// }
 		return a.QrConnect(c, body, platform, oauth2)
 	}
 	// 通过微信服务器回调
@@ -72,7 +75,7 @@ func (a *WeixinQm) Handle(c *gin.Context, body RequestParams, platform RequestPl
 	token := WeixinQmAccessToken{}
 	if err := token.GetAccessToken(platform.GetAppID(), platform.GetAppSecret(), body.GetCode()); err != nil {
 		return err // 网络异常
-	} else if token.ErrCode != 0 || token.ErrMsg != "ok" {
+	} else if token.ErrCode != 0 {
 		return &token // 微信服务器异常
 	}
 
@@ -124,7 +127,7 @@ func (a *WeixinQm) Connect(c *gin.Context, body RequestParams, platform RequestP
 
 	a.parseOnce.Do(func() {
 		// 只加载一次, 该内容是模板 解析一次即可
-		url := "https://open.weixin.qq.com/connect/oauth2/authorize?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type=code&scope={{.scope}}&state={{.state}}#wechat_redirect"
+		url := "https://open.weixin.qq.com/connect/oauth2/authorize?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type={{.response_type}}&scope={{.scope}}&state={{.state}}#wechat_redirect"
 		a.parseTemplate, a.parseError = gotemplate.New("").Parse(url)
 	})
 
@@ -175,7 +178,7 @@ func (a *WeixinQm) QrConnect(c *gin.Context, body RequestParams, platform Reques
 
 	a.parseOnce.Do(func() {
 		// 只加载一次, 该内容是模板 解析一次即可
-		url := "https://open.weixin.qq.com/connect/qrconnect?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type={{.code}}&scope={{.scope}}&state={{.state}}#wechat_redirect"
+		url := "https://open.weixin.qq.com/connect/qrconnect?appid={{.appid}}&redirect_uri={{.redirect_uri}}&response_type={{.response_type}}&scope={{.scope}}&state={{.state}}#wechat_redirect"
 		a.parseTemplate, a.parseError = gotemplate.New("").Parse(url)
 	})
 

@@ -245,12 +245,12 @@ func (aq *AccountQuery) Clone() *AccountQuery {
 // Example:
 //
 //	var v []struct {
-//		Pid string `json:"pid,omitempty"`
+//		Account string `json:"account,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Account.Query().
-//		GroupBy(account.FieldPid).
+//		GroupBy(account.FieldAccount).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 //
@@ -272,11 +272,11 @@ func (aq *AccountQuery) GroupBy(field string, fields ...string) *AccountGroupBy 
 // Example:
 //
 //	var v []struct {
-//		Pid string `json:"pid,omitempty"`
+//		Account string `json:"account,omitempty"`
 //	}
 //
 //	client.Account.Query().
-//		Select(account.FieldPid).
+//		Select(account.FieldAccount).
 //		Scan(ctx, &v)
 //
 func (aq *AccountQuery) Select(field string, fields ...string) *AccountSelect {

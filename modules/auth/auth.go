@@ -52,6 +52,8 @@ type UserInfo interface {
 	GetTokenID() string
 	// GetUserAccount 登陆ID, 本身不具备任何意义,只是标记登陆方式, 使用token反向加密
 	GetAccount() string
+	// GetTokenPID 令牌PID, 字母令牌使用， 一般用于接受第三方登录授权后， 捆绑的第三方登录信息令牌
+	GetTokenPID() string
 	// GetUserAccount2 用户自定义账户信息
 	GetAccount2() string
 

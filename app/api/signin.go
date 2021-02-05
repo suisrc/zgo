@@ -178,6 +178,7 @@ func (a *Signin) LogSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, up
 	o2a := schema.SigninGpaAccountToken{
 		TokenID:      u.GetTokenID(),
 		AccountID:    aid,
+		TokenPID:     sql.NullString{Valid: u.GetTokenPID() != "", String: u.GetTokenPID()},
 		OrgCode:      sql.NullString{Valid: u.GetOrgCode() != "", String: u.GetOrgCode()},
 		AccessToken:  sql.NullString{Valid: t.GetAccessToken() != "", String: t.GetAccessToken()},
 		ExpiresAt:    sql.NullTime{Valid: t.GetExpiresAt() > 0, Time: time.Unix(t.GetExpiresAt(), 0)},

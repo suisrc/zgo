@@ -24,6 +24,10 @@ var (
 	DatabaseDSN = func() string {
 		return config.C.MySQL.DSN()
 	}
+	// Database2DSN token
+	Database2DSN = func() string {
+		return config.C.MySQL2.DSN()
+	}
 )
 
 var (

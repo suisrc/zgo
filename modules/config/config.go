@@ -23,6 +23,7 @@ type Config struct {
 	GZIP         GZIP
 	Redis        Redis
 	MySQL        MySQL
+	MySQL2       MySQL
 	Postgres     Postgres
 	Sqlite3      Sqlite3
 	WWW          WWW

@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -149,6 +150,7 @@ func (a *Signin) GetSignUserInfo(c *gin.Context, b *schema.SigninBody, sa *schem
 	//suser.UserIdxID = strconv.Itoa(sa.UserID)
 	suser.TokenID = jwt.NewTokenID(strconv.Itoa(int(sa.ID + 1103)))
 	suser.Account, _ = EncryptAccountWithUser(c, sa.ID, sa.UserID.Int64, suser.TokenID) // 账户信息
+	suser.TokenPID, _ = helper.GetCtxValueToString(c, helper.ResTknKey)                 // 子母令牌
 	suser.Account2 = sa.CustomID.String
 
 	if err := a.SetSignUserWithUser(c, sa, &suser); err != nil { // 用户信息
@@ -438,15 +440,20 @@ func (a *Signin) parseCaptchaType(c *gin.Context, b *schema.SigninOfCaptcha) (*S
 }
 
 //===========================================================================================
+//===========================================================================================
+//===========================================================================================
 
 // OAuth2 登陆控制
 func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Context, int64) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	if b.Platform != "" {
 		// 当前用户
 		account := schema.SigninGpaAccount{}
-		if b.Code != "" {
-			a.findUserByRequestCode(c, b, &account)
-		}
+
+		// 👇👇👇 是否使用待定， 存在一定安全隐患
+		defer a.saveAccountByOAuth2Code(c, b, &account)
+		a.findAccountByOAuth2Code(c, b, &account)
+		// 👆👆👆 是否使用待定， 存在一定安全隐患
+		// 防止oauth2重复授权
 		if account.ID == 0 {
 			o2p := schema.OAuth2GpaPlatform{}
 			if err := o2p.QueryByKID(a.Sqlx, b.Platform); err != nil {
@@ -488,9 +495,6 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Co
 				}
 				return nil, err
 			}
-			if account.ID > 0 && b.Code != "" {
-				a.saveUserByRequestCode(c, b, &account)
-			}
 		}
 		if account.Status != schema.StatusEnable {
 			// 账户未激活， 抛出异常
@@ -509,6 +513,8 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Co
 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
 }
 
+//===========================================================================================
+
 // findUserOfOauth2 ...
 func (a *Signin) findUserOfOAuth2(c *gin.Context, b *schema.SigninOfOAuth2, ifnew bool, o2h oauth2.Handler,
 	o2p *schema.OAuth2GpaPlatform, token1x oauth2.RequestToken, account *schema.SigninGpaAccount,
@@ -525,7 +531,7 @@ func (a *Signin) findUserOfOAuth2(c *gin.Context, b *schema.SigninOfOAuth2, ifne
 	if ifnew && account.ID == 0 {
 		account.String1 = sql.NullString{Valid: true, String: deviceid} // 存储用户使用的设备信息
 		var user int64
-		if relation != "" {
+		if relation != "" && userid != "" {
 			name := strings.ToUpper(relation[:1]) + ":" + userid
 			account.CustomID = sql.NullString{Valid: true, String: name}
 			// 通过名称或者手机号查询当前用户身份, 可以执行自动归一操作
@@ -578,10 +584,18 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 			return nil
 		},
 		SaveToken: func(sqlx *sqlx.DB, token *oauth2.AccessToken) error {
+			tid := ""
+			if token.Account > 0 {
+				tid = jwt.NewTokenID(strconv.Itoa(int(token.Account) + 1103)) // 有用户信息令牌
+				helper.SetCtxValue(c, helper.ResTknKey, tid)                  // 令牌放入缓存， 备用
+			} else {
+				tid = "z" + crypto.EncodeBaseX32(o2p.ID) // 无用户信息令牌
+			}
 			t3n := schema.OAuth2GpaAccountToken{
-				TokenID:      jwt.NewTokenID("1000"),
+				TokenID:      tid,
 				AccountID:    sql.NullInt64{Valid: token.Account > 0, Int64: token.Account},
 				Platform:     o2p.KID,
+				TokenType:    sql.NullInt32{Valid: true, Int32: 2},
 				AccessToken:  token.AccessToken,
 				ExpiresAt:    token.ExpiresAt,
 				RefreshToken: token.RefreshToken,
@@ -615,33 +629,42 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 	}
 }
 
-func (a *Signin) saveUserByRequestCode(c *gin.Context, b *schema.SigninOfOAuth2, account *schema.SigninGpaAccount) error {
-	// 已经找到了用户， 记录登录人员信息
-	// tid := jwt.NewTokenID(strconv.Itoa(int(account.ID) + 1103))
-	// t3n := schema.OAuth2GpaAccountToken{
-	// 	TokenID:   tid,
-	// 	AccountID: sql.NullInt64{Valid: true, Int64: account.ID},
-	// 	Platform:  sql.NullString{Valid: true, String: b.Platform},
-	// 	CodeToken: sql.NullString{Valid: true, String: b.Code},
-	// 	CodeExpAt: sql.NullTime{Valid: true, Time: time.Now().Add(300 * time.Second)},
-	// }
-	// if err := t3n.UpdateAndSaveByTokenKID(a.Sqlx, false); err == nil {
-	// 	// do nothing
-	// }
-	return nil
+//===========================================================================================
+
+func (a *Signin) findAccountByOAuth2Code(c *gin.Context, b *schema.SigninOfOAuth2, account *schema.SigninGpaAccount) {
+	if oac := c.Query("oac"); oac != "new" {
+		val, _ := c.Cookie("zgo_oac")
+		if val != "" {
+			t3n := schema.OAuth2GpaAccountToken{}
+			t3n.QueryByPlatformAndCode(a.Sqlx, b.Platform, val)
+			if t3n.AccountID.Int64 > 0 && t3n.TokenType.Int32 == 2 && t3n.CodeExpAt.Valid && time.Now().Before(t3n.ExpiresAt.Time) {
+				if account.QueryByID(a.Sqlx, t3n.AccountID.Int64); account.ID > 0 {
+					// 直接查询上次认证信息, 该方法存在安全隐患, 但是可以减少OAuth2认证次数
+					helper.SetCtxValue(c, helper.ResTknKey, val)
+				}
+			}
+		}
+	}
 }
 
-func (a *Signin) findUserByRequestCode(c *gin.Context, b *schema.SigninOfOAuth2, account *schema.SigninGpaAccount) error {
-	// 确认用户是否， 增加处理速度
-	// t3n := schema.OAuth2GpaAccountToken{}
-	// if err := t3n.QueryByPlatformAndCode(a.Sqlx, b.Platform, b.Code); err != nil {
-	// 	// 正常情况 do nothing
-	// } else if t3n.CodeExpAt.Time.Before(time.Now()) {
-	// 	// 状态码过期
-	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-STATE", Other: "状态码无效"})
-	// } else if t3n.AccountID.Int64 > 0 {
-	// 	// 尝试通过状态码查询用户， 即使有错也跳过
-	// 	account.QueryByID(a.Sqlx, t3n.AccountID.Int64)
-	// }
-	return nil
+func (a *Signin) saveAccountByOAuth2Code(c *gin.Context, b *schema.SigninOfOAuth2, account *schema.SigninGpaAccount) {
+	if account.ID == 0 || b.Code == "" {
+		return
+	}
+	val, _ := c.Cookie("zgo_oac")
+	tid, _ := helper.GetCtxValueToString(c, helper.ResTknKey)
+	if tid != "" && val != tid {
+		// 需要更新令牌， 默认授权只存放12个小时， 超时， 需要重新认证
+		t3n := schema.OAuth2GpaAccountToken{
+			TokenID:   tid,
+			CodeToken: sql.NullString{Valid: true, String: b.Code},
+			CodeExpAt: sql.NullTime{Valid: true, Time: time.Now().Add(12 * time.Hour)},
+		}
+		if err := t3n.UpdateAndSaveByTokenKID(a.Sqlx, true); err == nil {
+			cke := http.Cookie{Name: "zgo_oac", Value: b.Code, Expires: time.Now().Add(12 * time.Hour)}
+			http.SetCookie(c.Writer, &cke)
+		}
+	}
 }
+
+//===========================================================================================
