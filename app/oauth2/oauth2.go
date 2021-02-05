@@ -101,7 +101,7 @@ type RequestOAuth2 interface {
 // GetRedirectURIByOAuth2Platform Redirect URI by OAuth2Platform
 func GetRedirectURIByOAuth2Platform(c *gin.Context, uri string, platform RequestPlatform, oauth2 RequestOAuth2) string {
 	if uri == "" {
-		uri := oauth2.GetRedirectHost()
+		uri = oauth2.GetRedirectHost()
 		if uri == "" {
 			uri = "https://" + c.Request.Host
 		}
@@ -117,7 +117,6 @@ func GetRedirectURIByOAuth2Platform(c *gin.Context, uri string, platform Request
 type AccessToken struct {
 	Account      int64
 	Platform     int64
-	TokenID      sql.NullString
 	AccessToken  sql.NullString
 	ExpiresIn    sql.NullInt64
 	ExpiresAt    sql.NullTime

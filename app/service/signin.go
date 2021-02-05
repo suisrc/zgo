@@ -3,7 +3,6 @@ package service
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"regexp"
 	"strconv"
 	"strings"
@@ -148,12 +147,9 @@ func (a *Signin) GetSignUserInfo(c *gin.Context, b *schema.SigninBody, sa *schem
 	suser.Scope = b.Scope
 	//suser.AccountID = strconv.Itoa(sa.ID) // SigninUser -> 1
 	//suser.UserIdxID = strconv.Itoa(sa.UserID)
-	suser.TokenID, _ = helper.GetCtxValueToString(c, helper.ResTokenKey) //  配置系统给定的TokenID
-	if suser.TokenID == "" {                                             // account加密需要令牌， 所以令牌不能为空
-		suser.TokenID = jwt.NewTokenID(strconv.Itoa(int(sa.ID + 1103)))
-	}
-	suser.Account2 = sa.CustomID.String
+	suser.TokenID = jwt.NewTokenID(strconv.Itoa(int(sa.ID + 1103)))
 	suser.Account, _ = EncryptAccountWithUser(c, sa.ID, sa.UserID.Int64, suser.TokenID) // 账户信息
+	suser.Account2 = sa.CustomID.String
 
 	if err := a.SetSignUserWithUser(c, sa, &suser); err != nil { // 用户信息
 		return nil, err
@@ -446,48 +442,61 @@ func (a *Signin) parseCaptchaType(c *gin.Context, b *schema.SigninOfCaptcha) (*S
 // OAuth2 登陆控制
 func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Context, int64) (*schema.SigninGpaAccountToken, error)) (*schema.SigninUser, error) {
 	if b.Platform != "" {
-		o2p := schema.OAuth2GpaPlatform{}
-		if err := o2p.QueryByKID(a.Sqlx, b.Platform); err != nil {
-			if sqlxc.IsNotFound(err) {
-				return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
-			}
-			return nil, err
-		}
-		o2h, ok := a.OAuth2Selector[o2p.Type]
-		if !ok {
-			return nil, helper.NewError(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONTROLLER-NONE",
-				Other: "无对应平台的OAuth2控制器: [{{.platform}}]"}, helper.H{
-				"platform": o2p.Type,
-			})
-		}
-
 		// 当前用户
 		account := schema.SigninGpaAccount{}
-		token1x := a.findUserOfToken1(c, b, &o2p)
-		oauth2x := oauth2.RequestOAuth2X{
-			FindHost: func() string { return o2p.SigninHost.String },
-			FindUser: func(relation, openid, userid, deviceid string) (int64, error) {
-				return a.findUserOfOAuth2(c, b, o2h, &o2p, token1x, &account, relation, openid, userid, deviceid)
-			},
+		if b.Code != "" {
+			a.findUserByRequestCode(c, b, &account)
 		}
-		if err := o2h.Handle(c, b, &o2p, token1x, &oauth2x); err != nil {
-			if redirect, ok := err.(*helper.ErrorRedirect); ok {
-				// 终止重定向， 返回json数据
-				if result := c.Query("result"); result == "json" {
-					code := redirect.Code
-					if code == 0 {
-						code = 303
-					}
-					log.Println(redirect.Location)
-					return nil, helper.NewSuccess(c, helper.H{
-						"code":     code,
-						"state":    redirect.State,
-						"location": redirect.Location,
-					})
+		if account.ID == 0 {
+			o2p := schema.OAuth2GpaPlatform{}
+			if err := o2p.QueryByKID(a.Sqlx, b.Platform); err != nil {
+				if sqlxc.IsNotFound(err) {
+					return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
 				}
+				return nil, err
 			}
-			return nil, err
+			o2h, ok := a.OAuth2Selector[o2p.Type.String]
+			if !ok {
+				return nil, helper.NewError(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-CONTROLLER-NONE",
+					Other: "无对应平台的OAuth2控制器: [{{.platform}}]"}, helper.H{
+					"platform": o2p.Type,
+				})
+			}
+
+			token1x := a.findUserOfToken1(c, b, &o2p)
+			oauth2x := oauth2.RequestOAuth2X{
+				FindHost: func() string { return o2p.SigninHost.String },
+				FindUser: func(relation, openid, userid, deviceid string) (int64, error) {
+					return a.findUserOfOAuth2(c, b, o2p.IsSign.Bool, o2h, &o2p, token1x, &account, relation, openid, userid, deviceid)
+				},
+			}
+			if err := o2h.Handle(c, b, &o2p, token1x, &oauth2x); err != nil {
+				if redirect, ok := err.(*helper.ErrorRedirect); ok {
+					// 终止重定向， 返回json数据
+					if result := c.Query("result"); result == "json" {
+						status := redirect.Status
+						if status == 0 {
+							status = 303
+						}
+						// log.Println(redirect.Location)
+						return nil, helper.NewSuccess(c, helper.H{
+							"status":   status,
+							"state":    redirect.State,
+							"location": redirect.Location,
+						})
+					}
+				}
+				return nil, err
+			}
+			if account.ID > 0 && b.Code != "" {
+				a.saveUserByRequestCode(c, b, &account)
+			}
 		}
+		if account.Status != schema.StatusEnable {
+			// 账户未激活， 抛出异常
+			return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOBIND", Other: "用户未绑定"})
+		}
+
 		// 获取用户信息
 		b2 := &schema.SigninBody{
 			Scope:    b.Scope,
@@ -498,6 +507,52 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Co
 		return a.GetSignUserInfo(c, b2, &account)
 	}
 	return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
+}
+
+// findUserOfOauth2 ...
+func (a *Signin) findUserOfOAuth2(c *gin.Context, b *schema.SigninOfOAuth2, ifnew bool, o2h oauth2.Handler,
+	o2p *schema.OAuth2GpaPlatform, token1x oauth2.RequestToken, account *schema.SigninGpaAccount,
+	relation, openid, userid, deviceid string) (int64, error) {
+	if openid == "" {
+		openid = o2p.AppID.String + ":" + userid
+	}
+	// 查询当前登录人员身份
+	if err := account.QueryByAccount(a.Sqlx, openid, schema.AccountTypeOpenid, b.Platform, b.OrgCode, false); err != nil {
+		if !sqlxc.IsNotFound(err) {
+			return 0, err
+		}
+	}
+	if ifnew && account.ID == 0 {
+		account.String1 = sql.NullString{Valid: true, String: deviceid} // 存储用户使用的设备信息
+		var user int64
+		if relation != "" {
+			name := strings.ToUpper(relation[:1]) + ":" + userid
+			account.CustomID = sql.NullString{Valid: true, String: name}
+			// 通过名称或者手机号查询当前用户身份, 可以执行自动归一操作
+			// if info, err := o2h.GetUser(c, o2p, token1x, relation, userid); err == nil {
+			// 	log.Println(info)
+			// 	a.Bus.Publish("topic:account:create", info)
+			// }
+		}
+		if user == 0 {
+			if res, _ := account.SelectByAccount(a.Sqlx, openid, schema.AccountTypeOpenid, b.Platform, "", schema.StatusEnable, 1, true); len(*res) > 0 {
+				user = (*res)[0].UserID.Int64 // 用户存在归一账户， 处理归一操作， 同时允许用户登录
+			}
+		}
+		// 用户第一次登录， 收集用户信息
+		account.Account = openid
+		account.AccountType = schema.AccountTypeOpenid
+		account.PlatformKID = sql.NullString{Valid: b.Platform != "", String: b.Platform}
+		account.OrgCode = sql.NullString{Valid: b.OrgCode != "", String: b.OrgCode}
+		if user > 0 {
+			account.UserID = sql.NullInt64{Valid: true, Int64: user}
+			account.Status = schema.StatusEnable // 自动完成激活
+		} else {
+			account.Status = schema.StatusNoActivate // 待激活账户
+		}
+		account.UpdateAndSaveX(a.Sqlx) // 持久化， 存储账户信息
+	}
+	return account.ID, nil
 }
 
 func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p *schema.OAuth2GpaPlatform) *oauth2.RequestToken1X {
@@ -512,7 +567,6 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 			} else if err := t3n.QueryByTokenKID(a.Sqlx, o2p.TokenKID.String); err != nil {
 				return err
 			}
-			token.TokenID = sql.NullString{Valid: true, String: t3n.TokenID}
 			token.Account = t3n.AccountID.Int64
 			token.Platform = o2p.ID
 			token.AccessToken = t3n.AccessToken
@@ -527,7 +581,7 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 			t3n := schema.OAuth2GpaAccountToken{
 				TokenID:      jwt.NewTokenID("1000"),
 				AccountID:    sql.NullInt64{Valid: token.Account > 0, Int64: token.Account},
-				Platform:     sql.NullString{Valid: true, String: o2p.KID},
+				Platform:     o2p.KID,
 				AccessToken:  token.AccessToken,
 				ExpiresAt:    token.ExpiresAt,
 				RefreshToken: token.RefreshToken,
@@ -561,49 +615,33 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 	}
 }
 
-// findUserOfOauth2 ...
-func (a *Signin) findUserOfOAuth2(c *gin.Context, b *schema.SigninOfOAuth2, o2h oauth2.Handler,
-	o2p *schema.OAuth2GpaPlatform, token1x oauth2.RequestToken, account *schema.SigninGpaAccount,
-	relation, openid, userid, deviceid string) (int64, error) {
-	// 查询当前登录人员身份
-	if err := account.QueryByAccount(a.Sqlx, openid, schema.AccountTypeOpenid, b.Platform, b.OrgCode, false); err != nil {
-		if !sqlxc.IsNotFound(err) {
-			return 0, err
-		}
-	}
-	if account.ID == 0 {
-		account.String1 = sql.NullString{Valid: true, String: deviceid} // 存储用户使用的设备信息
-		var user int64
-		if relation != "" {
-			name := strings.ToUpper(relation[:1]) + ":" + userid
-			account.CustomID = sql.NullString{Valid: true, String: name}
-			// 通过名称或者手机号查询当前用户身份, 可以执行自动归一操作
-			// if info, err := o2h.GetUser(c, o2p, token1x, relation, userid); err == nil {
-			// 	log.Println(info)
-			// 	a.Bus.Publish("topic:account:create", info)
-			// }
-		}
-		if user == 0 {
-			if res, _ := account.SelectByAccount(a.Sqlx, openid, schema.AccountTypeOpenid, b.Platform, "", schema.StatusEnable, 1, true); len(*res) > 0 {
-				user = (*res)[0].UserID.Int64 // 用户存在归一账户， 处理归一操作， 同时允许用户登录
-			}
-		}
-		// 用户第一次登录， 收集用户信息
-		account.Account = openid
-		account.AccountType = schema.AccountTypeOpenid
-		account.PlatformKID = sql.NullString{Valid: b.Platform != "", String: b.Platform}
-		account.OrgCode = sql.NullString{Valid: b.OrgCode != "", String: b.OrgCode}
-		if user > 0 {
-			account.UserID = sql.NullInt64{Valid: true, Int64: user}
-			account.Status = schema.StatusEnable // 自动完成激活
-		} else {
-			account.Status = schema.StatusNoActivate // 待激活账户
-		}
-		account.UpdateAndSaveX(a.Sqlx) // 持久化， 存储账户信息
-	}
-	if account.Status != schema.StatusEnable {
-		// 账户未激活， 抛出异常
-		return 0, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-NOBIND", Other: "用户未绑定"})
-	}
-	return account.ID, nil
+func (a *Signin) saveUserByRequestCode(c *gin.Context, b *schema.SigninOfOAuth2, account *schema.SigninGpaAccount) error {
+	// 已经找到了用户， 记录登录人员信息
+	// tid := jwt.NewTokenID(strconv.Itoa(int(account.ID) + 1103))
+	// t3n := schema.OAuth2GpaAccountToken{
+	// 	TokenID:   tid,
+	// 	AccountID: sql.NullInt64{Valid: true, Int64: account.ID},
+	// 	Platform:  sql.NullString{Valid: true, String: b.Platform},
+	// 	CodeToken: sql.NullString{Valid: true, String: b.Code},
+	// 	CodeExpAt: sql.NullTime{Valid: true, Time: time.Now().Add(300 * time.Second)},
+	// }
+	// if err := t3n.UpdateAndSaveByTokenKID(a.Sqlx, false); err == nil {
+	// 	// do nothing
+	// }
+	return nil
+}
+
+func (a *Signin) findUserByRequestCode(c *gin.Context, b *schema.SigninOfOAuth2, account *schema.SigninGpaAccount) error {
+	// 确认用户是否， 增加处理速度
+	// t3n := schema.OAuth2GpaAccountToken{}
+	// if err := t3n.QueryByPlatformAndCode(a.Sqlx, b.Platform, b.Code); err != nil {
+	// 	// 正常情况 do nothing
+	// } else if t3n.CodeExpAt.Time.Before(time.Now()) {
+	// 	// 状态码过期
+	// 	return helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-OAUTH2-STATE", Other: "状态码无效"})
+	// } else if t3n.AccountID.Int64 > 0 {
+	// 	// 尝试通过状态码查询用户， 即使有错也跳过
+	// 	account.QueryByID(a.Sqlx, t3n.AccountID.Int64)
+	// }
+	return nil
 }

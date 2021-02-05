@@ -12,8 +12,8 @@ import (
 // OAuth2GpaPlatform 登录使用的平台
 type OAuth2GpaPlatform struct {
 	ID          int64          `db:"id"`           // 唯一标识
-	KID         string         `db:"kid"`          // 三方标识
-	Type        string         `db:"type"`         // 平台标识
+	KID         sql.NullString `db:"kid"`          // 三方标识
+	Type        sql.NullString `db:"type"`         // 平台标识
 	IsSign      sql.NullBool   `db:"signin"`       // 登录标识
 	OrgCode     sql.NullString `db:"org_cod"`      // 组织字段
 	Status      StatusType     `db:"status"`       // 状态
@@ -51,7 +51,7 @@ func (a *OAuth2GpaPlatform) QueryByKID(sqlx *sqlx.DB, kid string) error {
 
 // UpdateAndSaveByID 更新
 func (a *OAuth2GpaPlatform) UpdateAndSaveByID(sqlx *sqlx.DB) error {
-	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "platform", IDCol: "id"}
+	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "platform", IDVal: a.ID}
 	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(tic, a)
 	if err != nil {
 		return err
@@ -100,6 +100,8 @@ type OAuth2GpaAccountToken struct {
 	ExpiresAt    sql.NullTime   `db:"expires_at"`
 	RefreshToken sql.NullString `db:"refresh_token"`
 	RefreshExpAt sql.NullTime   `db:"refresh_exp"`
+	CodeToken    sql.NullString `db:"code_token"`
+	CodeExpAt    sql.NullTime   `db:"code_exp"`
 	CallCount    sql.NullInt64  `db:"call_count"`
 	ErrCode      sql.NullString `db:"error_code"`
 	ErrMessage   sql.NullString `db:"error_message"`
@@ -114,6 +116,13 @@ func (a *OAuth2GpaAccountToken) QueryByTokenKID(sqlx *sqlx.DB, kid string) error
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, kid)
+}
+
+// QueryByPlatformAndCode code
+func (a *OAuth2GpaAccountToken) QueryByPlatformAndCode(sqlx *sqlx.DB, platform, code string) error {
+	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where code_token=? and platform_kid=? desc code_exp limit 1"
+	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
+	return sqlx.Get(a, SQL, code, platform)
 }
 
 // UpdateAndSaveByTokenKID 更新

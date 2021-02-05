@@ -39,7 +39,7 @@ func (a *SigninOfOAuth2) GetCode() string {
 
 // GetState ...
 func (a *SigninOfOAuth2) GetState() string {
-	return a.Scope
+	return a.State
 }
 
 // GetScope ...

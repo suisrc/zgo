@@ -12,14 +12,12 @@ import (
 
 // 定义上下文中的键
 const (
-	Prefix       = "zgo"
-	UserInfoKey  = Prefix + "/user-info"     // user info
-	TraceIDKey   = Prefix + "/tract-id"      // trace id
-	ReqBodyKey   = Prefix + "/req-body"      // request body
-	ResBodyKey   = Prefix + "/res-body"      // response body
-	ResJwtKey    = Prefix + "/res-jwt-kid"   // jwt kid
-	ResJwtOptKey = Prefix + "/res-jwt-opt"   // jwt opt
-	ResTokenKey  = Prefix + "/res-token-kid" // token kid -> jwt id
+	Prefix      = "zgo"
+	UserInfoKey = Prefix + "/user-info"   // user info
+	TraceIDKey  = Prefix + "/tract-id"    // trace id
+	ReqBodyKey  = Prefix + "/req-body"    // request body
+	ResBodyKey  = Prefix + "/res-body"    // response body
+	ResJwtKey   = Prefix + "/res-jwt-kid" // jwt kid
 
 	XReqOriginHostKey   = "X-Request-Origin-Host"
 	XReqOriginPathKey   = "X-Request-Origin-Path"

@@ -16,3 +16,14 @@ func TestNewNowTime(t *testing.T) {
 
 	assert.NotNil(t, nil)
 }
+
+func Test(t *testing.T) {
+	token := ""
+	openid := WeixinQyOpenid{}
+	if err := openid.ConvertToOpenid(token, "15140420103"); err != nil {
+		log.Println(err)
+	} else {
+		log.Println(openid)
+	}
+	assert.NotNil(t, nil)
+}
