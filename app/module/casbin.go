@@ -135,7 +135,7 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 		} else if !b {
 			// 租户无法访问该服务
 			helper.ResError(c, &helper.ErrorModel{
-				Status:   200,
+				Status:   403,
 				ShowType: helper.ShowWarn,
 				ErrorMessage: &i18n.Message{
 					ID:    "ERR-SERVICE-CLOSE",
@@ -167,7 +167,7 @@ func (a *CasbinAuther) UserAuthCasbinMiddlewareByOrigin(handle func(*gin.Context
 		}
 		if role == "" {
 			helper.ResError(c, &helper.ErrorModel{
-				Status:   200,
+				Status:   403,
 				ShowType: helper.ShowWarn,
 				ErrorMessage: &i18n.Message{
 					ID:    "ERR-SERVICE-NOROLE",
@@ -277,7 +277,7 @@ func (a *CasbinAuther) IsPassPermission(c *gin.Context, user auth.UserInfo, svc,
 			return true, nil
 		}
 		return false, &helper.ErrorModel{
-			Status:   200,
+			Status:   403,
 			ShowType: helper.ShowWarn,
 			ErrorMessage: &i18n.Message{
 				ID:    "ERR-SERVICE-TENANT-NONE",
@@ -328,7 +328,7 @@ func (a *CasbinAuther) GetUserRole(c *gin.Context, user auth.UserInfo, svc, org 
 	if role != "" {
 		// 指定的角色无效
 		err = &helper.ErrorModel{
-			Status:   200,
+			Status:   403,
 			ShowType: helper.ShowWarn,
 			ErrorMessage: &i18n.Message{
 				ID:    "ERR-SERVICE-ROLE-INVALID",
@@ -340,7 +340,7 @@ func (a *CasbinAuther) GetUserRole(c *gin.Context, user auth.UserInfo, svc, org 
 	} else if len(roles) > 1 {
 		// 用户对同一个应用具有多个角色， 拒绝访问
 		err = &helper.ErrorModel{
-			Status:   200,
+			Status:   403,
 			ShowType: helper.ShowWarn,
 			ErrorMessage: &i18n.Message{
 				ID:    "ERR-SERVICE-ROLE-MULT",
@@ -582,7 +582,7 @@ func (a *CasbinAuther) QueryCasbinPolicies(org, ver string) (*CasbinPolicy, erro
 		return &c, nil
 	} else if cgm.Status == schema.StatusDisable {
 		return nil, &helper.ErrorModel{
-			Status:   200,
+			Status:   403,
 			ShowType: helper.ShowWarn,
 			ErrorMessage: &i18n.Message{
 				ID:    "ERR-CASBIN-DISABLE",
