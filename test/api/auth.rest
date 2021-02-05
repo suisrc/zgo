@@ -15,7 +15,7 @@ Content-Type: application/json
   "g": "ORGCM3558",
   "scope": "snsapi_login",
   "password": "123456",
-  "username": "it-100002"
+  "username": "it-100004"
 }
 
 ###
