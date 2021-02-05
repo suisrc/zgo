@@ -27,7 +27,7 @@ import (
 type Signin struct {
 	gpa.GPA
 	Auther        auth.Auther
-	SigninService service.Signin
+	SigninService *service.Signin
 	CasbinAuther  *module.CasbinAuther
 }
 
@@ -72,25 +72,30 @@ func (a *Signin) signin(c *gin.Context) {
 		body.Username = body.Username[:offset]
 	}
 
-	// 执行登录
-	user, err := a.SigninService.Signin(c, &body, a.lastSignIn)
+	// 执行登录， 验证用户
+	user, err := a.SigninService.Signin(c, &body, a.LastSignIn)
 	if err != nil {
 		helper.FixResponse500Error(c, err, func() {
 			logger.Errorf(c, logger.ErrorWW(err))
 		})
 		return
 	}
-	// 生成令牌
-	token, usr, err := a.Auther.GenerateToken(c, user)
-	if err != nil {
-		helper.FixResponse500Error(c, err, func() {
-			logger.Errorf(c, logger.ErrorWW(err))
-		})
-		return
-	}
+	// 执行登录， 生成令牌
+	a.signin2(c, user)
+}
 
+// 执行登录， 生成令牌
+func (a *Signin) signin2(c *gin.Context, u auth.UserInfo) {
+	// 生成令牌
+	token, usr, err := a.Auther.GenerateToken(c, u)
+	if err != nil {
+		helper.FixResponse500Error(c, err, func() {
+			logger.Errorf(c, logger.ErrorWW(err))
+		})
+		return
+	}
 	// 记录登录
-	a.logSignIn(c, usr, token, false, nil)
+	a.LogSignIn(c, usr, token, false, nil)
 	// 登陆结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
@@ -102,9 +107,6 @@ func (a *Signin) signin(c *gin.Context) {
 		RefreshToken: token.GetRefreshToken(),
 		RefreshExpAt: token.GetRefreshExpAt(),
 	}
-
-	// 记录登陆
-	// 返回正常结果即可
 	helper.ResSuccess(c, &result)
 }
 
@@ -124,15 +126,15 @@ func (a *Signin) signout(c *gin.Context) {
 		helper.ResError(c, helper.Err400BadRequest)
 		return
 	}
-	a.logSignOut(c, user, user.GetTokenID())
+	a.LogSignOut(c, user, user.GetTokenID())
 
 	helper.ResSuccess(c, "ok")
 }
 
 //==================================================================================================================
 
-// 获取最后一次登陆信息
-func (a *Signin) lastSignIn(c *gin.Context, aid int64) (*schema.SigninGpaAccountToken, error) {
+// LastSignIn 获取最后一次登陆信息
+func (a *Signin) LastSignIn(c *gin.Context, aid int64) (*schema.SigninGpaAccountToken, error) {
 	if config.C.JWTAuth.LimitTime <= 0 {
 		// 不使用上去签名的结果作为缓存
 		return nil, nil
@@ -163,8 +165,8 @@ func (a *Signin) lastSignIn(c *gin.Context, aid int64) (*schema.SigninGpaAccount
 	return &o2a, nil
 }
 
-// 日志记录
-func (a *Signin) logSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, update bool, fix func(*schema.SigninGpaAccountToken)) {
+// LogSignIn 日志记录
+func (a *Signin) LogSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, update bool, fix func(*schema.SigninGpaAccountToken)) {
 	// c.SetCookie("signin", u.GetTokenID(), -1, "", u.GetAudience(), false, false) // 标记登陆信息
 
 	// aid, _ := strconv.Atoi(u.GetAccount())
@@ -192,8 +194,8 @@ func (a *Signin) logSignIn(c *gin.Context, u auth.UserInfo, t auth.TokenInfo, up
 	}
 }
 
-// 日志记录
-func (a *Signin) logSignOut(c *gin.Context, u auth.UserInfo, t string) {
+// LogSignOut 日志记录
+func (a *Signin) LogSignOut(c *gin.Context, u auth.UserInfo, t string) {
 	// 销毁刷新令牌
 	o2a := schema.SigninGpaAccountToken{
 		TokenID:      u.GetTokenID(),
@@ -258,7 +260,7 @@ func (a *Signin) refresh(c *gin.Context) {
 	}
 
 	// 登陆日志
-	a.logSignIn(c, user, token, true, nil)
+	a.LogSignIn(c, user, token, true, nil)
 	// 登录结果
 	result := schema.SigninResult{
 		TokenStatus:  "ok",
@@ -423,7 +425,7 @@ func (a *Signin) token3get(c *gin.Context) {
 		return
 	}
 
-	a.logSignIn(c, user, token, true, func(sga *schema.SigninGpaAccountToken) {
+	a.LogSignIn(c, user, token, true, func(sga *schema.SigninGpaAccountToken) {
 		// 注销延迟令牌， 延迟令牌只允许使用一次
 		sga.CodeExpAt = sql.NullTime{Valid: true, Time: time.Unix(0, 0)}
 	})

@@ -26,9 +26,9 @@ type SigninOfOAuth2 struct {
 	Code     string `form:"code"`         // 票据
 	State    string `form:"state"`        // 验签
 	Scope    string `form:"scope"`        // 作用域
-	Platform string `form:"p"`            // 授权平台
-	OrgCode  string `form:"g"`            // 租户
-	WebToken string `form:"w"`            // JWT令牌密钥， 高级用法， 使用非系统默认JWT令牌
+	Platform string `form:"p" uri:"p"`    // 授权平台
+	OrgCode  string `form:"g" uri:"g"`    // 租户
+	WebToken string `form:"w" uri:"w"`    // JWT令牌密钥， 高级用法， 使用非系统默认JWT令牌
 	Redirect string `form:"redirect_uri"` // 重定向地址
 }
 

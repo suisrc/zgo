@@ -224,6 +224,7 @@ func (a *TokenManager) FindToken(c context.Context) (string, error) {
 				if idle < time.Duration(a.NewCacheIdle) && toa2.AsyncLock.Valid && toa2.AsyncLock.Time.Add(5*time.Second).Before(time.Now()) {
 					// 有效期小于阈值, 异步更新， 锁定的是未来5s中的数据
 					if err := a.OAuth2Handle.LockAsync(a.Sqlx, a.Platform); err == nil {
+						// 执行异步更新
 						go a.NewToken(c)
 					}
 				}

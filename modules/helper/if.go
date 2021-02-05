@@ -34,10 +34,21 @@ func IfObject(condition bool, ifture, ifalse interface{}) interface{} {
 
 // IfFunc 判断
 func IfFunc(condition bool, ifture, ifalse func() interface{}) interface{} {
-	if condition {
+	if condition && ifture != nil {
 		return ifture()
+	} else if !condition && ifalse != nil {
+		return ifalse()
 	}
-	return ifalse()
+	return nil
+}
+
+// IfExec 判断
+func IfExec(condition bool, ifture, ifalse func()) {
+	if condition && ifture != nil {
+		ifture()
+	} else if !condition && ifalse != nil {
+		ifalse()
+	}
 }
 
 // ReverseStr 反正字符串

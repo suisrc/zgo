@@ -3,11 +3,13 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/asaskevich/EventBus"
 	"github.com/jmoiron/sqlx"
 	"github.com/suisrc/zgo/modules/auth/jwt"
 	"github.com/suisrc/zgo/modules/crypto"
@@ -36,6 +38,8 @@ type Signin struct {
 	ESender        EmailSender       // 邮箱发送验证
 	TSender        ThreeSender       // 三方发送验证
 	OAuth2Selector oauth2.Selector   // OAuth2选择器
+	Bus            EventBus.Bus      // 时间总线
+
 }
 
 // Signin 登陆控制
@@ -90,8 +94,10 @@ func (a *Signin) SigninByPasswd(c *gin.Context, b *schema.SigninBody, last func(
 		// 密码不匹配
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-PASSWD-ERROR", Other: "用户或密码错误"})
 	}
-	if _, err := last(c, account.ID); err != nil {
-		return nil, err // 快速验证上次登录结果
+	if last != nil {
+		if _, err := last(c, account.ID); err != nil {
+			return nil, err // 快速验证上次登录结果
+		}
 	}
 	// 获取用户信息
 	return a.GetSignUserInfo(c, b, &account)
@@ -121,8 +127,10 @@ func (a *Signin) SigninByCaptcha(c *gin.Context, b *schema.SigninBody, last func
 	} else if captcha != b.Captcha {
 		return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-CAPTCHA-CHECK", Other: "验证码不正确"})
 	}
-	if _, err := last(c, account.ID); err != nil {
-		return nil, err // 快速验证上次登录结果
+	if last != nil {
+		if _, err := last(c, account.ID); err != nil {
+			return nil, err // 快速验证上次登录结果
+		}
 	}
 	// 获取用户信息
 	return a.GetSignUserInfo(c, b, &account)
@@ -433,13 +441,6 @@ func (a *Signin) parseCaptchaType(c *gin.Context, b *schema.SigninOfCaptcha) (*S
 	return res, nil
 }
 
-//============================================================================================
-
-// 空的上次登陆验证器
-func (a *Signin) lastSignInNil(c *gin.Context, aid int64) (*schema.SigninGpaAccountToken, error) {
-	return nil, nil
-}
-
 //===========================================================================================
 
 // OAuth2 登陆控制
@@ -447,6 +448,9 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Co
 	if b.Platform != "" {
 		o2p := schema.OAuth2GpaPlatform{}
 		if err := o2p.QueryByKID(a.Sqlx, b.Platform); err != nil {
+			if sqlxc.IsNotFound(err) {
+				return nil, helper.New0Error(c, helper.ShowWarn, &i18n.Message{ID: "WARN-SIGNIN-OAUTH2-NONE", Other: "无效第三方登陆"})
+			}
 			return nil, err
 		}
 		o2h, ok := a.OAuth2Selector[o2p.Type]
@@ -463,7 +467,7 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Co
 		oauth2x := oauth2.RequestOAuth2X{
 			FindHost: func() string { return o2p.SigninHost.String },
 			FindUser: func(relation, openid, userid, deviceid string) (int64, error) {
-				return a.findUserOfOAuth2(c, b, &account, relation, openid, userid, deviceid)
+				return a.findUserOfOAuth2(c, b, o2h, &o2p, token1x, &account, relation, openid, userid, deviceid)
 			},
 		}
 		if err := o2h.Handle(c, b, &o2p, token1x, &oauth2x); err != nil {
@@ -474,8 +478,10 @@ func (a *Signin) OAuth2(c *gin.Context, b *schema.SigninOfOAuth2, l func(*gin.Co
 					if code == 0 {
 						code = 303
 					}
+					log.Println(redirect.Location)
 					return nil, helper.NewSuccess(c, helper.H{
 						"code":     code,
+						"state":    redirect.State,
 						"location": redirect.Location,
 					})
 				}
@@ -556,7 +562,8 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 }
 
 // findUserOfOauth2 ...
-func (a *Signin) findUserOfOAuth2(c *gin.Context, b *schema.SigninOfOAuth2, account *schema.SigninGpaAccount,
+func (a *Signin) findUserOfOAuth2(c *gin.Context, b *schema.SigninOfOAuth2, o2h oauth2.Handler,
+	o2p *schema.OAuth2GpaPlatform, token1x oauth2.RequestToken, account *schema.SigninGpaAccount,
 	relation, openid, userid, deviceid string) (int64, error) {
 	// 查询当前登录人员身份
 	if err := account.QueryByAccount(a.Sqlx, openid, schema.AccountTypeOpenid, b.Platform, b.OrgCode, false); err != nil {
@@ -571,8 +578,9 @@ func (a *Signin) findUserOfOAuth2(c *gin.Context, b *schema.SigninOfOAuth2, acco
 			name := strings.ToUpper(relation[:1]) + ":" + userid
 			account.CustomID = sql.NullString{Valid: true, String: name}
 			// 通过名称或者手机号查询当前用户身份, 可以执行自动归一操作
-			// if info, err := o2h.GetUser(c, &o2p, &token1x, relation, userid); err == nil {
+			// if info, err := o2h.GetUser(c, o2p, token1x, relation, userid); err == nil {
 			// 	log.Println(info)
+			// 	a.Bus.Publish("topic:account:create", info)
 			// }
 		}
 		if user == 0 {

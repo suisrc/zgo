@@ -74,7 +74,14 @@ func BuildInjector() (*Injector, func(), error) {
 		cleanup()
 		return nil, nil, err
 	}
-	signin := service.Signin{
+	bus, cleanup4, err := module.NewEventBus()
+	if err != nil {
+		cleanup3()
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
+	signin := &service.Signin{
 		GPA:            gpaGPA,
 		Passwd:         validator,
 		Store:          storer,
@@ -82,6 +89,7 @@ func BuildInjector() (*Injector, func(), error) {
 		ESender:        emailSender,
 		TSender:        threeSender,
 		OAuth2Selector: selector,
+		Bus:            bus,
 	}
 	apiSignin := &api.Signin{
 		GPA:           gpaGPA,
@@ -90,9 +98,11 @@ func BuildInjector() (*Injector, func(), error) {
 		CasbinAuther:  casbinAuther,
 	}
 	connect := &api.Connect{
-		GPA:          gpaGPA,
-		Signin:       apiSignin,
-		CasbinAuther: casbinAuther,
+		GPA:           gpaGPA,
+		Auther:        auther,
+		SigninService: signin,
+		CasbinAuther:  casbinAuther,
+		SigninAPI:     apiSignin,
 	}
 	user := service.User{
 		GPA:            gpaGPA,
@@ -161,6 +171,7 @@ func BuildInjector() (*Injector, func(), error) {
 		Healthz:    healthz,
 	}
 	return injector, func() {
+		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()

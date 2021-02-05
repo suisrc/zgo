@@ -1,0 +1,11 @@
+@base_url=http://127.0.0.1
+@bearer=
+
+GET {{base_url}}/connect/oauth2/signin/test?result=json
+Content-Type: application/json
+
+
+###
+Get {{base_url}}/api/ka/v1/user/current
+Content-Type: application/json
+Authorization: Bearer {{bearer}}
