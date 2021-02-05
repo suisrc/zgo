@@ -72,7 +72,7 @@ clean:
 
 pack: build
 	rm -rf $(RELEASE_ROOT) && mkdir -p $(RELEASE_SERVER)
-	cp -r $(SERVER_BIN) conf $(RELEASE_SERVER)
+	cp -r $(SERVER_BIN) docker/config.toml $(RELEASE_SERVER)
 	cd $(RELEASE_ROOT) && tar -cvf $(APP).tar ${APP} && rm -rf ${APP}
 
 cli:
