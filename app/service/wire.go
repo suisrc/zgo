@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/google/wire"
-	"github.com/suisrc/zgo/app/model/entc"
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/module"
@@ -12,7 +11,7 @@ import (
 
 // ServiceSet wire注入服务
 var ServiceSet = wire.NewSet(
-	entc.NewClient,  // 数据库连接注册
+	// entc.NewClient,  // 数据库连接注册
 	sqlxc.NewClient, // 数据库连接注册
 
 	wire.Struct(new(gpa.GPA), "*"),          // 数据库服务

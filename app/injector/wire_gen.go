@@ -8,7 +8,6 @@ package injector
 import (
 	"github.com/suisrc/zgo/app/api"
 	"github.com/suisrc/zgo/app/api/manager"
-	"github.com/suisrc/zgo/app/model/entc"
 	"github.com/suisrc/zgo/app/model/gpa"
 	"github.com/suisrc/zgo/app/model/sqlxc"
 	"github.com/suisrc/zgo/app/module"
@@ -25,22 +24,15 @@ func BuildInjector() (*Injector, func(), error) {
 	useEngine := api.NewUseEngine(bundle)
 	engine := middlewire.InitGinEngine(useEngine)
 	router := middlewire.NewRouter(engine)
-	client, cleanup, err := entc.NewClient()
+	db, cleanup, err := sqlxc.NewClient()
 	if err != nil {
-		return nil, nil, err
-	}
-	db, cleanup2, err := sqlxc.NewClient()
-	if err != nil {
-		cleanup()
 		return nil, nil, err
 	}
 	gpaGPA := gpa.GPA{
-		Entc: client,
 		Sqlx: db,
 	}
-	storer, cleanup3, err := module.NewStorer()
+	storer, cleanup2, err := module.NewStorer()
 	if err != nil {
-		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
@@ -69,14 +61,12 @@ func BuildInjector() (*Injector, func(), error) {
 	}
 	selector, err := oauth2.NewSelector(gpaGPA, storer)
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
 	}
-	bus, cleanup4, err := module.NewEventBus()
+	bus, cleanup3, err := module.NewEventBus()
 	if err != nil {
-		cleanup3()
 		cleanup2()
 		cleanup()
 		return nil, nil, err
@@ -171,7 +161,6 @@ func BuildInjector() (*Injector, func(), error) {
 		Healthz:    healthz,
 	}
 	return injector, func() {
-		cleanup4()
 		cleanup3()
 		cleanup2()
 		cleanup()
