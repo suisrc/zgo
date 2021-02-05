@@ -112,22 +112,22 @@ type OAuth2GpaAccountToken struct {
 	String2      sql.NullString `db:"string_2"` // 扩展字段
 }
 
-// QueryByTokenKID kid
-func (a *OAuth2GpaAccountToken) QueryByTokenKID(sqlx *sqlx.DB, kid string) error {
+// QueryByTokenKID2 kid
+func (a *OAuth2GpaAccountToken) QueryByTokenKID2(sqlx *sqlx.DB, kid string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where token_kid=?"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, kid)
 }
 
-// QueryByPlatformAndCode code
-func (a *OAuth2GpaAccountToken) QueryByPlatformAndCode(sqlx *sqlx.DB, platform, code string) error {
+// QueryByPlatformAndCode2 code
+func (a *OAuth2GpaAccountToken) QueryByPlatformAndCode2(sqlx *sqlx.DB, platform, code string) error {
 	SQL := "select " + sqlxc.SelectColumns(a) + " from {{TP}}token where code_token=? and platform_kid=? order by code_exp desc limit 1"
 	SQL = strings.ReplaceAll(SQL, "{{TP}}", TablePrefix)
 	return sqlx.Get(a, SQL, code, platform)
 }
 
-// UpdateAndSaveByTokenKID 更新
-func (a *OAuth2GpaAccountToken) UpdateAndSaveByTokenKID(sqlx *sqlx.DB, update bool) error {
+// UpdateAndSaveByTokenKID2 更新
+func (a *OAuth2GpaAccountToken) UpdateAndSaveByTokenKID2(sqlx *sqlx.DB, update bool) error {
 	tic := sqlxc.TableIdxColumn{Table: TablePrefix + "token", IDCol: "token_kid", IDVal: a.TokenID, Update: sql.NullBool{Valid: true, Bool: update}}
 	SQL, params, err := sqlxc.CreateUpdateSQLByNamedAndSkipNilAndSet(tic, a)
 	if err != nil {

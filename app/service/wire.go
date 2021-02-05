@@ -2,8 +2,7 @@ package service
 
 import (
 	"github.com/google/wire"
-	"github.com/suisrc/zgo/app/model/gpa"
-	"github.com/suisrc/zgo/app/model/sqlxc"
+	"github.com/suisrc/zgo/app/model/gpaf"
 	"github.com/suisrc/zgo/app/module"
 	"github.com/suisrc/zgo/app/oauth2"
 	"github.com/suisrc/zgo/modules/passwd"
@@ -11,10 +10,7 @@ import (
 
 // ServiceSet wire注入服务
 var ServiceSet = wire.NewSet(
-	// entc.NewClient,  // 数据库连接注册
-	sqlxc.NewClient, // 数据库连接注册
-
-	wire.Struct(new(gpa.GPA), "*"),          // 数据库服务
+	gpaf.NewGPA,                             // 数据库链接
 	wire.Struct(new(passwd.Validator), "*"), // 密码验证
 	oauth2.NewSelector,                      // OAuth2注册
 

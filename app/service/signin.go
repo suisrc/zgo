@@ -570,7 +570,7 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 			t3n := schema.OAuth2GpaAccountToken{}
 			if !o2p.TokenKID.Valid {
 				return nil
-			} else if err := t3n.QueryByTokenKID(a.Sqlx, o2p.TokenKID.String); err != nil {
+			} else if err := t3n.QueryByTokenKID2(a.Sqlx2, o2p.TokenKID.String); err != nil {
 				return err
 			}
 			token.Account = t3n.AccountID.Int64
@@ -607,7 +607,7 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 				ID:       o2p.ID,
 				TokenKID: sql.NullString{Valid: true, String: t3n.TokenID},
 			}
-			if err := t3n.UpdateAndSaveByTokenKID(a.Sqlx, false); err != nil {
+			if err := t3n.UpdateAndSaveByTokenKID2(a.Sqlx2, false); err != nil {
 				return err
 			}
 			return o3p.UpdateAndSaveByID(a.Sqlx) // 绑定令牌
@@ -617,14 +617,14 @@ func (a *Signin) findUserOfToken1(c *gin.Context, b *schema.SigninOfOAuth2, o2p 
 			if !o2p.TokenKID.Valid {
 				// 没有使用令牌
 				return errors.New("no token")
-			} else if err := t3n.QueryByTokenKID(a.Sqlx, o2p.TokenKID.String); err != nil {
+			} else if err := t3n.QueryByTokenKID2(a.Sqlx2, o2p.TokenKID.String); err != nil {
 				return err
 			}
 			t4n := schema.OAuth2GpaAccountToken{
 				TokenID: t3n.TokenID,
 			}
 			// 更新令牌的更新时间
-			return t4n.UpdateAndSaveByTokenKID(a.Sqlx, true)
+			return t4n.UpdateAndSaveByTokenKID2(a.Sqlx2, true)
 		},
 	}
 }
@@ -636,7 +636,7 @@ func (a *Signin) findAccountByOAuth2Code(c *gin.Context, b *schema.SigninOfOAuth
 		val, _ := c.Cookie("zgo_oac")
 		if val != "" {
 			t3n := schema.OAuth2GpaAccountToken{}
-			t3n.QueryByPlatformAndCode(a.Sqlx, b.Platform, val)
+			t3n.QueryByPlatformAndCode2(a.Sqlx2, b.Platform, val)
 			if t3n.AccountID.Int64 > 0 && t3n.TokenType.Int32 == 2 && t3n.CodeExpAt.Valid && time.Now().Before(t3n.ExpiresAt.Time) {
 				if account.QueryByID(a.Sqlx, t3n.AccountID.Int64); account.ID > 0 {
 					// 直接查询上次认证信息, 该方法存在安全隐患, 但是可以减少OAuth2认证次数
@@ -660,7 +660,7 @@ func (a *Signin) saveAccountByOAuth2Code(c *gin.Context, b *schema.SigninOfOAuth
 			CodeToken: sql.NullString{Valid: true, String: b.Code},
 			CodeExpAt: sql.NullTime{Valid: true, Time: time.Now().Add(12 * time.Hour)},
 		}
-		if err := t3n.UpdateAndSaveByTokenKID(a.Sqlx, true); err == nil {
+		if err := t3n.UpdateAndSaveByTokenKID2(a.Sqlx2, true); err == nil {
 			cke := http.Cookie{Name: "zgo_oac", Value: b.Code, Expires: time.Now().Add(12 * time.Hour)}
 			http.SetCookie(c.Writer, &cke)
 		}
