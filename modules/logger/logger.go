@@ -100,7 +100,6 @@ func StartTrace(ctx context.Context) *Entry {
 	}
 	if v, ok := FromUserIDContext(ctx); ok {
 		fields[UserIDKey] = v.GetUserID()
-		fields[RoleIDKey] = v.GetRoleID()
 	}
 
 	return newEntryWithFields(fields)
