@@ -6,7 +6,6 @@ package casbinredis
 //	"github.com/casbin/casbin/v2"
 //	"github.com/casbin/casbin/v2/persist"
 //	zgocasbin "github.com/suisrc/zgo/casbin"
-//	"github.com/suisrc/zgo/
 //
 //	rediswatcher "github.com/billcobbler/casbin-redis-watcher/v2"
 //)
