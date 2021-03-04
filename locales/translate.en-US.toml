@@ -1,0 +1,23 @@
+[ERR-UNAUTHORIZED]
+hash = "sha1-c71fa0ab7cc6ad5622e35c85f23a8af55a7bf6dc"
+other = "Unauthorized"
+
+[ERR-SIGNIN-CLIENT-ERROR]
+hash = "sha1-951f78e33be1573ca35cafd3fa31a04ae08833a8"
+other = "client error"
+
+[ERR-SIGNIN-PASSWD-ERROR]
+hash = "sha1-70e4e871d99cb596e6ca1c4e91c6ffc036fe4311"
+other = "username or password error"
+
+[ERR-SIGNIN-ROLE-ERROR]
+hash = "sha1-8750f4cd761c656dc814e8db50f5d5ec92274e1b"
+other = "no role"
+
+[ERR-SIGNIN-USER-ERROR]
+hash = "sha1-1b2a3e6bd117d645641c9b0f79c5fb5dcbc5bd44"
+other = "user not found"
+
+["service.signin.select-role-text"]
+hash = "sha1-30741f3cf717344ac0d5c31cca2658083a94aa79"
+other = "Select Role"
