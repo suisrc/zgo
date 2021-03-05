@@ -13,6 +13,7 @@ require (
 	github.com/gin-gonic/gin v1.6.3
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis_rate v6.5.0+incompatible
+	github.com/golang/snappy v0.0.3
 	github.com/google/uuid v1.2.0
 	github.com/guonaihong/gout v0.1.5
 	github.com/jmoiron/sqlx v1.3.1
