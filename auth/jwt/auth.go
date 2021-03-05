@@ -277,12 +277,21 @@ func (a *Auther) RefreshToken(c context.Context, tkn string, chk func(auth.UserI
 		return nil, nil, err
 	}
 
+	refresh := a.opts.refresh
+	if a.opts.claimsFunc != nil {
+		if rfr, err := a.opts.claimsFunc(c, claims); err != nil {
+			return nil, nil, err
+		} else if rfr > 0 {
+			refresh = rfr
+		}
+	}
+
 	tokenInfo := &TokenInfo{
 		TokenID:      claims.Id,
 		AccessToken:  token,
 		ExpiresAt:    claims.ExpiresAt,
 		RefreshToken: NewRefreshToken(claims.Id),
-		RefreshExpAt: now.Add(time.Duration(a.opts.refresh) * time.Second).Unix(),
+		RefreshExpAt: now.Add(time.Duration(refresh) * time.Second).Unix(),
 	}
 	return tokenInfo, claims, nil
 }
