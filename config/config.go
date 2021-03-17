@@ -72,6 +72,7 @@ type Casbin struct {
 
 // Logging 日志配置参数
 type Logging struct {
+	Version          int    `default:"1212"`
 	Level            string `default:"info"`
 	Format           string // json | text
 	Output           string

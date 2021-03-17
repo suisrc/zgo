@@ -50,12 +50,14 @@ func ErrorStack(ctx context.Context, err error) {
 
 // 定义键名
 const (
-	TraceIDKey  = "trace_id"
-	UserIDKey   = "user_id"
-	RoleIDKey   = "role_id"
-	VersionKey  = "version"
-	HostnameKey = "hostname"
-	StackKey    = "stack"
+	TraceIDKey   = "trace_id"
+	UserIDKey    = "user_id"
+	RoleIDKey    = "role_id"
+	VersionKey   = "version"
+	HostnameKey  = "hostname"
+	StackKey     = "stack"
+	LogVerKey    = "@version"
+	NamespaceKey = "@namespace"
 )
 
 var (
@@ -92,8 +94,10 @@ func StartTrace(ctx context.Context) *Entry {
 	}
 
 	fields := map[string]interface{}{
-		VersionKey:  version,
-		HostnameKey: hostname,
+		LogVerKey:    logversion,
+		NamespaceKey: namespace,
+		HostnameKey:  hostname,
+		VersionKey:   version,
 	}
 	if v := FromTraceIDContext(ctx); v != "" {
 		fields[TraceIDKey] = v

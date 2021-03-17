@@ -90,6 +90,6 @@ db-entc-del:
 run1:
 	go run cmd/app1/main.go web -c ./conf/__config1.toml
 wire1:
-	wire gen ./apps/app1/injector
+	wire gen ./apx/app1/injector
 build1:
 	go build -ldflags "-w -s" -o $(SERVER_BIN) ./cmd/app1

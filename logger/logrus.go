@@ -77,6 +77,8 @@ func (e *Entry) WithFields(fields map[string]interface{}) *Entry {
 		RoleIDKey,
 		HostnameKey,
 		VersionKey,
+		LogVerKey,
+		NamespaceKey,
 	)
 	return newEntry(e.entry.WithFields(fields))
 }
