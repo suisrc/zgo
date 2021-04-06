@@ -7,6 +7,10 @@ import (
 
 // Storer 令牌存储接口
 type Storer interface {
+	// 获取令牌剩余的时间
+	TTL(ctx context.Context, key string) (time.Duration, bool, error)
+	// 重置过期时间
+	EXP(ctx context.Context, key string, expiration time.Duration) (bool, error)
 	// 存储令牌数据，并指定到期时间
 	Set(ctx context.Context, key, value string, expiration time.Duration) error
 	// 获取存储数据

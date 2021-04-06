@@ -33,6 +33,48 @@ type Store struct {
 	db *buntdb.DB
 }
 
+// TTL ...
+func (a *Store) TTL(ctx context.Context, key string) (time.Duration, bool, error) {
+	var exists bool
+	var value time.Duration
+	err := a.db.View(func(tx *buntdb.Tx) error {
+		val, err := tx.TTL(key)
+		if err != nil {
+			if err == buntdb.ErrNotFound {
+				return nil
+			}
+			return err
+		}
+		value = val
+		exists = true
+		return nil
+	})
+	return value, exists, err
+}
+
+// EXP ...
+func (a *Store) EXP(ctx context.Context, key string, expiration time.Duration) (bool, error) {
+	var exists bool
+	err := a.db.Update(func(tx *buntdb.Tx) error {
+		val, err := tx.Get(key)
+		if err != nil {
+			if err == buntdb.ErrNotFound {
+				return nil // 没有数据
+			}
+			return err
+		}
+
+		var opts *buntdb.SetOptions
+		if expiration > 0 {
+			opts = &buntdb.SetOptions{Expires: true, TTL: expiration}
+		}
+		_, _, err = tx.Set(key, val, opts)
+		exists = true
+		return err
+	})
+	return exists, err
+}
+
 // Set ...
 func (a *Store) Set(ctx context.Context, key, value string, expiration time.Duration) error {
 	return a.db.Update(func(tx *buntdb.Tx) error {

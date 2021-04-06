@@ -68,6 +68,19 @@ func (s *Store) wrapperKey(key string) string {
 	return fmt.Sprintf("%s%s", s.prefix, key)
 }
 
+// TTL ...
+func (s *Store) TTL(ctx context.Context, key string) (time.Duration, bool, error) {
+	cmd := s.cli.TxPipeline().TTL(s.wrapperKey(key))
+	val, err := cmd.Result()
+	return val, val > 0, err
+}
+
+// EXP ...
+func (s *Store) EXP(ctx context.Context, key string, expiration time.Duration) (bool, error) {
+	cmd := s.cli.Expire(s.wrapperKey(key), expiration/time.Second)
+	return cmd.Result()
+}
+
 // Get ...
 func (s *Store) Get(ctx context.Context, key string) (string, bool, error) {
 	cmd := s.cli.Get(s.wrapperKey(key))

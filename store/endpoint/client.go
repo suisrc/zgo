@@ -37,6 +37,16 @@ type Store struct {
 	middleware goutapi.RequestMiddler
 }
 
+// TTL ...
+func (s *Store) TTL(ctx context.Context, key string) (time.Duration, bool, error) {
+	return 0, false, nil
+}
+
+// EXP ...
+func (s *Store) EXP(ctx context.Context, key string, expiration time.Duration) (bool, error) {
+	return false, nil
+}
+
 // Get ...
 func (s *Store) Get(ctx context.Context, key string) (string, bool, error) {
 	return "", false, nil
